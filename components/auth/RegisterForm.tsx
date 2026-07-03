@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signInWithCustomToken } from "firebase/auth";
 import {
   AuthButton,
   AuthDivider,
@@ -10,8 +11,13 @@ import {
   AuthShell,
   GoogleButton,
 } from "@/components/auth/AuthShell";
+import { businessSignup, memberSignup } from "@/lib/api/auth-client";
+import { auth } from "@/lib/firebase/client";
 
 type RegisterMode = "business" | "member";
+
+const ACCOUNT_CREATED_MESSAGE =
+  "Account created successfully! Please check your email to verify your account.";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -20,11 +26,44 @@ export function RegisterForm() {
   const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    // TODO: connect businessSignup / memberSignup API
-    router.push("/dashboard");
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const response =
+        mode === "business"
+          ? await businessSignup({
+              business_name: businessName,
+              email,
+              password,
+            })
+          : await memberSignup({ email, password });
+
+      if (response?.customToken) {
+        try {
+          await signInWithCustomToken(auth, response.customToken);
+          router.push("/dashboard");
+        } catch (loginError) {
+          console.warn("Auto-login failed after account creation:", loginError);
+          router.push(
+            `/login?message=${encodeURIComponent(ACCOUNT_CREATED_MESSAGE)}`
+          );
+        }
+      } else {
+        router.push(
+          `/login?message=${encodeURIComponent(ACCOUNT_CREATED_MESSAGE)}`
+        );
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Signup failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleGoogleSignUp = () => {
@@ -105,9 +144,19 @@ export function RegisterForm() {
           autoComplete="new-password"
         />
 
+        {error ? (
+          <p className="text-sm text-red-600" role="alert">
+            {error}
+          </p>
+        ) : null}
+
         <div className="pt-2">
-          <AuthButton type="submit">
-            {mode === "business" ? "Create business account" : "Create member account"}
+          <AuthButton type="submit" disabled={isSubmitting}>
+            {isSubmitting
+              ? "Creating account..."
+              : mode === "business"
+                ? "Create business account"
+                : "Create member account"}
           </AuthButton>
         </div>
       </form>
