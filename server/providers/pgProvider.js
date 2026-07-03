@@ -33,15 +33,15 @@ export default {
        RETURNING id`,
       [uid, business_name]
     );
-    return { bid: rows[0].id, uid, business_name };
+    return { business_id: rows[0].id, uid, business_name };
   },
 
-  async createUser({ uid, email, role, bid }) {
+  async createUser({ uid, email, role, business_id }) {
     const { rows } = await pool.query(
-      `INSERT INTO prospect_discover.users (firebase_uid, email, role, bid)
+      `INSERT INTO prospect_discover.users (firebase_uid, email, role, business_id)
        VALUES ($1, $2, $3, $4)
-       RETURNING id, firebase_uid AS "firebaseUid", email, role, bid`,
-      [uid, email, role, bid]
+       RETURNING id, firebase_uid AS "firebaseUid", email, role, business_id`,
+      [uid, email, role, business_id ?? null]
     );
     return rows[0];
   },
@@ -54,19 +54,19 @@ export default {
     await pool.query(`DELETE FROM prospect_discover.users WHERE firebase_uid = $1`, [uid]);
   },
 
-  async findOrCreate({ uid, email, role = 'pending', bid = null }) {
+  async findOrCreate({ uid, email, role = 'pending', business_id = null }) {
     await pool.query(
-      `INSERT INTO prospect_discover.users (firebase_uid, email, role, bid)
+      `INSERT INTO prospect_discover.users (firebase_uid, email, role, business_id)
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (firebase_uid) DO NOTHING`,
-      [uid, email, role, bid]
+      [uid, email, role, business_id]
     );
     return this.findByUid(uid);
   },
 
   async findByUid(uid) {
     const { rows } = await pool.query(
-      `SELECT id, firebase_uid AS "firebaseUid", email, role, bid
+      `SELECT id, firebase_uid AS "firebaseUid", email, role, business_id
        FROM prospect_discover.users
        WHERE firebase_uid = $1`,
       [uid]
@@ -74,13 +74,13 @@ export default {
     return rows[0] ?? null;
   },
 
-  async getAllBusinessMember(bid) {
+  async getAllBusinessMember(business_id) {
     const { rows } = await pool.query(
       `SELECT firebase_uid AS "firebaseUid", email, role
        FROM prospect_discover.users
-       WHERE bid = $1
+       WHERE business_id = $1
        ORDER BY email ASC`,
-      [bid]
+      [business_id]
     );
     return rows;
   },

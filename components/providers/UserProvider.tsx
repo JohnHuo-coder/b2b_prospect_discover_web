@@ -21,7 +21,7 @@ import { isMobileDevice } from "@/lib/auth/isMobileDevice";
 
 type BackendUser = {
   role?: string;
-  bid?: string;
+  business_id?: number;
 };
 
 export type AppUser = FirebaseUser & BackendUser;

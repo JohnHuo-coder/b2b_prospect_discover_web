@@ -45,6 +45,12 @@ export function RegisterForm() {
     setError("");
     setIsSubmitting(true);
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const response =
         mode === "business"

@@ -2,8 +2,7 @@ import { errorResponse, jsonResponse } from "@/lib/api/response";
 import "@/lib/firebase/firebase.js";
 import userRepository from "@/server/repositories/userRepository.js";
 import { getAuth } from "firebase-admin/auth";
-
-type SignupError = Error & { code?: string };
+import { mapSignupError } from "@/lib/auth/mapSignupError";
 
 export async function POST(request: Request) {
   let uid: string | undefined;
@@ -14,6 +13,10 @@ export async function POST(request: Request) {
 
     if (!email || !password) {
       return errorResponse("Email and password are required");
+    }
+
+    if (password.length < 6) {
+      return errorResponse("Password must be at least 6 characters");
     }
 
     const userRecord = await getAuth().createUser({ email, password });
@@ -46,14 +49,7 @@ export async function POST(request: Request) {
 
     console.error("Member signup error:", error);
 
-    const err = error as SignupError;
-    if (err.code === "auth/email-already-exists") {
-      return errorResponse("Email already in use");
-    }
-    if (err.code === "23505" || err.code === "ER_DUP_ENTRY") {
-      return errorResponse("Email already in use");
-    }
-
-    return errorResponse("Internal server error", 500);
+    const mapped = mapSignupError(error);
+    return errorResponse(mapped.message, mapped.status);
   }
 }
