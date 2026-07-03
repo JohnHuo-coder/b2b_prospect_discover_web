@@ -1,40 +1,6 @@
-import admin from '@/lib/firebase/firebase.js';
 import userRepository from '../repositories/userRepository.js';
 
 const authController = {
-  async login(req, res) {
-    try {
-      const { idToken } = req.body;
-
-      if (!idToken) {
-        return res.status(400).json({
-          error: 'Firebase ID token is required',
-        });
-      }
-
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
-
-      res.cookie('session', idToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 3600 * 1000,
-        path: '/',
-      });
-
-      res.status(200).json({
-        message: 'Login successful',
-        uid: decodedToken.uid,
-      });
-    } catch (error) {
-      console.error('Login error:', error);
-      res.status(401).json({ error: 'Authentication failed' });
-    }
-  },
-
-  async getMe(req, res) {
-    res.json(req.user);
-  },
 
   async logout(_req, res) {
     try {
@@ -58,40 +24,6 @@ const authController = {
       res.status(200).json(users);
     } catch (error) {
       console.error('Get all users error:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  },
-
-  // Called after Google OAuth (popup or redirect) to sync the Firebase user into the database.
-  async handleToken(req, res) {
-    try {
-      const { idToken } = req.body;
-
-      if (!idToken) {
-        return res.status(400).json({ error: 'No ID token provided' });
-      }
-
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
-
-      const user = await userRepository.findOrCreate({
-        uid: decodedToken.uid,
-        email: decodedToken.email
-      })
-
-      res.cookie('session', idToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 3600 * 1000,
-        path: '/',
-      });
-
-      res.json({ success: true, user });
-    } catch (error) {
-      console.error('Token handling error:', error);
-      if (error.code === '23505' || error.code === 'ER_DUP_ENTRY') {
-        return res.status(400).json({ error: 'Email already in use' });
-      }
       res.status(500).json({ error: 'Internal server error' });
     }
   },
