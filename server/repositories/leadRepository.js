@@ -4,7 +4,7 @@ const p = mysqlProvider;
 
 const leadRepository = {
   getLeads: (opts) => p.getLeads(opts),
-  getById: (id) => p.getLeadById(id),
+  getById: (opts) => p.getLeadById(opts),
   deleteLead: (id) => p.deleteLead(id),
 
   async sendThankYouEmail() {

@@ -154,13 +154,21 @@ export default {
     };
   },
 
-  async getLeadById(id) {
+  async getLeadById({ id, business_id }) {
+    const leadParams = [id];
+    let leadWhere = "WHERE ic.id = $1";
+
+    if (business_id != null) {
+      leadParams.push(business_id);
+      leadWhere += ` AND ic.business_id = $${leadParams.length}`;
+    }
+
     const [leadResult, scoreResult, emailResult] = await Promise.all([
       pool.query(
         `SELECT ic.id, ic.company_name, ic.website, ic.phone, ic.status, ic.created_at
          FROM prospect_discover.initial_candidates ic
-         WHERE ic.id = $1`,
-        [id]
+         ${leadWhere}`,
+        leadParams
       ),
       pool.query(
         `SELECT fs.score, fs.reason, fs.supporting_facts, fs.requirement_index,
@@ -172,8 +180,9 @@ export default {
          JOIN prospect_discover.requirements req
            ON req.business_id = ic.business_id
           AND req.req_index = fs.requirement_index
-         WHERE ic.id = $1`,
-        [id]
+         ${leadWhere}
+         ORDER BY req.req_index ASC`,
+        leadParams
       ),
       pool.query(
         `SELECT ec.email, ec.first_name, ec.last_name, ec.job_title, ec.linkedin_url,
@@ -186,8 +195,8 @@ export default {
            ON oe.business_id = ec.business_id
           AND oe.place_id = ec.place_id
           AND oe.email = ec.email
-         WHERE ic.id = $1`,
-        [id]
+         ${leadWhere}`,
+        leadParams
       ),
     ]);
 

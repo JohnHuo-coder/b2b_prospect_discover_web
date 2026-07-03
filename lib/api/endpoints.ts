@@ -5,4 +5,6 @@ export const ENDPOINTS = {
     AUTH_BUSINESS_SIGNUP: "/api/auth/signup/business",
     AUTH_MEMBER_SIGNUP: "/api/auth/signup/member",
     LEADS: "/api/leads",
+    DASHBOARD_SUMMARY: "/api/dashboard/summary",
+    leadDetail: (id: string) => `/api/leads/${id}`,
   } as const;

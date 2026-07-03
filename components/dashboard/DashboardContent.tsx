@@ -1,43 +1,37 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { ExternalLink, Search } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SkeletonBar } from "@/components/ui/SkeletonBar";
+import { fetchDashboardSummary } from "@/lib/api/dashboard-client";
 import { fetchLeads } from "@/lib/api/leads-client";
 import { useUser } from "@/components/providers/UserProvider";
-import {
-  dashboardSummary,
-  statusLabels,
-  type Lead,
-  type LeadStatus,
-} from "@/lib/mock-data";
+import { statusLabels, type Lead, type LeadStatus } from "@/lib/mock-data";
 
-const summaryCards = [
+const summaryCardMeta = [
   {
     key: "sent" as const,
     label: "Email Sent",
-    value: dashboardSummary.sent,
     valueClass: "text-blue-600",
     bgClass: "bg-blue-50",
   },
   {
     key: "heard_back" as const,
     label: "Heard Back",
-    value: dashboardSummary.heard_back,
     valueClass: "text-emerald-600",
     bgClass: "bg-emerald-50",
   },
   {
     key: "pending" as const,
     label: "Pending",
-    value: dashboardSummary.pending,
     valueClass: "text-amber-600",
     bgClass: "bg-amber-50",
   },
   {
     key: "rejected" as const,
     label: "Rejected",
-    value: dashboardSummary.rejected,
     valueClass: "text-gray-600",
     bgClass: "bg-gray-100",
   },
@@ -51,31 +45,107 @@ const statusFilters: Array<LeadStatus | "all"> = [
   "rejected",
 ];
 
+function SummaryStatCard({
+  label,
+  value,
+  valueClass,
+  bgClass,
+  loading,
+}: {
+  label: string;
+  value: number;
+  valueClass: string;
+  bgClass: string;
+  loading: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-xl border border-gray-200 ${bgClass} px-5 py-4`}
+      aria-busy={loading}
+    >
+      {loading ? (
+        <>
+          <SkeletonBar className="h-4 w-28" />
+          <SkeletonBar className="mt-3 h-9 w-16" />
+        </>
+      ) : (
+        <>
+          <p className="text-sm font-medium text-gray-600">{label}</p>
+          <p className={`mt-2 text-3xl font-bold ${valueClass}`}>{value}</p>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function DashboardContent() {
   const { user, isLoading: authLoading } = useUser();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
+  const [summary, setSummary] = useState<Record<
+    (typeof summaryCardMeta)[number]["key"],
+    number
+  > | null>(null);
+  const [summaryError, setSummaryError] = useState("");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [total, setTotal] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [leadsLoading, setLeadsLoading] = useState(true);
+  const [leadsError, setLeadsError] = useState("");
 
   useEffect(() => {
     if (authLoading) return;
 
     if (!user) {
-      setError("Please sign in to view leads.");
+      setSummary(null);
+      setSummaryError("Please sign in to view dashboard.");
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadSummary = async () => {
+      setSummary(null);
+      setSummaryError("");
+
+      try {
+        const result = await fetchDashboardSummary();
+
+        if (!cancelled) {
+          setSummary(result);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setSummaryError(
+            err instanceof Error ? err.message : "Failed to load summary"
+          );
+          setSummary(null);
+        }
+      }
+    };
+
+    void loadSummary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user]);
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (!user) {
+      setLeadsError("Please sign in to view leads.");
       setLeads([]);
       setTotal(0);
-      setIsLoading(false);
+      setLeadsLoading(false);
       return;
     }
 
     let cancelled = false;
 
     const loadLeads = async () => {
-      setIsLoading(true);
-      setError("");
+      setLeadsLoading(true);
+      setLeadsError("");
 
       try {
         const result = await fetchLeads({
@@ -90,13 +160,15 @@ export function DashboardContent() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load leads");
+          setLeadsError(
+            err instanceof Error ? err.message : "Failed to load leads"
+          );
           setLeads([]);
           setTotal(0);
         }
       } finally {
         if (!cancelled) {
-          setIsLoading(false);
+          setLeadsLoading(false);
         }
       }
     };
@@ -109,6 +181,9 @@ export function DashboardContent() {
     };
   }, [search, statusFilter, authLoading, user]);
 
+  const showSummarySkeleton =
+    !summaryError && summary === null && (authLoading || Boolean(user));
+
   return (
     <div className="px-8 py-8">
       <div className="mb-8">
@@ -116,17 +191,22 @@ export function DashboardContent() {
         <p className="mt-1 text-sm text-gray-500">All lead candidates</p>
       </div>
 
+      {summaryError ? (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {summaryError}
+        </div>
+      ) : null}
+
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {summaryCards.map((card) => (
-          <div
+        {summaryCardMeta.map((card) => (
+          <SummaryStatCard
             key={card.key}
-            className={`rounded-xl border border-gray-200 ${card.bgClass} px-5 py-4`}
-          >
-            <p className="text-sm font-medium text-gray-600">{card.label}</p>
-            <p className={`mt-2 text-3xl font-bold ${card.valueClass}`}>
-              {card.value}
-            </p>
-          </div>
+            label={card.label}
+            value={summary?.[card.key] ?? 0}
+            valueClass={card.valueClass}
+            bgClass={card.bgClass}
+            loading={showSummarySkeleton}
+          />
         ))}
       </div>
 
@@ -164,14 +244,14 @@ export function DashboardContent() {
         </div>
       </div>
 
-      {error ? (
+      {leadsError ? (
         <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+          {leadsError}
         </div>
       ) : null}
 
       <div className="mb-3 text-right text-sm text-gray-500">
-        {isLoading ? "Loading..." : `${total} results`}
+        {leadsLoading ? "Loading..." : `${total} results`}
       </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
@@ -192,12 +272,23 @@ export function DashboardContent() {
                 key={lead.id}
                 className="border-b border-gray-50 last:border-b-0 hover:bg-gray-50/60"
               >
-                <td className="px-6 py-4 text-sm text-gray-500">{lead.id}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">
+                  <Link
+                    href={`/leads/${lead.id}`}
+                    className="block text-violet-600 hover:text-violet-700"
+                  >
+                    {lead.id}
+                  </Link>
+                </td>
                 <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                  {lead.company}
+                  <Link href={`/leads/${lead.id}`} className="hover:text-violet-700">
+                    {lead.company}
+                  </Link>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-700">
-                  {lead.contact}
+                  <Link href={`/leads/${lead.id}`} className="block hover:text-violet-700">
+                    {lead.contact}
+                  </Link>
                 </td>
                 <td className="px-6 py-4">
                   {lead.website ? (
@@ -210,6 +301,7 @@ export function DashboardContent() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-sm text-violet-600 hover:text-violet-700"
+                      onClick={(event) => event.stopPropagation()}
                     >
                       {lead.website}
                       <ExternalLink className="h-3.5 w-3.5" />
@@ -219,15 +311,21 @@ export function DashboardContent() {
                   )}
                 </td>
                 <td className="px-6 py-4">
-                  <StatusBadge status={lead.status} />
+                  <Link href={`/leads/${lead.id}`} className="inline-block">
+                    <StatusBadge status={lead.status} />
+                  </Link>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600">{lead.added}</td>
+                <td className="px-6 py-4 text-sm text-gray-600">
+                  <Link href={`/leads/${lead.id}`} className="block hover:text-violet-700">
+                    {lead.added}
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        {!isLoading && leads.length === 0 ? (
+        {!leadsLoading && leads.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm text-gray-500">
             No leads match your filters.
           </div>

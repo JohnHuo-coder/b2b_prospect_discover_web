@@ -3,7 +3,7 @@ import pgProvider from '../providers/pgProvider.js';
 const provider = pgProvider;
 
 const dashboardRepository = {
-  getDashboardSummary: (business_id) => provider.getDashboardSummary(business_id),
+  getDashboardSummary: (opts) => provider.getDashboardSummary(opts),
   getLeads: (opt) => provider.getLeads(opt),
 };
 
