@@ -59,18 +59,26 @@ export function Field({
   );
 }
 
-export function TagList({ items }: { items: string[] }) {
+export function TagList({
+  items,
+  variant = "gray",
+}: {
+  items: string[];
+  variant?: "gray" | "purple";
+}) {
   if (items.length === 0) {
     return <span className="text-sm text-gray-400">—</span>;
   }
 
+  const tagClassName =
+    variant === "purple"
+      ? "rounded-md bg-violet-100 px-3 py-1.5 text-sm text-violet-700"
+      : "rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-700";
+
   return (
     <div className="flex flex-wrap gap-2">
       {items.map((item) => (
-        <span
-          key={item}
-          className="rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-700"
-        >
+        <span key={item} className={tagClassName}>
           {item}
         </span>
       ))}

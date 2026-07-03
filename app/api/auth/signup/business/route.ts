@@ -4,6 +4,7 @@ import businessRepository from "@/server/repositories/businessRepository.js";
 import userRepository from "@/server/repositories/userRepository.js";
 import { getAuth } from "firebase-admin/auth";
 import { mapSignupError } from "@/lib/auth/mapSignupError";
+import { normalizeOptionalName } from "@/lib/auth/parseDisplayName";
 
 export async function POST(request: Request) {
   let uid: string | undefined;
@@ -11,7 +12,12 @@ export async function POST(request: Request) {
   let dbUserCreated = false;
 
   try {
-    const { business_name, email, password } = await request.json();
+    const body = await request.json();
+    const business_name = body.business_name;
+    const email = body.email;
+    const password = body.password;
+    const first_name = normalizeOptionalName(body.first_name);
+    const last_name = normalizeOptionalName(body.last_name);
 
     if (!email || !password) {
       return errorResponse("Email and password are required");
@@ -35,6 +41,8 @@ export async function POST(request: Request) {
       email,
       role: "owner",
       business_id: business.business_id,
+      first_name,
+      last_name,
     });
     dbUserCreated = true;
 

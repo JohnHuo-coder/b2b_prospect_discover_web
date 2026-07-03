@@ -16,10 +16,28 @@ export const PATCH = withAuth(
           return errorResponse("You need to join a company first", 403);
         }
 
-        const body = await request.json();
+        const body = (await request.json()) as {
+          search_keyword?: unknown;
+          search_location?: unknown;
+        };
+
+        const search_keyword =
+          typeof body.search_keyword === "string" ? body.search_keyword.trim() : "";
+        const search_location =
+          typeof body.search_location === "string" ? body.search_location.trim() : "";
+
+        if (!search_keyword) {
+          return errorResponse("search_keyword is required", 400);
+        }
+
+        if (!search_location) {
+          return errorResponse("search_location is required", 400);
+        }
+
         const result = await businessRepository.upsertSearchConfig({
           business_id: user.business_id,
-          ...body,
+          search_keyword,
+          search_location,
         });
         return jsonResponse(result);
       } catch (error) {

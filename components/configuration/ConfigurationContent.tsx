@@ -35,6 +35,11 @@ import {
   RequirementsEditForm,
   RequirementsModalFooter,
 } from "@/components/configuration/RequirementsEditForm";
+import { ContactPreferencesEditForm } from "@/components/configuration/ContactPreferencesEditForm";
+import {
+  getDefaultRunSettingsDraft,
+  OutreachSettingsEditForm,
+} from "@/components/configuration/OutreachSettingsEditForm";
 import {
   CheckboxInput,
   linesToList,
@@ -47,6 +52,22 @@ import {
 } from "@/components/ui/Modal";
 import { SkeletonBar } from "@/components/ui/SkeletonBar";
 import { useUser } from "@/components/providers/UserProvider";
+import { normalizeContactCategories } from "@/lib/constants/contact-categories";
+import {
+  DEFAULT_CONTACT_TITLES,
+  DEFAULT_RUN_SETTINGS,
+} from "@/lib/constants/config-defaults";
+
+const SCORING_THRESHOLD_MIN = 0;
+const SCORING_THRESHOLD_MAX = 100;
+
+function isValidScoringThreshold(value: number | null): value is number {
+  return (
+    value !== null &&
+    value >= SCORING_THRESHOLD_MIN &&
+    value <= SCORING_THRESHOLD_MAX
+  );
+}
 
 const emptyConfig: BusinessConfigState = {
   business_id: "",
@@ -63,11 +84,11 @@ const emptyConfig: BusinessConfigState = {
   qualified_conf_email_classification: null,
   search_keyword: "",
   search_location: "",
-  contact_titles: [],
+  contact_titles: [...DEFAULT_CONTACT_TITLES],
   contact_categories: [],
-  min_words: null,
-  max_words: null,
-  number_of_candidates_per_run: null,
+  min_words: DEFAULT_RUN_SETTINGS.min_words,
+  max_words: DEFAULT_RUN_SETTINGS.max_words,
+  number_of_candidates_per_run: DEFAULT_RUN_SETTINGS.number_of_candidates_per_run,
   test_mode: null,
   test_email_override: "",
   follow_up_delay: "",
@@ -279,19 +300,34 @@ export function ConfigurationContent() {
 
     try {
       switch (activeSection) {
-        case "identity":
+        case "identity": {
+          const business_name = draft.business_name.trim();
+          const collaboration_intent = draft.collaboration_intent.trim();
+          const sender_name = draft.sender_name.trim();
+
+          if (!business_name) {
+            setError("Business name is required.");
+            return;
+          }
+
+          if (!collaboration_intent) {
+            setError("Collaboration intent is required.");
+            return;
+          }
+
           await saveBusinessProfile({
-            business_name: draft.business_name,
-            sender_name: draft.sender_name,
-            collaboration_intent: draft.collaboration_intent,
+            business_name,
+            collaboration_intent,
+            sender_name,
           });
           setConfig((prev) => ({
             ...prev,
-            business_name: draft.business_name,
-            sender_name: draft.sender_name,
-            collaboration_intent: draft.collaboration_intent,
+            business_name,
+            sender_name,
+            collaboration_intent,
           }));
           break;
+        }
         case "requirements": {
           const requirements = normalizeRequirements(draft.requirements);
           await saveRequirements({ requirements });
@@ -307,58 +343,125 @@ export function ConfigurationContent() {
             max_distance: draft.max_distance,
           }));
           break;
-        case "scoring":
+        case "scoring": {
+          const {
+            fit_score_cutoff,
+            low_conf_cutoff_email_classification,
+            qualified_conf_email_classification,
+          } = draft;
+
+          if (
+            fit_score_cutoff === null ||
+            low_conf_cutoff_email_classification === null ||
+            qualified_conf_email_classification === null
+          ) {
+            setError("All scoring threshold fields are required.");
+            return;
+          }
+
+          if (
+            !isValidScoringThreshold(fit_score_cutoff) ||
+            !isValidScoringThreshold(low_conf_cutoff_email_classification) ||
+            !isValidScoringThreshold(qualified_conf_email_classification)
+          ) {
+            setError(
+              `Scoring thresholds must be between ${SCORING_THRESHOLD_MIN} and ${SCORING_THRESHOLD_MAX}.`
+            );
+            return;
+          }
+
           await saveClassificationCutoffs({
-            fit_score_cutoff: draft.fit_score_cutoff ?? 0,
-            low_conf_cutoff_email_classification:
-              draft.low_conf_cutoff_email_classification ?? 0,
-            qualified_conf_email_classification:
-              draft.qualified_conf_email_classification ?? 0,
+            fit_score_cutoff,
+            low_conf_cutoff_email_classification,
+            qualified_conf_email_classification,
           });
           setConfig((prev) => ({
             ...prev,
-            fit_score_cutoff: draft.fit_score_cutoff,
-            low_conf_cutoff_email_classification:
-              draft.low_conf_cutoff_email_classification,
-            qualified_conf_email_classification:
-              draft.qualified_conf_email_classification,
+            fit_score_cutoff,
+            low_conf_cutoff_email_classification,
+            qualified_conf_email_classification,
           }));
           break;
-        case "target":
+        }
+        case "target": {
+          const search_keyword = draft.search_keyword.trim();
+          const search_location = draft.search_location.trim();
+
+          if (!search_keyword) {
+            setError("Search keyword is required.");
+            return;
+          }
+
+          if (!search_location) {
+            setError("Search location is required.");
+            return;
+          }
+
           await saveSearchConfig({
-            search_keyword: draft.search_keyword,
-            search_location: draft.search_location,
+            search_keyword,
+            search_location,
           });
           setConfig((prev) => ({
             ...prev,
-            search_keyword: draft.search_keyword,
-            search_location: draft.search_location,
+            search_keyword,
+            search_location,
           }));
           break;
-        case "contact":
+        }
+        case "contact": {
+          const contact_titles = draft.contact_titles
+            .map((title) => title.trim())
+            .filter(Boolean);
+          const contact_categories = normalizeContactCategories(
+            draft.contact_categories
+          );
+
           await saveContactFilters({
-            contact_titles: draft.contact_titles,
-            contact_categories: draft.contact_categories,
+            contact_titles,
+            contact_categories,
           });
           setConfig((prev) => ({
             ...prev,
-            contact_titles: draft.contact_titles,
-            contact_categories: draft.contact_categories,
+            contact_titles,
+            contact_categories,
           }));
           break;
-        case "outreach":
+        }
+        case "outreach": {
+          const { min_words, max_words, number_of_candidates_per_run } = draft;
+
+          if (
+            min_words === null ||
+            max_words === null ||
+            number_of_candidates_per_run === null
+          ) {
+            setError("All outreach settings fields are required.");
+            return;
+          }
+
+          if (min_words < 1 || max_words < 1 || number_of_candidates_per_run < 1) {
+            setError("Outreach settings must be positive integers.");
+            return;
+          }
+
+          if (min_words >= max_words) {
+            setError("Max words must be greater than min words.");
+            return;
+          }
+
           await saveRunSettings({
-            number_of_candidates_per_run: draft.number_of_candidates_per_run ?? 0,
-            min_words: draft.min_words ?? 0,
-            max_words: draft.max_words ?? 0,
+            number_of_candidates_per_run,
+            min_words,
+            max_words,
           });
           setConfig((prev) => ({
             ...prev,
-            number_of_candidates_per_run: draft.number_of_candidates_per_run,
-            min_words: draft.min_words,
-            max_words: draft.max_words,
+            number_of_candidates_per_run,
+            min_words,
+            max_words,
           }));
           break;
+        }
         case "system":
           setConfig((prev) => ({
             ...prev,
@@ -548,7 +651,9 @@ export function ConfigurationContent() {
               />
               <Field
                 label="Contact Categories (Anymail Finder)"
-                value={<TagList items={config.contact_categories} />}
+                value={
+                  <TagList items={config.contact_categories} variant="purple" />
+                }
               />
             </div>
           </ConfigCard>
@@ -631,6 +736,7 @@ export function ConfigurationContent() {
           <div className="space-y-4">
             <TextInput
               label="Business Name"
+              required
               value={draft.business_name}
               onChange={(v) => patchDraft("business_name", v)}
             />
@@ -638,6 +744,7 @@ export function ConfigurationContent() {
               label="Sender / Team"
               value={draft.sender_name}
               onChange={(v) => patchDraft("sender_name", v)}
+              placeholder="Optional"
             />
             <TextInput
               label="Sender Email"
@@ -647,6 +754,7 @@ export function ConfigurationContent() {
             />
             <TextArea
               label="Collaboration Intent"
+              required
               rows={6}
               value={draft.collaboration_intent}
               onChange={(v) => patchDraft("collaboration_intent", v)}
@@ -689,19 +797,31 @@ export function ConfigurationContent() {
           <div className="space-y-4">
             <NumberInput
               label="Fit Score Cutoff"
-              value={draft.fit_score_cutoff ?? 0}
+              required
+              min={SCORING_THRESHOLD_MIN}
+              max={SCORING_THRESHOLD_MAX}
+              hint={`Must be between ${SCORING_THRESHOLD_MIN} and ${SCORING_THRESHOLD_MAX}.`}
+              value={draft.fit_score_cutoff}
               onChange={(v) => patchDraft("fit_score_cutoff", v)}
             />
             <NumberInput
               label="Email Classification — Low Confidence Cutoff"
-              value={draft.low_conf_cutoff_email_classification ?? 0}
+              required
+              min={SCORING_THRESHOLD_MIN}
+              max={SCORING_THRESHOLD_MAX}
+              hint={`Must be between ${SCORING_THRESHOLD_MIN} and ${SCORING_THRESHOLD_MAX}.`}
+              value={draft.low_conf_cutoff_email_classification}
               onChange={(v) =>
                 patchDraft("low_conf_cutoff_email_classification", v)
               }
             />
             <NumberInput
               label="Email Classification — Qualified Confidence"
-              value={draft.qualified_conf_email_classification ?? 0}
+              required
+              min={SCORING_THRESHOLD_MIN}
+              max={SCORING_THRESHOLD_MAX}
+              hint={`Must be between ${SCORING_THRESHOLD_MIN} and ${SCORING_THRESHOLD_MAX}.`}
+              value={draft.qualified_conf_email_classification}
               onChange={(v) =>
                 patchDraft("qualified_conf_email_classification", v)
               }
@@ -713,11 +833,13 @@ export function ConfigurationContent() {
           <div className="space-y-4">
             <TextInput
               label="Search Keyword"
+              required
               value={draft.search_keyword}
               onChange={(v) => patchDraft("search_keyword", v)}
             />
             <TextInput
               label="Search Location"
+              required
               value={draft.search_location}
               onChange={(v) => patchDraft("search_location", v)}
             />
@@ -725,42 +847,35 @@ export function ConfigurationContent() {
         ) : null}
 
         {activeSection === "contact" ? (
-          <div className="space-y-4">
-            <TextArea
-              label="Contact Titles (Apollo API)"
-              rows={6}
-              hint="One title per line."
-              value={listToLines(draft.contact_titles)}
-              onChange={(v) => patchDraft("contact_titles", linesToList(v))}
-            />
-            <TextArea
-              label="Contact Categories (Anymail Finder)"
-              rows={4}
-              hint="One category per line."
-              value={listToLines(draft.contact_categories)}
-              onChange={(v) => patchDraft("contact_categories", linesToList(v))}
-            />
-          </div>
+          <ContactPreferencesEditForm
+            contactTitles={draft.contact_titles}
+            contactCategories={draft.contact_categories}
+            onContactTitlesChange={(contact_titles) =>
+              patchDraft("contact_titles", contact_titles)
+            }
+            onContactCategoriesChange={(contact_categories) =>
+              patchDraft("contact_categories", contact_categories)
+            }
+          />
         ) : null}
 
         {activeSection === "outreach" ? (
-          <div className="space-y-4">
-            <NumberInput
-              label="Min. Words per Email"
-              value={draft.min_words ?? 0}
-              onChange={(v) => patchDraft("min_words", v)}
-            />
-            <NumberInput
-              label="Max. Words per Email"
-              value={draft.max_words ?? 0}
-              onChange={(v) => patchDraft("max_words", v)}
-            />
-            <NumberInput
-              label="Candidates per Run"
-              value={draft.number_of_candidates_per_run ?? 0}
-              onChange={(v) => patchDraft("number_of_candidates_per_run", v)}
-            />
-          </div>
+          <OutreachSettingsEditForm
+            minWords={draft.min_words}
+            maxWords={draft.max_words}
+            numberOfCandidatesPerRun={draft.number_of_candidates_per_run}
+            onMinWordsChange={(min_words) => patchDraft("min_words", min_words)}
+            onMaxWordsChange={(max_words) => patchDraft("max_words", max_words)}
+            onNumberOfCandidatesPerRunChange={(number_of_candidates_per_run) =>
+              patchDraft("number_of_candidates_per_run", number_of_candidates_per_run)
+            }
+            onRestoreDefaults={() => {
+              setDraft((prev) => ({
+                ...prev,
+                ...getDefaultRunSettingsDraft(),
+              }));
+            }}
+          />
         ) : null}
 
         {activeSection === "system" ? (

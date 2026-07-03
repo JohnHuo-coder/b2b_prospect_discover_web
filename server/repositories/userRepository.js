@@ -11,6 +11,7 @@ const userRepository = {
 
   findOrCreate: (userData) => provider.findOrCreate(userData),
   setRole: (uid, role) => provider.setRole(uid, role),
+  updateUserBusinessId: (body) => provider.updateUserBusinessId(body),
 };
 
 export default userRepository;

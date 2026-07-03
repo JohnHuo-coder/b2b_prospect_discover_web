@@ -1,6 +1,6 @@
 import { pool } from '../../lib/db/client.ts';
 
-async function upsertBusinessConfigPartial(business_id, fields) {
+async function upsertBusinessConfigPartial(business_id, fields, client = pool) {
   if (!business_id) {
     throw new Error('business_id is required');
   }
@@ -13,7 +13,7 @@ async function upsertBusinessConfigPartial(business_id, fields) {
     .map((column) => `${column} = EXCLUDED.${column}`)
     .join(',\n        ');
 
-  const { rows, rowCount } = await pool.query(
+  const { rows, rowCount } = await client.query(
     `INSERT INTO prospect_discover.business_configs (${columnList})
      VALUES ($1, ${placeholders})
      ON CONFLICT (business_id) DO UPDATE SET
@@ -27,21 +27,41 @@ async function upsertBusinessConfigPartial(business_id, fields) {
 
 export default {
   async createBusiness({ uid, business_name }) {
-    const { rows } = await pool.query(
-      `INSERT INTO prospect_discover.businesses (firebase_uid, business_name)
-       VALUES ($1, $2)
-       RETURNING id`,
-      [uid, business_name]
-    );
-    return { business_id: rows[0].id, uid, business_name };
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const { rows } = await client.query(
+        `INSERT INTO prospect_discover.businesses (firebase_uid, business_name)
+         VALUES ($1, $2)
+         RETURNING id`,
+        [uid, business_name]
+      );
+
+      const business_id = rows[0].id;
+
+      await client.query(
+        `INSERT INTO prospect_discover.business_configs (business_id, business_name)
+         VALUES ($1, $2)`,
+        [business_id, business_name]
+      );
+
+      await client.query('COMMIT');
+      return { business_id, uid, business_name };
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   },
 
-  async createUser({ uid, email, role, business_id }) {
+  async createUser({ uid, email, role, business_id, first_name = null, last_name = null }) {
     const { rows } = await pool.query(
-      `INSERT INTO prospect_discover.users (firebase_uid, email, role, business_id)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, firebase_uid AS "firebaseUid", email, role, business_id`,
-      [uid, email, role, business_id ?? null]
+      `INSERT INTO prospect_discover.users (firebase_uid, email, role, business_id, first_name, last_name)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, firebase_uid AS "firebaseUid", email, role, business_id, first_name, last_name`,
+      [uid, email, role, business_id ?? null, first_name, last_name]
     );
     return rows[0];
   },
@@ -54,29 +74,98 @@ export default {
     await pool.query(`DELETE FROM prospect_discover.users WHERE firebase_uid = $1`, [uid]);
   },
 
-  async findOrCreate({ uid, email, role = 'pending', business_id = null }) {
+  async findOrCreate({
+    uid,
+    email,
+    role = 'pending',
+    business_id = null,
+    first_name = null,
+    last_name = null,
+  }) {
     await pool.query(
-      `INSERT INTO prospect_discover.users (firebase_uid, email, role, business_id)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (firebase_uid) DO NOTHING`,
-      [uid, email, role, business_id]
+      `INSERT INTO prospect_discover.users (firebase_uid, email, role, business_id, first_name, last_name)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (firebase_uid) DO UPDATE SET
+         email = EXCLUDED.email,
+         first_name = COALESCE(prospect_discover.users.first_name, EXCLUDED.first_name),
+         last_name = COALESCE(prospect_discover.users.last_name, EXCLUDED.last_name)`,
+      [uid, email, role, business_id, first_name, last_name]
     );
     return this.findByUid(uid);
   },
 
   async findByUid(uid) {
     const { rows } = await pool.query(
-      `SELECT id, firebase_uid AS "firebaseUid", email, role, business_id
-       FROM prospect_discover.users
-       WHERE firebase_uid = $1`,
+      `SELECT
+         u.id,
+         u.firebase_uid AS "firebaseUid",
+         u.email,
+         u.role,
+         u.business_id,
+         u.first_name,
+         u.last_name,
+         b.business_name
+       FROM prospect_discover.users u
+       LEFT JOIN prospect_discover.businesses b ON b.id = u.business_id
+       WHERE u.firebase_uid = $1`,
       [uid]
     );
     return rows[0] ?? null;
   },
 
+  async getBusinesses({ search }) {
+    const params = [];
+    let where = "WHERE u.role = 'owner'";
+
+    const trimmedSearch = typeof search === 'string' ? search.trim() : '';
+    if (trimmedSearch) {
+      params.push(`%${trimmedSearch}%`);
+      const pattern = `$${params.length}`;
+      where += ` AND (
+        u.email ILIKE ${pattern}
+        OR u.first_name ILIKE ${pattern}
+        OR u.last_name ILIKE ${pattern}
+        OR b.business_name ILIKE ${pattern}
+      )`;
+    }
+
+    const { rows } = await pool.query(
+      `SELECT
+         u.id,
+         u.firebase_uid AS "firebaseUid",
+         u.email,
+         u.role,
+         u.business_id,
+         u.first_name,
+         u.last_name,
+         b.business_name
+       FROM prospect_discover.users u
+       LEFT JOIN prospect_discover.businesses b ON b.id = u.business_id
+       ${where}
+       ORDER BY b.business_name ASC NULLS LAST, u.email ASC`,
+      params
+    );
+    return rows;
+  },
+
+  async updateUserBusinessId({ uid, business_id }) {
+    const { rowCount } = await pool.query(
+      `UPDATE prospect_discover.users
+       SET business_id = $1
+       WHERE firebase_uid = $2`,
+      [business_id ?? null, uid]
+    );
+
+    if (rowCount === 0) {
+      return null;
+    }
+
+    return this.findByUid(uid);
+  },
+
   async getAllBusinessMember(business_id) {
     const { rows } = await pool.query(
-      `SELECT firebase_uid AS "firebaseUid", email, role
+      `SELECT firebase_uid AS "firebaseUid", email, role, first_name, last_name
        FROM prospect_discover.users
        WHERE business_id = $1
        ORDER BY email ASC`,
@@ -370,11 +459,39 @@ export default {
     sender_name,
     collaboration_intent,
   }) {
-    return upsertBusinessConfigPartial(business_id, {
-      business_name,
-      sender_name,
-      collaboration_intent,
-    });
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const { rowCount: businessRowCount } = await client.query(
+        `UPDATE prospect_discover.businesses
+         SET business_name = $2
+         WHERE id = $1`,
+        [business_id, business_name]
+      );
+
+      if (businessRowCount === 0) {
+        throw new Error('Business not found');
+      }
+
+      const configResult = await upsertBusinessConfigPartial(
+        business_id,
+        {
+          business_name,
+          sender_name: sender_name?.trim() ? sender_name.trim() : null,
+          collaboration_intent,
+        },
+        client
+      );
+
+      await client.query('COMMIT');
+      return configResult;
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   },
 
   async upsertClassificationCutoffs({

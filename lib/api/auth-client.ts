@@ -8,7 +8,7 @@ export type SignupResponse = {
 
 async function postSignup(
   url: string,
-  body: Record<string, string>
+  body: Record<string, string | undefined>
 ): Promise<SignupResponse> {
   const response = await fetch(url, {
     method: "POST",
@@ -31,10 +31,17 @@ export function businessSignup(body: {
   business_name: string;
   email: string;
   password: string;
+  first_name?: string;
+  last_name?: string;
 }) {
   return postSignup(ENDPOINTS.AUTH_BUSINESS_SIGNUP, body);
 }
 
-export function memberSignup(body: { email: string; password: string }) {
+export function memberSignup(body: {
+  email: string;
+  password: string;
+  first_name?: string;
+  last_name?: string;
+}) {
   return postSignup(ENDPOINTS.AUTH_MEMBER_SIGNUP, body);
 }

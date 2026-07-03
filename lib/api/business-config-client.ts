@@ -1,6 +1,10 @@
 import type { BusinessConfigState } from "@/lib/types/business-config";
 import { ENDPOINTS } from "@/lib/api/endpoints";
 import { authenticatedFetch } from "@/lib/api/authenticatedFetch";
+import {
+  resolveContactTitles,
+  resolveRunSettings,
+} from "@/lib/constants/config-defaults";
 
 const base = ENDPOINTS.BUSINESS_CONFIG;
 
@@ -57,6 +61,13 @@ export function mapBusinessConfigResponse(
     .map((row) => row.clarified?.trim())
     .filter((value): value is string => Boolean(value));
 
+  const contact_titles = resolveContactTitles(toStringArray(cfg.contact_titles));
+  const runSettings = resolveRunSettings({
+    min_words: toNumber(cfg.min_words),
+    max_words: toNumber(cfg.max_words),
+    number_of_candidates_per_run: toNumber(cfg.number_of_candidates_per_run),
+  });
+
   return {
     business_id: toStringValue(cfg.business_id),
     business_name: toStringValue(cfg.business_name),
@@ -74,11 +85,11 @@ export function mapBusinessConfigResponse(
       toNumber(cfg.qualified_conf_email_classification),
     search_keyword: toStringValue(cfg.search_keyword),
     search_location: toStringValue(cfg.search_location),
-    contact_titles: toStringArray(cfg.contact_titles),
+    contact_titles,
     contact_categories: toStringArray(cfg.contact_categories),
-    min_words: toNumber(cfg.min_words),
-    max_words: toNumber(cfg.max_words),
-    number_of_candidates_per_run: toNumber(cfg.number_of_candidates_per_run),
+    min_words: runSettings.min_words,
+    max_words: runSettings.max_words,
+    number_of_candidates_per_run: runSettings.number_of_candidates_per_run,
     test_mode: null,
     test_email_override: "",
     follow_up_delay: "",
@@ -121,8 +132,8 @@ export async function fetchBusinessConfig(): Promise<BusinessConfigState> {
 
 export function saveBusinessProfile(body: {
   business_name: string;
-  sender_name: string;
   collaboration_intent: string;
+  sender_name?: string;
 }) {
   return patchConfig("/profile", body);
 }

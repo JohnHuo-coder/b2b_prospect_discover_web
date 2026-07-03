@@ -110,25 +110,37 @@ export function TextInput({
   onChange,
   type = "text",
   placeholder,
+  required = false,
+  min,
+  max,
+  hint,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   type?: string;
   placeholder?: string;
+  required?: boolean;
+  min?: number;
+  max?: number;
+  hint?: string;
 }) {
   return (
     <label className="block">
       <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
         {label}
+        {required ? <span className="text-red-500"> *</span> : null}
       </span>
       <input
         type={type}
         value={value}
         placeholder={placeholder}
+        min={min}
+        max={max}
         onChange={(event) => onChange(event.target.value)}
         className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
       />
+      {hint ? <p className="mt-1.5 text-xs text-gray-500">{hint}</p> : null}
     </label>
   );
 }
@@ -140,6 +152,7 @@ export function TextArea({
   rows = 4,
   placeholder,
   hint,
+  required = false,
 }: {
   label: string;
   value: string;
@@ -147,11 +160,13 @@ export function TextArea({
   rows?: number;
   placeholder?: string;
   hint?: string;
+  required?: boolean;
 }) {
   return (
     <label className="block">
       <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
         {label}
+        {required ? <span className="text-red-500"> *</span> : null}
       </span>
       <textarea
         value={value}
@@ -169,17 +184,37 @@ export function NumberInput({
   label,
   value,
   onChange,
+  required = false,
+  min,
+  max,
+  hint,
 }: {
   label: string;
-  value: number;
-  onChange: (value: number) => void;
+  value: number | null;
+  onChange: (value: number | null) => void;
+  required?: boolean;
+  min?: number;
+  max?: number;
+  hint?: string;
 }) {
   return (
     <TextInput
       label={label}
+      required={required}
       type="number"
-      value={String(value)}
-      onChange={(next) => onChange(Number(next) || 0)}
+      min={min}
+      max={max}
+      hint={hint}
+      value={value === null || value === undefined ? "" : String(value)}
+      onChange={(next) => {
+        const trimmed = next.trim();
+        if (!trimmed) {
+          onChange(null);
+          return;
+        }
+        const numeric = Number(trimmed);
+        onChange(Number.isNaN(numeric) ? null : numeric);
+      }}
     />
   );
 }

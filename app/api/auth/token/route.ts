@@ -7,6 +7,7 @@ import {
 import "@/lib/firebase/firebase.js";
 import userRepository from "@/server/repositories/userRepository.js";
 import { getAuth } from "firebase-admin/auth";
+import { parseDisplayName } from "@/lib/auth/parseDisplayName";
 
 type DbError = Error & { code?: string };
 
@@ -30,10 +31,13 @@ export async function POST(request: Request) {
     }
 
     const decodedToken = await getAuth().verifyIdToken(idToken);
+    const { first_name, last_name } = parseDisplayName(decodedToken.name);
 
     const user = await userRepository.findOrCreate({
       uid: decodedToken.uid,
       email: decodedToken.email,
+      first_name,
+      last_name,
     });
 
     const response = NextResponse.json({ success: true, user });

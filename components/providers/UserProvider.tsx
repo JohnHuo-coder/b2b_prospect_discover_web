@@ -22,6 +22,9 @@ import { isMobileDevice } from "@/lib/auth/isMobileDevice";
 type BackendUser = {
   role?: string;
   business_id?: number;
+  business_name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
 };
 
 export type AppUser = FirebaseUser & BackendUser;
@@ -29,6 +32,7 @@ export type AppUser = FirebaseUser & BackendUser;
 type UserContextValue = {
   user: AppUser | null;
   isLoading: boolean;
+  refreshUser: () => Promise<void>;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<boolean>;
   googleAuth: () => Promise<boolean>;
@@ -127,9 +131,32 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshUser = async () => {
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser) {
+      setUser(null);
+      return;
+    }
+
+    try {
+      const idToken = await firebaseUser.getIdToken();
+      const response = await fetch(ENDPOINTS.AUTH_ME, {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+
+      if (response.ok) {
+        const backendUserData = (await response.json()) as BackendUser;
+        setUser(Object.assign(firebaseUser, backendUserData));
+      }
+    } catch (error) {
+      console.error("Failed to refresh user:", error);
+    }
+  };
+
   const contextValue: UserContextValue = {
     user,
     isLoading,
+    refreshUser,
     login,
     logout,
     googleAuth,

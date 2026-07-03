@@ -129,7 +129,7 @@ export const businessConfig = {
   contact_categories: ["Sales", "Marketing"],
   min_words: 90,
   max_words: 160,
-  number_of_candidates_per_run: 20,
+  number_of_candidates_per_run: 50,
   test_mode: true,
   test_email_override: "c.weaver1on1@gmail.com",
   follow_up_delay: "7 days",

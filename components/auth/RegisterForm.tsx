@@ -34,6 +34,8 @@ export function RegisterForm() {
   const [mode, setMode] = useState<RegisterMode>("business");
 
   const [businessName, setBusinessName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -52,14 +54,20 @@ export function RegisterForm() {
     }
 
     try {
+      const optionalNames = {
+        ...(firstName.trim() ? { first_name: firstName.trim() } : {}),
+        ...(lastName.trim() ? { last_name: lastName.trim() } : {}),
+      };
+
       const response =
         mode === "business"
           ? await businessSignup({
               business_name: businessName,
               email,
               password,
+              ...optionalNames,
             })
-          : await memberSignup({ email, password });
+          : await memberSignup({ email, password, ...optionalNames });
 
       if (response?.customToken) {
         try {
@@ -167,6 +175,23 @@ export function RegisterForm() {
             autoComplete="email"
           />
         )}
+
+        <div className="grid grid-cols-2 gap-3">
+          <AuthField
+            label="First Name (optional)"
+            value={firstName}
+            onChange={setFirstName}
+            placeholder="Clarence"
+            autoComplete="given-name"
+          />
+          <AuthField
+            label="Last Name (optional)"
+            value={lastName}
+            onChange={setLastName}
+            placeholder="Weaver"
+            autoComplete="family-name"
+          />
+        </div>
 
         <AuthField
           label="Password"
