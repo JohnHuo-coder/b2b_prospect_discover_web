@@ -91,12 +91,21 @@ export function AuthButton({
   );
 }
 
-export function GoogleButton({ onClick }: { onClick: () => void }) {
+export function GoogleButton({
+  onClick,
+  disabled = false,
+  label = "Continue with Google",
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  label?: string;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+      disabled={disabled}
+      className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
         <path
@@ -116,7 +125,7 @@ export function GoogleButton({ onClick }: { onClick: () => void }) {
           fill="#EA4335"
         />
       </svg>
-      Continue with Google
+      {label}
     </button>
   );
 }

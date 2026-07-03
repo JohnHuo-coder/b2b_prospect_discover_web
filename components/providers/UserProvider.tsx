@@ -17,6 +17,7 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase/client";
 import { ENDPOINTS } from "@/lib/api/endpoints";
+import { isMobileDevice } from "@/lib/auth/isMobileDevice";
 
 type BackendUser = {
   role?: string;
@@ -30,7 +31,7 @@ type UserContextValue = {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<boolean>;
-  googleAuth: () => Promise<void>;
+  googleAuth: () => Promise<boolean>;
   requestPasswordReset: (email: string) => Promise<boolean>;
 };
 
@@ -102,8 +103,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const googleAuth = async () => {
     try {
+      if (isMobileDevice()) {
+        window.location.assign("/auth/callback?start=google");
+        return false;
+      }
+
       // onAuthStateChanged syncs session via /api/auth/token and loads /api/auth/me
       await signInWithPopup(auth, googleProvider);
+      return true;
     } catch (error) {
       console.error("Google auth error:", error);
       throw error;

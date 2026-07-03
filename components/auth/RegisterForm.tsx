@@ -13,14 +13,24 @@ import {
 } from "@/components/auth/AuthShell";
 import { businessSignup, memberSignup } from "@/lib/api/auth-client";
 import { auth } from "@/lib/firebase/client";
+import { useUser } from "@/components/providers/UserProvider";
+import {
+  isAuthCancellation,
+  mapAuthCodeToMessage,
+} from "@/lib/auth/mapAuthCodeToMessage";
 
 type RegisterMode = "business" | "member";
+
+type FirebaseAuthError = {
+  code?: string;
+};
 
 const ACCOUNT_CREATED_MESSAGE =
   "Account created successfully! Please check your email to verify your account.";
 
 export function RegisterForm() {
   const router = useRouter();
+  const { googleAuth } = useUser();
   const [mode, setMode] = useState<RegisterMode>("business");
 
   const [businessName, setBusinessName] = useState("");
@@ -28,6 +38,7 @@ export function RegisterForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -66,10 +77,26 @@ export function RegisterForm() {
     }
   };
 
-  const handleGoogleSignUp = () => {
-    // TODO: connect Google OAuth
-    router.push("/dashboard");
+  const handleGoogleSignUp = async () => {
+    setError("");
+    setIsGoogleLoading(true);
+
+    try {
+      const shouldNavigate = await googleAuth();
+      if (shouldNavigate) {
+        router.replace("/dashboard");
+      }
+    } catch (err) {
+      const code = (err as FirebaseAuthError).code ?? "";
+      if (!isAuthCancellation(code)) {
+        setError(mapAuthCodeToMessage(code));
+      }
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
+
+  const isBusy = isSubmitting || isGoogleLoading;
 
   return (
     <AuthShell
@@ -151,7 +178,7 @@ export function RegisterForm() {
         ) : null}
 
         <div className="pt-2">
-          <AuthButton type="submit" disabled={isSubmitting}>
+          <AuthButton type="submit" disabled={isBusy}>
             {isSubmitting
               ? "Creating account..."
               : mode === "business"
@@ -164,7 +191,15 @@ export function RegisterForm() {
       {mode === "member" ? (
         <>
           <AuthDivider />
-          <GoogleButton onClick={handleGoogleSignUp} />
+          <GoogleButton
+            onClick={handleGoogleSignUp}
+            disabled={isBusy}
+            label={
+              isGoogleLoading
+                ? "Signing up with Google..."
+                : "Continue with Google"
+            }
+          />
         </>
       ) : null}
 

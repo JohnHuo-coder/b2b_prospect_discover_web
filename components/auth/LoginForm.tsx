@@ -11,7 +11,10 @@ import {
   GoogleButton,
 } from "@/components/auth/AuthShell";
 import { useUser } from "@/components/providers/UserProvider";
-import { mapAuthCodeToMessage } from "@/lib/auth/mapAuthCodeToMessage";
+import {
+  isAuthCancellation,
+  mapAuthCodeToMessage,
+} from "@/lib/auth/mapAuthCodeToMessage";
 
 type FirebaseAuthError = {
   code?: string;
@@ -19,11 +22,12 @@ type FirebaseAuthError = {
 
 export function LoginForm() {
   const router = useRouter();
-  const { login } = useUser();
+  const { login, googleAuth } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -41,10 +45,26 @@ export function LoginForm() {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    // TODO: connect Google OAuth via useUser().googleAuth()
-    router.push("/dashboard");
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setIsGoogleLoading(true);
+
+    try {
+      const shouldNavigate = await googleAuth();
+      if (shouldNavigate) {
+        router.replace("/dashboard");
+      }
+    } catch (err) {
+      const code = (err as FirebaseAuthError).code ?? "";
+      if (!isAuthCancellation(code)) {
+        setError(mapAuthCodeToMessage(code));
+      }
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
+
+  const isBusy = isLoading || isGoogleLoading;
 
   return (
     <AuthShell
@@ -76,7 +96,7 @@ export function LoginForm() {
         ) : null}
 
         <div className="pt-2">
-          <AuthButton type="submit" disabled={isLoading}>
+          <AuthButton type="submit" disabled={isBusy}>
             {isLoading ? "Signing in..." : "Sign in"}
           </AuthButton>
         </div>
@@ -84,7 +104,11 @@ export function LoginForm() {
 
       <AuthDivider />
 
-      <GoogleButton onClick={handleGoogleSignIn} />
+      <GoogleButton
+        onClick={handleGoogleSignIn}
+        disabled={isBusy}
+        label={isGoogleLoading ? "Signing in with Google..." : "Continue with Google"}
+      />
 
       <p className="mt-6 text-center text-sm text-gray-500">
         Don&apos;t have an account?{" "}
