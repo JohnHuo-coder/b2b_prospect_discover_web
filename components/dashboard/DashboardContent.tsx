@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ExternalLink, Search } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { fetchLeads } from "@/lib/api/leads-client";
+import { useUser } from "@/components/providers/UserProvider";
 import {
   dashboardSummary,
-  leads,
   statusLabels,
+  type Lead,
   type LeadStatus,
 } from "@/lib/mock-data";
 
@@ -50,25 +52,62 @@ const statusFilters: Array<LeadStatus | "all"> = [
 ];
 
 export function DashboardContent() {
+  const { user, isLoading: authLoading } = useUser();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [total, setTotal] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const filteredLeads = useMemo(() => {
-    const query = search.trim().toLowerCase();
+  useEffect(() => {
+    if (authLoading) return;
 
-    return leads.filter((lead) => {
-      const matchesStatus =
-        statusFilter === "all" || lead.status === statusFilter;
-      const matchesSearch =
-        !query ||
-        lead.id.toLowerCase().includes(query) ||
-        lead.company.toLowerCase().includes(query) ||
-        lead.contact.toLowerCase().includes(query) ||
-        lead.website.toLowerCase().includes(query);
+    if (!user) {
+      setError("Please sign in to view leads.");
+      setLeads([]);
+      setTotal(0);
+      setIsLoading(false);
+      return;
+    }
 
-      return matchesStatus && matchesSearch;
-    });
-  }, [search, statusFilter]);
+    let cancelled = false;
+
+    const loadLeads = async () => {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const result = await fetchLeads({
+          search: search.trim() || undefined,
+          status: statusFilter,
+          limit: 100,
+        });
+
+        if (!cancelled) {
+          setLeads(result.leads);
+          setTotal(result.total);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load leads");
+          setLeads([]);
+          setTotal(0);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    const timer = setTimeout(loadLeads, search ? 300 : 0);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [search, statusFilter, authLoading, user]);
 
   return (
     <div className="px-8 py-8">
@@ -125,8 +164,14 @@ export function DashboardContent() {
         </div>
       </div>
 
+      {error ? (
+        <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      ) : null}
+
       <div className="mb-3 text-right text-sm text-gray-500">
-        {filteredLeads.length} results
+        {isLoading ? "Loading..." : `${total} results`}
       </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
@@ -142,7 +187,7 @@ export function DashboardContent() {
             </tr>
           </thead>
           <tbody>
-            {filteredLeads.map((lead) => (
+            {leads.map((lead) => (
               <tr
                 key={lead.id}
                 className="border-b border-gray-50 last:border-b-0 hover:bg-gray-50/60"
@@ -155,15 +200,23 @@ export function DashboardContent() {
                   {lead.contact}
                 </td>
                 <td className="px-6 py-4">
-                  <a
-                    href={`https://${lead.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm text-violet-600 hover:text-violet-700"
-                  >
-                    {lead.website}
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
+                  {lead.website ? (
+                    <a
+                      href={
+                        lead.website.startsWith("http")
+                          ? lead.website
+                          : `https://${lead.website}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm text-violet-600 hover:text-violet-700"
+                    >
+                      {lead.website}
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  ) : (
+                    <span className="text-sm text-gray-400">—</span>
+                  )}
                 </td>
                 <td className="px-6 py-4">
                   <StatusBadge status={lead.status} />
@@ -174,7 +227,7 @@ export function DashboardContent() {
           </tbody>
         </table>
 
-        {filteredLeads.length === 0 ? (
+        {!isLoading && leads.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm text-gray-500">
             No leads match your filters.
           </div>

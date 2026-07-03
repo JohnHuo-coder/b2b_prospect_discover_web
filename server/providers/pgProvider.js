@@ -100,6 +100,7 @@ export default {
     status,
     startDate,
     endDate,
+    business_id,
     page = 1,
     limit = 25,
   }) {
@@ -129,13 +130,16 @@ export default {
     if (endDate) {
       where += ` AND ic.created_at <= ${addParam(endDate)}`;
     }
+    if (business_id) {
+      where += ` AND ic.business_id = ${addParam(business_id)}`;
+    }
 
     const table = 'prospect_discover.initial_candidates';
 
     const [countResult, rowsResult] = await Promise.all([
       pool.query(`SELECT COUNT(*) AS total FROM ${table} ic ${where}`, params),
       pool.query(
-        `SELECT ic.id, ic.company_name, ic.website, ic.status, ic.created_at
+        `SELECT ic.id, ic.company_name, ic.website, ic.phone, ic.status, ic.created_at
          FROM ${table} ic
          ${where}
          ORDER BY ic.created_at DESC
