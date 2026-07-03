@@ -102,19 +102,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const googleAuth = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const idToken = await result.user.getIdToken();
-
-      const res = await fetch(ENDPOINTS.AUTH_TOKEN, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to sync account with server");
-      }
+      // onAuthStateChanged syncs session via /api/auth/token and loads /api/auth/me
+      await signInWithPopup(auth, googleProvider);
     } catch (error) {
       console.error("Google auth error:", error);
       throw error;

@@ -10,20 +10,39 @@ import {
   AuthShell,
   GoogleButton,
 } from "@/components/auth/AuthShell";
+import { useUser } from "@/components/providers/UserProvider";
+import { mapAuthCodeToMessage } from "@/lib/auth/mapAuthCodeToMessage";
+
+type FirebaseAuthError = {
+  code?: string;
+};
 
 export function LoginForm() {
   const router = useRouter();
+  const { login } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    // TODO: connect auth API
-    router.push("/dashboard");
+    setError("");
+    setIsLoading(true);
+
+    try {
+      await login(email, password);
+      router.replace("/dashboard");
+    } catch (err) {
+      const code = (err as FirebaseAuthError).code ?? "";
+      setError(mapAuthCodeToMessage(code));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleSignIn = () => {
-    // TODO: connect Google OAuth
+    // TODO: connect Google OAuth via useUser().googleAuth()
     router.push("/dashboard");
   };
 
@@ -50,8 +69,16 @@ export function LoginForm() {
           autoComplete="current-password"
         />
 
+        {error ? (
+          <p className="text-sm text-red-600" role="alert">
+            {error}
+          </p>
+        ) : null}
+
         <div className="pt-2">
-          <AuthButton type="submit">Sign in</AuthButton>
+          <AuthButton type="submit" disabled={isLoading}>
+            {isLoading ? "Signing in..." : "Sign in"}
+          </AuthButton>
         </div>
       </form>
 
