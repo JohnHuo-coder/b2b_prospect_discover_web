@@ -21,14 +21,16 @@ export function ConfigCard({
           <Icon className="h-4 w-4 text-gray-500" />
           <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
         </div>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-violet-600"
-        >
-          <Pencil className="h-3.5 w-3.5" />
-          Edit
-        </button>
+        {onEdit ? (
+          <button
+            type="button"
+            onClick={onEdit}
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-violet-600"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Edit
+          </button>
+        ) : null}
       </div>
       <div className="px-6 py-5">{children}</div>
       {footer ? (
@@ -58,6 +60,10 @@ export function Field({
 }
 
 export function TagList({ items }: { items: string[] }) {
+  if (items.length === 0) {
+    return <span className="text-sm text-gray-400">—</span>;
+  }
+
   return (
     <div className="flex flex-wrap gap-2">
       {items.map((item) => (

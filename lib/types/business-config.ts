@@ -1,6 +1,3 @@
-export const DEFAULT_BUSINESS_ID =
-  process.env.NEXT_PUBLIC_BUSINESS_ID ?? "suvarnaveda-wellness";
-
 export type BusinessConfigState = {
   business_id: string;
   business_name: string;
@@ -11,17 +8,17 @@ export type BusinessConfigState = {
   latitude: string;
   longitude: string;
   max_distance: string;
-  fit_score_cutoff: number;
-  low_conf_cutoff_email_classification: number;
-  qualified_conf_email_classification: number;
+  fit_score_cutoff: number | null;
+  low_conf_cutoff_email_classification: number | null;
+  qualified_conf_email_classification: number | null;
   search_keyword: string;
   search_location: string;
   contact_titles: string[];
   contact_categories: string[];
-  min_words: number;
-  max_words: number;
-  number_of_candidates_per_run: number;
-  test_mode: boolean;
+  min_words: number | null;
+  max_words: number | null;
+  number_of_candidates_per_run: number | null;
+  test_mode: boolean | null;
   test_email_override: string;
   follow_up_delay: string;
   excluded_partners: string[];

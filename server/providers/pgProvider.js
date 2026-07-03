@@ -14,7 +14,7 @@ async function upsertBusinessConfigPartial(business_id, fields) {
     .join(',\n        ');
 
   const { rows, rowCount } = await pool.query(
-    `INSERT INTO prospect_discover.business_config (${columnList})
+    `INSERT INTO prospect_discover.business_configs (${columnList})
      VALUES ($1, ${placeholders})
      ON CONFLICT (business_id) DO UPDATE SET
        ${setClause}
@@ -405,8 +405,8 @@ export default {
   }) {
     return upsertBusinessConfigPartial(business_id, {
       number_of_candidates_per_run,
-      min_words,
-      max_words,
+      email_min_words: min_words,
+      email_max_words: max_words,
     });
   },
 
@@ -430,49 +430,80 @@ export default {
       throw new Error('business_id is required');
     }
 
-    const { rows } = await pool.query(
-      `SELECT
-        business_id,
-        business_name,
-        sender_name,
-        collaboration_intent,
-        search_keyword,
-        search_location,
-        number_of_candidates_per_run,
-        min_words,
-        max_words,
-        low_conf_cutoff_email_classification,
-        qualified_conf_email_classification,
-        fit_score_cutoff,
-        contact_titles,
-        contact_categories
-       FROM prospect_discover.business_config
-       WHERE business_id = $1`,
-      [business_id]
-    );
+    const [config, requirements] = await Promise.all([
+      pool.query(
+        `SELECT
+          business_id,
+          business_name,
+          sender_name,
+          collaboration_intent,
+          search_keyword,
+          search_location,
+          number_of_candidates_per_run,
+          email_min_words AS min_words,
+          email_max_words AS max_words,
+          low_conf_cutoff_email_classification,
+          qualified_conf_email_classification,
+          fit_score_cutoff,
+          contact_titles,
+          contact_categories
+        FROM prospect_discover.business_configs
+        WHERE business_id = $1`,
+        [business_id]
+      ),
+      pool.query(
+        `SELECT id, business_id, original, clarified, reason, req_index, topic_list
+         FROM prospect_discover.requirements
+         WHERE business_id = $1
+         ORDER BY req_index ASC`,
+        [business_id]
+      )])
 
-    return rows[0] ?? null;
+    return {
+      business_config: config.rows[0],
+      business_requirements: requirements.rows
+    };
   },
 
   async upsertRequirements({ business_id, requirements }) {
     if (!business_id) {
       throw new Error('business_id is required');
     }
-    if (!Array.isArray(requirements) || requirements.length === 0) {
-      return { rows: [], affectedRows: 0 };
+    if (!Array.isArray(requirements)) {
+      throw new Error('requirements must be an array');
     }
 
-    const { rows, rowCount } = await pool.query(
-      `INSERT INTO prospect_discover.requirements (business_id, clarified)
-       SELECT $1, unnest($2::text[])
-       ON CONFLICT (business_id, clarified) DO NOTHING
-       RETURNING *`,
-      [business_id, requirements]
-    );
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    return { rows, affectedRows: rowCount };
+      await client.query(
+        `DELETE FROM prospect_discover.requirements WHERE business_id = $1`,
+        [business_id]
+      );
+
+      if (requirements.length === 0) {
+        await client.query('COMMIT');
+        return { rows: [], affectedRows: 0 };
+      }
+
+      const { rows } = await client.query(
+        `INSERT INTO prospect_discover.requirements (business_id, clarified, req_index)
+         SELECT $1, r.clarified, r.ord::integer
+         FROM unnest($2::text[]) WITH ORDINALITY AS r(clarified, ord)
+         RETURNING *`,
+        [business_id, requirements]
+      );
+
+      await client.query('COMMIT');
+      return { rows, affectedRows: rows.length };
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   },
-
   async updateLeadStatus(id, {status}){
     if (!id) {
       throw new Error('lead id is missing');

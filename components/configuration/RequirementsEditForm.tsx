@@ -2,15 +2,25 @@
 
 import { useState } from "react";
 import { Sparkles, X } from "lucide-react";
+import type { RephraseSuggestion } from "@/lib/api/business-config-client";
 
 export function RequirementsEditForm({
   requirements,
   onChange,
+  rephraseSuggestions = [],
+  onUpdateRephraseSuggestion,
+  onKeepRephraseSuggestion,
+  onDiscardRephraseSuggestion,
 }: {
   requirements: string[];
   onChange: (requirements: string[]) => void;
+  rephraseSuggestions?: Array<RephraseSuggestion | null>;
+  onUpdateRephraseSuggestion?: (index: number, clarified: string) => void;
+  onKeepRephraseSuggestion?: (index: number, clarified: string) => void;
+  onDiscardRephraseSuggestion?: (index: number) => void;
 }) {
   const [newRequirement, setNewRequirement] = useState("");
+  const hasPendingSuggestions = rephraseSuggestions.some(Boolean);
 
   const updateRequirement = (index: number, value: string) => {
     onChange(requirements.map((item, i) => (i === index ? value : item)));
@@ -18,6 +28,7 @@ export function RequirementsEditForm({
 
   const removeRequirement = (index: number) => {
     onChange(requirements.filter((_, i) => i !== index));
+    onDiscardRephraseSuggestion?.(index);
   };
 
   const addRequirement = () => {
@@ -77,6 +88,70 @@ export function RequirementsEditForm({
           + Add
         </button>
       </div>
+
+      {hasPendingSuggestions ? (
+        <div className="mt-8 border-t border-gray-100 pt-6">
+          <div className="mb-4 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-violet-500" />
+            <h3 className="text-sm font-semibold text-gray-900">LLM Rephrase Suggestions</h3>
+          </div>
+
+          <div className="space-y-4">
+            {requirements.map((requirement, index) => {
+              const suggestion = rephraseSuggestions[index];
+              if (!suggestion) return null;
+
+              return (
+                <div
+                  key={`suggestion-${index}-${requirement.slice(0, 20)}`}
+                  className="rounded-xl border border-violet-100 bg-violet-50/40 p-4"
+                >
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
+                      Suggestion for #{index + 1}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onDiscardRephraseSuggestion?.(index)
+                        }
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
+                      >
+                        Discard
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onKeepRephraseSuggestion?.(index, suggestion.clarified)
+                        }
+                        className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-violet-700"
+                      >
+                        Keep
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    value={suggestion.clarified}
+                    rows={2}
+                    onChange={(event) =>
+                      onUpdateRephraseSuggestion?.(index, event.target.value)
+                    }
+                    className="min-h-[44px] w-full resize-none rounded-lg border border-violet-200 bg-white px-3 py-2.5 text-sm leading-relaxed text-gray-800 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                  />
+
+                  {suggestion.reason ? (
+                    <p className="mt-2 text-xs leading-relaxed text-gray-500">
+                      {suggestion.reason}
+                    </p>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
