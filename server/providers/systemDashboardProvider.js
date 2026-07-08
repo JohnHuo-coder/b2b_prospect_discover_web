@@ -500,7 +500,9 @@ export default {
             ic.id,
             ic.company_name,
             ic.website,
-            fc.status
+            fc.status,
+            fc.apollo_status,
+            fc.anymail_finder_status
         FROM prospect_discover.find_contact_status fc
         JOIN prospect_discover.initial_candidates ic
             ON fc.place_id = ic.place_id
@@ -610,6 +612,8 @@ export default {
       `SELECT
          COUNT(*)::int AS total_candidates,
          COUNT(*) FILTER (WHERE status IN ('success', 'succeed'))::int AS success_candidates,
+         COUNT(*) FILTER (WHERE apollo_status IN ('success', 'succeed'))::int AS success_apollo_candidates,
+         COUNT(*) FILTER (WHERE anymail_finder_status IN ('success', 'succeed'))::int AS success_anymail_candidates,
          COUNT(*) FILTER (WHERE status = 'failed')::int AS failed_candidates
        FROM prospect_discover.find_contact_status
        WHERE business_id = $1`,
@@ -619,7 +623,58 @@ export default {
     return rows[0];
   },
 
-  async getFindContactStatusWorkflow({ business_id }) {
+  async getFindContactStatusApolloDetail({ business_id }) {
+    if (!business_id) {
+      throw new Error('business_id is required');
+    }
+
+    const { rows } = await pool.query(
+      `SELECT
+         COUNT(*)::int AS failed_candidates,
+         apollo_status
+       FROM prospect_discover.find_contact_status
+       WHERE business_id = $1
+         AND apollo_status NOT IN ('success', 'succeed')
+       GROUP BY apollo_status
+       ORDER BY failed_candidates DESC`,
+      [business_id]
+    );
+
+    return {
+      stages: rows.map((row) => ({
+        status: row.apollo_status,
+        failed_candidates: Number(row.failed_candidates),
+      })),
+    };
+  },
+
+  async getFindContactStatusAnymailDetail({ business_id }) {
+    if (!business_id) {
+      throw new Error('business_id is required');
+    }
+
+    const { rows } = await pool.query(
+      `SELECT
+         COUNT(*)::int AS failed_candidates,
+         anymail_finder_status
+       FROM prospect_discover.find_contact_status
+       WHERE business_id = $1
+         AND apollo_status NOT IN ('success', 'succeed')
+         AND anymail_finder_status NOT IN ('success', 'succeed')
+       GROUP BY anymail_finder_status
+       ORDER BY failed_candidates DESC`,
+      [business_id]
+    );
+
+    return {
+      stages: rows.map((row) => ({
+        status: row.anymail_finder_status,
+        failed_candidates: Number(row.failed_candidates),
+      })),
+    };
+  },
+
+  async getFindContactStatusWebDetail({ business_id }) {
     if (!business_id) {
       throw new Error('business_id is required');
     }
@@ -630,8 +685,11 @@ export default {
          final_stage
        FROM prospect_discover.find_contact_status
        WHERE business_id = $1
+         AND apollo_status NOT IN ('success', 'succeed')
+         AND anymail_finder_status NOT IN ('success', 'succeed')
          AND status = 'failed'
-       GROUP BY final_stage`,
+       GROUP BY final_stage
+       ORDER BY failed_candidates DESC`,
       [business_id]
     );
 
@@ -641,30 +699,6 @@ export default {
         failed_candidates: Number(row.failed_candidates),
       })),
     };
-  },
-
-  async getFindContactStageDetail({ business_id, final_stage }) {
-    if (!business_id) {
-      throw new Error('business_id is required');
-    }
-    if (!final_stage) {
-      throw new Error('final_stage is required');
-    }
-
-    const { rows } = await pool.query(
-      `SELECT ic.id, fc.reason, ic.company_name, ic.website
-       FROM prospect_discover.find_contact_status fc
-       JOIN prospect_discover.initial_candidates ic
-         ON fc.place_id = ic.place_id
-        AND fc.business_id = ic.business_id
-       WHERE fc.business_id = $1
-         AND fc.status = 'failed'
-         AND fc.final_stage = $2
-       ORDER BY ic.company_name`,
-      [business_id, final_stage]
-    );
-
-    return rows;
   },
 
   async getOutReachStatus({

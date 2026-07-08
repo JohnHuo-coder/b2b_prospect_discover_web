@@ -26,10 +26,12 @@ const systemDashboardRepository = {
     systemDashboardProvider.getFindContactStatusDetail(opts),
   getFindContactStatusSummary: (opts) =>
     systemDashboardProvider.getFindContactStatusSummary(opts),
-  getFindContactStatusWorkflow: (opts) =>
-    systemDashboardProvider.getFindContactStatusWorkflow(opts),
-  getFindContactStageDetail: (opts) =>
-    systemDashboardProvider.getFindContactStageDetail(opts),
+  getFindContactStatusApolloDetail: (opts) =>
+    systemDashboardProvider.getFindContactStatusApolloDetail(opts),
+  getFindContactStatusAnymailDetail: (opts) =>
+    systemDashboardProvider.getFindContactStatusAnymailDetail(opts),
+  getFindContactStatusWebDetail: (opts) =>
+    systemDashboardProvider.getFindContactStatusWebDetail(opts),
   getOutReachStatus: (opts) => systemDashboardProvider.getOutReachStatus(opts),
   getOutreachStatusDetail: (opts) =>
     systemDashboardProvider.getOutreachStatusDetail(opts),

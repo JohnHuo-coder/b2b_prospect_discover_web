@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import type { ContactEmailSource } from "@/lib/system-dashboard/contact-status";
+import { getContactEmailSourceLabel } from "@/lib/system-dashboard/contact-status";
 
 export function SystemDashboardBackLink({
   title,
@@ -149,6 +151,44 @@ export function OutreachStatusWithTag({
           analyticStatus={humanReviewAnalyticStatus}
           editSeverity={humanReviewEditSeverity}
         />
+      ) : null}
+    </div>
+  );
+}
+
+export function ContactEmailSourceTag({
+  source,
+}: {
+  source: ContactEmailSource;
+}) {
+  const styles =
+    source === "apollo"
+      ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+      : source === "anymail_finder"
+        ? "border-cyan-200 bg-cyan-50 text-cyan-700"
+        : "border-teal-200 bg-teal-50 text-teal-700";
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${styles}`}
+    >
+      {getContactEmailSourceLabel(source)}
+    </span>
+  );
+}
+
+export function ContactStatusWithSource({
+  status,
+  emailSource = null,
+}: {
+  status: "succeed" | "failed";
+  emailSource?: ContactEmailSource | null;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <AcquisitionStatusBadge status={status} />
+      {status === "succeed" && emailSource ? (
+        <ContactEmailSourceTag source={emailSource} />
       ) : null}
     </div>
   );

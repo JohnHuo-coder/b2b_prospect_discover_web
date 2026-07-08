@@ -13,6 +13,13 @@ const emptyStats: ContactSummaryStats = {
   totalInput: 0,
   succeed: 0,
   failed: 0,
+  successApollo: 0,
+  successAnymail: 0,
+  emailSources: {
+    apollo: { rate: 0, found: 0, total: 0 },
+    anymailFinder: { rate: 0, found: 0, total: 0 },
+    emailFromWebsite: { rate: 0, found: 0, total: 0 },
+  },
 };
 
 export function ContactSummaryCards() {

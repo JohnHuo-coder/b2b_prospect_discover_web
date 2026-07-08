@@ -1,5 +1,9 @@
 import { ENDPOINTS } from "@/lib/api/endpoints";
 import { authenticatedFetch } from "@/lib/api/authenticatedFetch";
+import type {
+  ContactEmailSource,
+  ContactEmailSourceBreakdown,
+} from "@/lib/system-dashboard/contact-status";
 
 export type AcquisitionRequirementResult = {
   requirement_index: number;
@@ -488,6 +492,9 @@ export type ContactSummaryStats = {
   totalInput: number;
   succeed: number;
   failed: number;
+  successApollo: number;
+  successAnymail: number;
+  emailSources: ContactEmailSourceBreakdown;
 };
 
 export async function fetchContactSummary(): Promise<ContactSummaryStats> {
@@ -505,6 +512,34 @@ export async function fetchContactSummary(): Promise<ContactSummaryStats> {
   }
 
   return (await response.json()) as ContactSummaryStats;
+}
+
+export type ContactEmailSourceDetailItem = {
+  label: string;
+  count: number;
+};
+
+export async function fetchContactEmailSourceDetail(
+  source: "apollo" | "anymail" | "website"
+): Promise<ContactEmailSourceDetailItem[]> {
+  const response = await authenticatedFetch(
+    ENDPOINTS.contactEmailSourceDetail(source)
+  );
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(
+      typeof data.error === "string"
+        ? data.error
+        : "Failed to load email source details"
+    );
+  }
+
+  const data = (await response.json()) as {
+    items: ContactEmailSourceDetailItem[];
+  };
+
+  return data.items ?? [];
 }
 
 export type ContactEmail = {
@@ -535,6 +570,7 @@ export type ContactTableCandidate = {
   company: string;
   website: string | null;
   status: ContactStatus;
+  email_source: ContactEmailSource | null;
 };
 
 type ContactApiRow = {
@@ -542,6 +578,7 @@ type ContactApiRow = {
   company_name: string;
   website: string | null;
   status: ContactStatus;
+  email_source?: ContactEmailSource | null;
 };
 
 type ContactDetailApiResponse = {
@@ -563,6 +600,7 @@ function mapContactRow(row: ContactApiRow): ContactTableCandidate {
     company: row.company_name,
     website: row.website,
     status: row.status,
+    email_source: row.email_source ?? null,
   };
 }
 

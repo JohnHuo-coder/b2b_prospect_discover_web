@@ -1,17 +1,36 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Globe, MailSearch, Radar } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import {
-  mockContactEmailSourceStats,
-  type ContactEmailSourceMockStats,
-  type ContactSourceNotFoundReason,
-  type ContactWebsiteFailureDetail,
-} from "@/lib/mock-data/contact-email-source";
+  fetchContactEmailSourceDetail,
+  fetchContactSummary,
+  type ContactEmailSourceDetailItem,
+  type ContactSummaryStats,
+} from "@/lib/api/system-dashboard-client";
+import type { ContactEmailSourceBreakdown } from "@/lib/system-dashboard/contact-status";
+import { SkeletonBar } from "@/components/ui/SkeletonBar";
 
 type DetailView = "apollo" | "anymailFinder" | "emailFromWebsite" | null;
+
+type DetailApiSource = "apollo" | "anymail" | "website";
+
+const detailViewToApiSource: Record<
+  Exclude<DetailView, null>,
+  DetailApiSource
+> = {
+  apollo: "apollo",
+  anymailFinder: "anymail",
+  emailFromWebsite: "website",
+};
+
+const emptyEmailSources: ContactEmailSourceBreakdown = {
+  apollo: { rate: 0, found: 0, total: 0 },
+  anymailFinder: { rate: 0, found: 0, total: 0 },
+  emailFromWebsite: { rate: 0, found: 0, total: 0 },
+};
 
 function SummarySection({
   title,
@@ -95,80 +114,75 @@ function SourceMetricCard({
   );
 }
 
-function NotFoundReasonsList({ reasons }: { reasons: ContactSourceNotFoundReason[] }) {
-  const totalMisses = reasons.reduce((sum, row) => sum + row.count, 0);
-
+function SourceCardSkeleton() {
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-gray-600">
-        Reasons candidates did not receive an email from this source.
-      </p>
-      <ul className="space-y-3">
-        {reasons.map((row) => {
-          const share =
-            totalMisses > 0 ? Math.round((row.count / totalMisses) * 100) : 0;
-
-          return (
-            <li
-              key={row.reason}
-              className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-sm text-gray-800 [overflow-wrap:anywhere]">
-                  {row.reason}
-                </p>
-                <span className="shrink-0 rounded-full bg-white px-2.5 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-gray-200">
-                  {row.count}
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-gray-500">{share}% of misses</p>
-            </li>
-          );
-        })}
-      </ul>
+    <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+      <SkeletonBar className="h-4 w-24" />
+      <SkeletonBar className="mt-3 h-9 w-20" />
+      <SkeletonBar className="mt-4 h-2 w-full" />
+      <SkeletonBar className="mt-4 h-9 w-full" />
     </div>
   );
 }
 
-function WebsiteFailureDetailsList({
-  failures,
+function formatDetailLabel(label: string): string {
+  return label.replaceAll("_", " ");
+}
+
+function SourceDetailBreakdown({
+  items,
+  labelColumn,
+  description,
 }: {
-  failures: ContactWebsiteFailureDetail[];
+  items: ContactEmailSourceDetailItem[];
+  labelColumn: string;
+  description: string;
 }) {
+  const total = items.reduce((sum, row) => sum + row.count, 0);
+
+  if (items.length === 0) {
+    return (
+      <p className="text-sm text-gray-500">No failure breakdown available.</p>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-600">
-        Stages where website-based email discovery failed and the recorded reasons.
-      </p>
+      <p className="text-sm text-gray-600">{description}</p>
       <div className="overflow-hidden rounded-lg border border-gray-200">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                Stage
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                Reason
+                {labelColumn}
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
                 Count
               </th>
+              <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                Share
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
-            {failures.map((row) => (
-              <tr key={`${row.stage}-${row.reason}`}>
-                <td className="px-4 py-3 align-top font-mono text-xs text-gray-700">
-                  {row.stage}
-                </td>
-                <td className="px-4 py-3 align-top text-gray-800 [overflow-wrap:anywhere]">
-                  {row.reason}
-                </td>
-                <td className="px-4 py-3 align-top text-right font-medium text-gray-700">
-                  {row.count}
-                </td>
-              </tr>
-            ))}
+            {items.map((row) => {
+              const share =
+                total > 0 ? Math.round((row.count / total) * 100) : 0;
+
+              return (
+                <tr key={row.label}>
+                  <td className="px-4 py-3 align-top font-mono text-xs text-gray-700">
+                    {formatDetailLabel(row.label)}
+                  </td>
+                  <td className="px-4 py-3 align-top text-right font-medium text-gray-700">
+                    {row.count}
+                  </td>
+                  <td className="px-4 py-3 align-top text-right text-gray-500">
+                    {share}%
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -177,31 +191,131 @@ function WebsiteFailureDetailsList({
 }
 
 function getDetailModalTitle(view: DetailView): string {
-  if (view === "apollo") return "Apollo API — not found reasons";
-  if (view === "anymailFinder") return "Anymail Finder — not found reasons";
-  if (view === "emailFromWebsite") return "Email from website — stage details";
+  if (view === "apollo") return "Apollo API — failure breakdown";
+  if (view === "anymailFinder") return "Anymail Finder — failure breakdown";
+  if (view === "emailFromWebsite") return "Email from website — failure breakdown";
   return "";
 }
 
-export function ContactEmailSourceCards({
-  stats = mockContactEmailSourceStats,
-}: {
-  stats?: ContactEmailSourceMockStats;
-}) {
+export function ContactEmailSourceCards() {
+  const [emailSources, setEmailSources] =
+    useState<ContactEmailSourceBreakdown>(emptyEmailSources);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [detailView, setDetailView] = useState<DetailView>(null);
+  const [detailItems, setDetailItems] = useState<ContactEmailSourceDetailItem[]>(
+    []
+  );
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const result: ContactSummaryStats = await fetchContactSummary();
+        if (!cancelled) {
+          setEmailSources(result.emailSources ?? emptyEmailSources);
+        }
+      } catch (loadError) {
+        if (!cancelled) {
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Failed to load email source summary"
+          );
+          setEmailSources(emptyEmailSources);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!detailView) {
+      setDetailItems([]);
+      setDetailError(null);
+      setDetailLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    const apiSource = detailViewToApiSource[detailView];
+
+    async function loadDetail() {
+      setDetailLoading(true);
+      setDetailError(null);
+
+      try {
+        const items = await fetchContactEmailSourceDetail(apiSource);
+        if (!cancelled) {
+          setDetailItems(items);
+        }
+      } catch (loadError) {
+        if (!cancelled) {
+          setDetailError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Failed to load email source details"
+          );
+          setDetailItems([]);
+        }
+      } finally {
+        if (!cancelled) setDetailLoading(false);
+      }
+    }
+
+    void loadDetail();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [detailView]);
+
+  if (loading) {
+    return (
+      <SummarySection
+        title="Email source breakdown"
+        description="Success rate for each email discovery source"
+      >
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+          <SourceCardSkeleton />
+          <SourceCardSkeleton />
+          <SourceCardSkeleton />
+        </div>
+      </SummarySection>
+    );
+  }
 
   return (
     <>
       <SummarySection
         title="Email source breakdown"
-        description="Share of candidates that obtained email through each discovery source"
+        description="Success rate for each email discovery source"
       >
+        {error ? (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
           <SourceMetricCard
             label="Apollo API"
-            rate={stats.apollo.rate}
-            found={stats.apollo.found}
-            total={stats.apollo.total}
+            rate={emailSources.apollo.rate}
+            found={emailSources.apollo.found}
+            total={emailSources.apollo.total}
             icon={Radar}
             iconClassName="text-indigo-600"
             iconBoxClassName="bg-indigo-100"
@@ -211,9 +325,9 @@ export function ContactEmailSourceCards({
           />
           <SourceMetricCard
             label="Anymail Finder"
-            rate={stats.anymailFinder.rate}
-            found={stats.anymailFinder.found}
-            total={stats.anymailFinder.total}
+            rate={emailSources.anymailFinder.rate}
+            found={emailSources.anymailFinder.found}
+            total={emailSources.anymailFinder.total}
             icon={MailSearch}
             iconClassName="text-cyan-600"
             iconBoxClassName="bg-cyan-100"
@@ -223,9 +337,9 @@ export function ContactEmailSourceCards({
           />
           <SourceMetricCard
             label="Email from website"
-            rate={stats.emailFromWebsite.rate}
-            found={stats.emailFromWebsite.found}
-            total={stats.emailFromWebsite.total}
+            rate={emailSources.emailFromWebsite.rate}
+            found={emailSources.emailFromWebsite.found}
+            total={emailSources.emailFromWebsite.total}
             icon={Globe}
             iconClassName="text-teal-600"
             iconBoxClassName="bg-teal-100"
@@ -242,14 +356,42 @@ export function ContactEmailSourceCards({
         onClose={() => setDetailView(null)}
         size="lg"
       >
-        {detailView === "apollo" ? (
-          <NotFoundReasonsList reasons={stats.apollo.notFoundReasons} />
+        {detailLoading ? (
+          <div className="space-y-3">
+            <SkeletonBar className="h-4 w-full" />
+            <SkeletonBar className="h-4 w-5/6" />
+            <SkeletonBar className="h-4 w-4/6" />
+          </div>
         ) : null}
-        {detailView === "anymailFinder" ? (
-          <NotFoundReasonsList reasons={stats.anymailFinder.notFoundReasons} />
+
+        {!detailLoading && detailError ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {detailError}
+          </div>
         ) : null}
-        {detailView === "emailFromWebsite" ? (
-          <WebsiteFailureDetailsList failures={stats.emailFromWebsite.failures} />
+
+        {!detailLoading && !detailError && detailView === "apollo" ? (
+          <SourceDetailBreakdown
+            items={detailItems}
+            labelColumn="Status"
+            description="Candidates that did not receive an email from Apollo, grouped by apollo_status."
+          />
+        ) : null}
+
+        {!detailLoading && !detailError && detailView === "anymailFinder" ? (
+          <SourceDetailBreakdown
+            items={detailItems}
+            labelColumn="Status"
+            description="Candidates that reached Anymail Finder without Apollo success, grouped by anymail_finder_status."
+          />
+        ) : null}
+
+        {!detailLoading && !detailError && detailView === "emailFromWebsite" ? (
+          <SourceDetailBreakdown
+            items={detailItems}
+            labelColumn="Stage"
+            description="Candidates that failed after Apollo and Anymail Finder, grouped by final_stage."
+          />
         ) : null}
       </Modal>
     </>

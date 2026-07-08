@@ -27,6 +27,8 @@ export const ENDPOINTS = {
     fitscoreDetail: (id: string) => `/api/system-dashboard/fitscore/${id}`,
     SYSTEM_DASHBOARD_CONTACT: "/api/system-dashboard/contact",
     SYSTEM_DASHBOARD_CONTACT_SUMMARY: "/api/system-dashboard/contact/summary",
+    contactEmailSourceDetail: (source: "apollo" | "anymail" | "website") =>
+      `/api/system-dashboard/contact/email-source/${source}`,
     SYSTEM_DASHBOARD_CONTACT_WORKFLOW:
       "/api/system-dashboard/contact/workflow",
     SYSTEM_DASHBOARD_CONTACT_WORKFLOW_STAGE:

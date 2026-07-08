@@ -1,6 +1,10 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
+import {
+  getContactEmailSource,
+  type ContactEmailSource,
+} from "@/lib/system-dashboard/contact-status";
 import systemDashboardRepository from "@/server/repositories/systemDashboardRepository.js";
 
 type DbUser = {
@@ -12,6 +16,8 @@ type ContactListRow = {
   company_name: string;
   website: string | null;
   status: string;
+  apollo_status: string | null;
+  anymail_finder_status: string | null;
 };
 
 function mapContactStatus(status: string) {
@@ -47,12 +53,21 @@ export const GET = withAuth(
       });
 
       return jsonResponse({
-        candidates: (result.rows as ContactListRow[]).map((row) => ({
-          id: row.id,
-          company_name: row.company_name,
-          website: row.website,
-          status: mapContactStatus(row.status),
-        })),
+        candidates: (result.rows as ContactListRow[]).map((row) => {
+          const status = mapContactStatus(row.status);
+
+          return {
+            id: row.id,
+            company_name: row.company_name,
+            website: row.website,
+            status,
+            email_source: getContactEmailSource(
+              row.status,
+              row.apollo_status,
+              row.anymail_finder_status
+            ),
+          };
+        }),
         total: result.total,
       });
     } catch (error) {

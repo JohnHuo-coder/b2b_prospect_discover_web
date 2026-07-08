@@ -1,6 +1,7 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
+import { computeContactEmailSourceBreakdown } from "@/lib/system-dashboard/contact-status";
 import systemDashboardRepository from "@/server/repositories/systemDashboardRepository.js";
 
 type DbUser = {
@@ -8,16 +9,36 @@ type DbUser = {
 };
 
 type SummaryCountsRow = {
-  total_candidates: number | string;
-  success_candidates: number | string;
-  failed_candidates: number | string;
+  total_candidates?: number | string;
+  success_candidates?: number | string;
+  success_apollo_candidates?: number | string;
+  success_anymail_candidates?: number | string;
+  failed_candidates?: number | string;
 };
 
+function safeCount(value: unknown): number {
+  const count = Number(value);
+  return Number.isFinite(count) ? Math.max(count, 0) : 0;
+}
+
 function mapCounts(row: SummaryCountsRow) {
+  const totalInput = safeCount(row.total_candidates);
+  const succeed = safeCount(row.success_candidates);
+  const successApollo = safeCount(row.success_apollo_candidates);
+  const successAnymail = safeCount(row.success_anymail_candidates);
+
   return {
-    totalInput: Number(row.total_candidates),
-    succeed: Number(row.success_candidates),
-    failed: Number(row.failed_candidates),
+    totalInput,
+    succeed,
+    failed: safeCount(row.failed_candidates),
+    successApollo,
+    successAnymail,
+    emailSources: computeContactEmailSourceBreakdown({
+      totalInput,
+      succeed,
+      successApollo,
+      successAnymail,
+    }),
   };
 }
 

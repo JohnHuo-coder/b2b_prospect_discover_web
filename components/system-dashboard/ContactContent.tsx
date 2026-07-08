@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ExternalLink, GitBranch, Search } from "lucide-react";
+import { ExternalLink, Search } from "lucide-react";
 import {
   fetchContactCandidateDetail,
   fetchContactCandidates,
@@ -16,7 +15,7 @@ import { ContactEmailSourceCards } from "./ContactEmailSourceCards";
 import { DataTableSection } from "./MetricCard";
 import { Pagination } from "@/components/ui/Pagination";
 import {
-  AcquisitionStatusBadge,
+  ContactStatusWithSource,
   SystemDashboardBackLink,
 } from "./SystemDashboardShared";
 
@@ -161,16 +160,6 @@ export function ContactContent() {
 
       <ContactEmailSourceCards />
 
-      <div className="mb-6">
-        <Link
-          href="/system-dashboard/contact/pipeline"
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
-        >
-          <GitBranch className="h-4 w-4" />
-          View pipeline flow
-        </Link>
-      </div>
-
       <div className="mb-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="relative max-w-xl flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -215,16 +204,16 @@ export function ContactContent() {
         <table className="w-full table-fixed">
           <colgroup>
             <col className="w-20" />
-            <col className="w-[32%]" />
-            <col className="w-[38%]" />
-            <col className="w-28" />
+            <col className="w-[36%]" />
+            <col className="w-[36%]" />
+            <col className="w-40" />
           </colgroup>
           <thead>
             <tr className="border-b border-gray-100 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">
               <th className="w-20 px-6 py-4">ID</th>
-              <th className="w-[32%] px-6 py-4">Company</th>
-              <th className="w-[38%] px-6 py-4">Website</th>
-              <th className="w-28 px-6 py-4">Status</th>
+              <th className="w-[36%] px-6 py-4">Company</th>
+              <th className="w-[36%] px-6 py-4">Website</th>
+              <th className="w-40 px-6 py-4">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -289,7 +278,10 @@ export function ContactContent() {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <AcquisitionStatusBadge status={candidate.status} />
+                      <ContactStatusWithSource
+                        status={candidate.status}
+                        emailSource={candidate.email_source}
+                      />
                     </td>
                   </tr>
                 );
