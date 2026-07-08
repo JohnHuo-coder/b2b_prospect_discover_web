@@ -1,17 +1,12 @@
-import pgProvider from '../providers/pgProvider.js';
-
-const provider = pgProvider;
+import userProvider from '../providers/userProvider.js';
 
 const userRepository = {
-  createUser: (userData) => provider.createUser(userData),
-  deleteByUid: (uid) => provider.deleteUserByUid(uid),
-
-  findByUid: (uid) => provider.findByUid(uid),
-  // getAll: () => provider.getAll(),
-
-  findOrCreate: (userData) => provider.findOrCreate(userData),
-  setRole: (uid, role) => provider.setRole(uid, role),
-  updateUserBusinessId: (body) => provider.updateUserBusinessId(body),
+  createUser: (userData) => userProvider.createUser(userData),
+  deleteByUid: (uid) => userProvider.deleteUserByUid(uid),
+  findByUid: (uid) => userProvider.findByUid(uid),
+  findOrCreate: (userData) => userProvider.findOrCreate(userData),
+  setRole: (uid, role) => userProvider.setRole(uid, role),
+  updateUserBusinessId: (body) => userProvider.updateUserBusinessId(body),
 };
 
 export default userRepository;

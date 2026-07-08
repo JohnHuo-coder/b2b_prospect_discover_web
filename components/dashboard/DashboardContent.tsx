@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ExternalLink, Search } from "lucide-react";
+import { ExternalLink, Search, Undo2 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SkeletonBar } from "@/components/ui/SkeletonBar";
 import { Pagination } from "@/components/ui/Pagination";
+import { StartProspectDiscoverModal } from "@/components/dashboard/StartProspectDiscoverModal";
 import { fetchDashboardSummary } from "@/lib/api/dashboard-client";
-import { fetchLeads } from "@/lib/api/leads-client";
+import { fetchLeads, updateLeadStatus } from "@/lib/api/leads-client";
 import {
   searchBusinesses,
   updateBusinessJoin,
@@ -342,6 +343,9 @@ export function DashboardContent() {
   const [page, setPage] = useState(1);
   const [leadsLoading, setLeadsLoading] = useState(true);
   const [leadsError, setLeadsError] = useState("");
+  const [runModalOpen, setRunModalOpen] = useState(false);
+  const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
+  const [statusUpdateError, setStatusUpdateError] = useState("");
 
   useEffect(() => {
     setPage(1);
@@ -439,6 +443,43 @@ export function DashboardContent() {
 
   const totalPages = Math.max(1, Math.ceil(total / LEADS_PAGE_SIZE));
 
+  const handleUpdateLeadStatus = async (
+    leadId: string,
+    nextStatus: LeadStatus,
+    previousStatus: LeadStatus
+  ) => {
+    setUpdatingLeadId(leadId);
+    setStatusUpdateError("");
+
+    try {
+      await updateLeadStatus(leadId, nextStatus);
+
+      setLeads((current) =>
+        current.map((lead) =>
+          lead.id === leadId ? { ...lead, status: nextStatus } : lead
+        )
+      );
+      setSummary((current) => {
+        if (!current) return current;
+
+        const next = { ...current };
+        if (previousStatus in next) {
+          next[previousStatus] = Math.max(0, next[previousStatus] - 1);
+        }
+        if (nextStatus in next) {
+          next[nextStatus] = next[nextStatus] + 1;
+        }
+        return next;
+      });
+    } catch (err) {
+      setStatusUpdateError(
+        err instanceof Error ? err.message : "Failed to update lead status"
+      );
+    } finally {
+      setUpdatingLeadId(null);
+    }
+  };
+
   const showSummarySkeleton =
     !isPending &&
     !summaryError &&
@@ -468,10 +509,24 @@ export function DashboardContent() {
 
   return (
     <div className="px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">All lead candidates</p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500">All lead candidates</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setRunModalOpen(true)}
+          className="shrink-0 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-violet-700"
+        >
+          Start Prospect Discover
+        </button>
       </div>
+
+      <StartProspectDiscoverModal
+        open={runModalOpen}
+        onClose={() => setRunModalOpen(false)}
+      />
 
       {summaryError ? (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -529,6 +584,12 @@ export function DashboardContent() {
       {leadsError ? (
         <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {leadsError}
+        </div>
+      ) : null}
+
+      {statusUpdateError ? (
+        <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {statusUpdateError}
         </div>
       ) : null}
 
@@ -594,9 +655,40 @@ export function DashboardContent() {
                   )}
                 </td>
                 <td className="px-6 py-4">
-                  <Link href={`/leads/${lead.id}`} className="inline-block">
-                    <StatusBadge status={lead.status} />
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link href={`/leads/${lead.id}`} className="inline-block">
+                      <StatusBadge status={lead.status} />
+                    </Link>
+                    {lead.status === "sent" ? (
+                      <button
+                        type="button"
+                        disabled={updatingLeadId === lead.id}
+                        title="Mark as heard back"
+                        aria-label="Mark as heard back"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleUpdateLeadStatus(lead.id, "heard_back", "sent");
+                        }}
+                        className="text-xs font-medium text-gray-400 underline-offset-2 transition hover:text-emerald-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {updatingLeadId === lead.id ? "Updating..." : "Heard back?"}
+                      </button>
+                    ) : lead.status === "heard_back" ? (
+                      <button
+                        type="button"
+                        disabled={updatingLeadId === lead.id}
+                        title="Undo — mark as sent"
+                        aria-label="Undo — mark as sent"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleUpdateLeadStatus(lead.id, "sent", "heard_back");
+                        }}
+                        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Undo2 className="h-3.5 w-3.5" />
+                      </button>
+                    ) : null}
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600">
                   <Link href={`/leads/${lead.id}`} className="block hover:text-violet-700">

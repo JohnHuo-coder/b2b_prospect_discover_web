@@ -1,21 +1,36 @@
-import mysqlProvider from '../providers/pgProvider.js';
-
-const provider = mysqlProvider;
+import donationProvider from '../providers/donationProvider.js';
 
 const donationRepository = {
-  getDonations: (opts) => provider.getDonations(opts),
-  getById: (id) => provider.getById(id),
-  getUnsentIds: (filters) => provider.getUnsentIds(filters),
-  getUnsentRecipients: (filters) => provider.getUnsentRecipients(filters),
-  createDonation: (data) => provider.createDonation(data),
-  updateDonation: (id, body) => provider.updateDonation(id, body),
-  updateReceiptStatus: (id, status) => provider.updateReceiptStatus(id, status),
+  getUnsentIds: (filters) => donationProvider.getUnsentIds(filters),
+  getUnsentRecipients: (filters) => donationProvider.getUnsentRecipients(filters),
   markManyReceiptStatus: (ids, status) =>
-    provider.markManyReceiptStatus(ids, status),
-  deleteDonation: (id) => provider.deleteDonation(id),
-  getMaxStripeCreatedAt: () => provider.getMaxStripeCreatedAt(),
-  existsByStripeId: (id) => provider.existsByStripeId(id),
-  createStripeDonation: (data) => provider.createStripeDonation(data),
+    donationProvider.markManyReceiptStatus(ids, status),
+  deleteDonation: (id) => donationProvider.deleteDonation(id),
+
+  async getDonations() {
+    throw new Error('Not implemented');
+  },
+  async getById() {
+    throw new Error('Not implemented');
+  },
+  async createDonation() {
+    throw new Error('Not implemented');
+  },
+  async updateDonation() {
+    throw new Error('Not implemented');
+  },
+  async updateReceiptStatus() {
+    throw new Error('Not implemented');
+  },
+  async getMaxStripeCreatedAt() {
+    throw new Error('Not implemented');
+  },
+  async existsByStripeId() {
+    throw new Error('Not implemented');
+  },
+  async createStripeDonation() {
+    throw new Error('Not implemented');
+  },
 };
 
 export default donationRepository;

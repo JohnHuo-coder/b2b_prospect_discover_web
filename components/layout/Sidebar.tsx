@@ -7,6 +7,7 @@ import {
   ClipboardList,
   LayoutGrid,
   LogOut,
+  Network,
   Settings,
   Shield,
 } from "lucide-react";
@@ -19,6 +20,12 @@ import {
 
 const allNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, ownerOnly: false },
+  {
+    href: "/system-dashboard",
+    label: "System Dashboard",
+    icon: Network,
+    ownerOnly: false,
+  },
   { href: "/admin", label: "Admin", icon: Shield, ownerOnly: true },
   {
     href: "/human-review",

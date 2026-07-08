@@ -88,3 +88,21 @@ export async function fetchLeads(params?: {
     total: data.total,
   };
 }
+
+export async function updateLeadStatus(
+  id: string,
+  status: LeadStatus
+): Promise<void> {
+  const response = await authenticatedFetch(ENDPOINTS.leadDetail(id), {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(
+      typeof data.error === "string" ? data.error : "Failed to update lead status"
+    );
+  }
+}

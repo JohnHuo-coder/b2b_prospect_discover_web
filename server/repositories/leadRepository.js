@@ -1,11 +1,10 @@
-import mysqlProvider from '../providers/pgProvider.js';
-
-const p = mysqlProvider;
+import leadProvider from '../providers/leadProvider.js';
 
 const leadRepository = {
-  getLeads: (opts) => p.getLeads(opts),
-  getById: (opts) => p.getLeadById(opts),
-  deleteLead: (id) => p.deleteLead(id),
+  getLeads: (opts) => leadProvider.getLeads(opts),
+  getById: (opts) => leadProvider.getLeadById(opts),
+  deleteLead: (id) => leadProvider.deleteLead(id),
+  updateLeadStatus: (opts) => leadProvider.updateLeadStatus(opts),
 
   async sendThankYouEmail() {
     throw new Error('Not implemented');

@@ -1,10 +1,9 @@
-import pgProvider from '../providers/pgProvider.js';
-
-const provider = pgProvider;
+import dashboardProvider from '../providers/dashboardProvider.js';
+import leadProvider from '../providers/leadProvider.js';
 
 const dashboardRepository = {
-  getDashboardSummary: (opts) => provider.getDashboardSummary(opts),
-  getLeads: (opt) => provider.getLeads(opt),
+  getDashboardSummary: (opts) => dashboardProvider.getDashboardSummary(opts),
+  getLeads: (opt) => leadProvider.getLeads(opt),
 };
 
 export default dashboardRepository;

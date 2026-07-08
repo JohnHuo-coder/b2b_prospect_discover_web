@@ -1,0 +1,75 @@
+.workflow-canvas .react-flow {
+  --xy-edge-stroke-default: #94a3b8;
+  --xy-edge-stroke-width-default: 1.5;
+  --xy-edge-stroke-selected-default: #cbd5e1;
+  --xy-connectionline-stroke-default: #94a3b8;
+  --xy-node-border-default: transparent;
+  --xy-node-background-color-default: transparent;
+  --xy-background-color-default: #1e293b;
+  --xy-background-pattern-dots-color-default: #475569;
+  --xy-minimap-background-color-default: #1e293b;
+  --xy-minimap-mask-background-color-default: rgb(15 23 42 / 0.55);
+  --xy-controls-button-background-color-default: #334155;
+  --xy-controls-button-background-color-hover-default: #475569;
+  --xy-controls-button-color-default: #e2e8f0;
+  --xy-controls-button-border-color-default: #475569;
+  background-color: #1e293b;
+}
+
+.workflow-canvas .react-flow__edge-path {
+  stroke-linecap: round;
+  stroke-dasharray: 8 6;
+  animation: workflow-edge-flow 1.1s linear infinite;
+}
+
+@keyframes workflow-edge-flow {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+.workflow-canvas .react-flow__edge.animated path {
+  animation: workflow-edge-flow 1.1s linear infinite;
+}
+
+.workflow-canvas .react-flow__edge-textbg {
+  fill: #1e293b;
+  fill-opacity: 0.92;
+}
+
+.workflow-canvas .react-flow__edge-text {
+  fill: #cbd5e1;
+  font-size: 10px;
+}
+
+.workflow-canvas .react-flow__handle {
+  border-width: 1px;
+  border-color: #94a3b8 !important;
+  background-color: #e2e8f0 !important;
+}
+
+.workflow-canvas .react-flow__controls {
+  overflow: hidden;
+  border-radius: 0.75rem;
+  border: 1px solid #475569;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.25);
+}
+
+.workflow-canvas .react-flow__minimap {
+  overflow: hidden;
+  border-radius: 0.75rem;
+  border: 1px solid #475569;
+}
+
+.workflow-canvas .react-flow__node {
+  overflow: visible;
+}
+
+.workflow-canvas .react-flow__node-group {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
