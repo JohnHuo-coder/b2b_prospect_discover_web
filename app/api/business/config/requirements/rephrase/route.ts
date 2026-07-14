@@ -6,6 +6,7 @@ import { N8nError, triggerN8nWebhook } from "@/lib/services/n8n";
 
 type DbUser = {
   business_id?: number | string | null;
+  config_version?: number | null;
 };
 
 function parseRequirementsInput(value: unknown): string[] | null {
@@ -22,6 +23,29 @@ export type RephraseSuggestion = {
   clarified: string;
   reason?: string;
 };
+
+export const REPHRASE_FAILED_MESSAGE =
+  "Rephrase failed. Please try again later or contact your technical team.";
+
+function isRephraseWorkflowFailed(data: unknown): boolean {
+  if (!data || typeof data !== "object") return false;
+
+  const record = data as Record<string, unknown>;
+  const status =
+    typeof record.status === "string" ? record.status.trim().toLowerCase() : "";
+
+  if (status === "failed") return true;
+
+  if (record.result) {
+    return isRephraseWorkflowFailed(record.result);
+  }
+
+  if (record.data) {
+    return isRephraseWorkflowFailed(record.data);
+  }
+
+  return false;
+}
 
 function parseSuggestionItem(item: unknown): RephraseSuggestion | null {
   if (typeof item !== "object" || item === null) return null;
@@ -101,8 +125,13 @@ export const POST = withAuth(
 
         const result = await triggerN8nWebhook("rephrase-requirement", {
           business_id: user.business_id,
+          version: Number(user.config_version) || 0,
           requirements,
         });
+
+        if (isRephraseWorkflowFailed(result)) {
+          return errorResponse(REPHRASE_FAILED_MESSAGE, 502);
+        }
 
         const suggestions = extractRephraseSuggestions(result);
         const rephrased = suggestions?.map((item) => item.clarified) ?? null;

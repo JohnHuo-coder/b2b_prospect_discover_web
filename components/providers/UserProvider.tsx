@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -23,11 +24,23 @@ type BackendUser = {
   role?: string;
   business_id?: number;
   business_name?: string | null;
+  config_version?: number;
   first_name?: string | null;
   last_name?: string | null;
 };
 
 export type AppUser = FirebaseUser & BackendUser;
+
+function mergeAppUser(
+  firebaseUser: FirebaseUser,
+  backendUserData: BackendUser
+): AppUser {
+  const config_version = Number(backendUserData.config_version) || 0;
+
+  return Object.assign({}, firebaseUser, backendUserData, {
+    config_version,
+  }) as AppUser;
+}
 
 type UserContextValue = {
   user: AppUser | null;
@@ -69,7 +82,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
           if (response.ok) {
             const backendUserData = (await response.json()) as BackendUser;
-            setUser(Object.assign(firebaseUser, backendUserData));
+            setUser(mergeAppUser(firebaseUser, backendUserData));
           } else {
             setUser(firebaseUser);
           }
@@ -131,7 +144,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     const firebaseUser = auth.currentUser;
     if (!firebaseUser) {
       setUser(null);
@@ -146,12 +159,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const backendUserData = (await response.json()) as BackendUser;
-        setUser(Object.assign(firebaseUser, backendUserData));
+        setUser(mergeAppUser(firebaseUser, backendUserData));
       }
     } catch (error) {
       console.error("Failed to refresh user:", error);
     }
-  };
+  }, []);
 
   const contextValue: UserContextValue = {
     user,

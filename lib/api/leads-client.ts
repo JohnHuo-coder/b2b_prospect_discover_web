@@ -24,8 +24,12 @@ const KNOWN_STATUSES = new Set<LeadStatus>([
 ]);
 
 function normalizeStatus(status: string): LeadStatus {
-  if (KNOWN_STATUSES.has(status as LeadStatus)) {
-    return status as LeadStatus;
+  const normalized = status.trim().toLowerCase();
+  if (KNOWN_STATUSES.has(normalized as LeadStatus)) {
+    return normalized as LeadStatus;
+  }
+  if (normalized === "review_needed") {
+    return "pending";
   }
   return "pending";
 }

@@ -1,11 +1,8 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
+import { getConfigScope, type DbUserWithConfig } from "@/lib/api/server-config-scope";
 import systemDashboardRepository from "@/server/repositories/systemDashboardRepository.js";
-
-type DbUser = {
-  business_id?: number | string | null;
-};
 
 type StageDetailRow = {
   id: number | string;
@@ -15,13 +12,8 @@ type StageDetailRow = {
 };
 
 export const GET = withAuth(
-  withApproved(async (request: Request, _context: unknown, user: DbUser) => {
+  withApproved(async (request: Request, _context: unknown, user: DbUserWithConfig) => {
     try {
-      const business_id = user.business_id;
-      if (!business_id) {
-        return errorResponse("Business affiliation required", 400);
-      }
-
       const { searchParams } = new URL(request.url);
       const requirementIndexParam = searchParams.get("requirement_index");
       const finalStage = searchParams.get("final_stage");
@@ -38,9 +30,18 @@ export const GET = withAuth(
         return errorResponse("Invalid requirement_index", 400);
       }
 
+      const scope = getConfigScope(user);
+      if (!scope) {
+        return jsonResponse({
+          requirement_index,
+          final_stage: finalStage,
+          candidates: [],
+        });
+      }
+
       const rows = await systemDashboardRepository.getInfoAcquisitionStageDetail(
         {
-          business_id,
+          ...scope,
           requirement_index,
           final_stage: finalStage,
         }

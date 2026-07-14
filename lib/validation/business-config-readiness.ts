@@ -21,6 +21,13 @@ export function validateBusinessConfigForRun(
 ): { ready: boolean; issues: ConfigReadinessIssue[] } {
   const issues: ConfigReadinessIssue[] = [];
 
+  if (config.version < 1) {
+    issues.push({
+      section: "Configuration",
+      message: "Complete business configuration before starting a run",
+    });
+  }
+
   if (!config.business_name.trim()) {
     issues.push({
       section: "Business Identity",
@@ -114,7 +121,7 @@ export function validateBusinessConfigForRun(
     config.number_of_candidates_per_run < 1
   ) {
     issues.push({
-      section: "Outreach Settings",
+      section: "Run Settings",
       message: "Candidates per run is required",
     });
   }

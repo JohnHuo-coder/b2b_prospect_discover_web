@@ -10,18 +10,14 @@ import {
 export function OutreachSettingsEditForm({
   minWords,
   maxWords,
-  numberOfCandidatesPerRun,
   onMinWordsChange,
   onMaxWordsChange,
-  onNumberOfCandidatesPerRunChange,
   onRestoreDefaults,
 }: {
   minWords: number | null;
   maxWords: number | null;
-  numberOfCandidatesPerRun: number | null;
   onMinWordsChange: (value: number | null) => void;
   onMaxWordsChange: (value: number | null) => void;
-  onNumberOfCandidatesPerRunChange: (value: number | null) => void;
   onRestoreDefaults: () => void;
 }) {
   return (
@@ -46,17 +42,13 @@ export function OutreachSettingsEditForm({
         value={maxWords}
         onChange={onMaxWordsChange}
       />
-      <NumberInput
-        label="Candidates per Run"
-        required
-        min={1}
-        value={numberOfCandidatesPerRun}
-        onChange={onNumberOfCandidatesPerRunChange}
-      />
     </div>
   );
 }
 
 export function getDefaultRunSettingsDraft() {
-  return { ...DEFAULT_RUN_SETTINGS };
+  return {
+    min_words: DEFAULT_RUN_SETTINGS.min_words,
+    max_words: DEFAULT_RUN_SETTINGS.max_words,
+  };
 }

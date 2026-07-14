@@ -5,14 +5,22 @@ import type {
   ContactEmailSourceBreakdown,
 } from "@/lib/system-dashboard/contact-status";
 
+export type AcquisitionWebAcquisitionStatus = {
+  status: string | null;
+  final_stage: string;
+  reason: string;
+};
+
 export type AcquisitionRequirementResult = {
   requirement_index: number;
   requirement_text: string;
   has_url_no_web_content_miss: number;
   insufficient_content_miss: number;
-  status: string;
+  status: string | null;
   final_stage: string;
   reason: string;
+  google_review_status: string | null;
+  google_review_sufficient: boolean | null;
   no_facts_extracted_miss: number;
   no_best_url_subset_miss: number;
 };
@@ -21,6 +29,8 @@ export type AcquisitionCandidate = {
   id: string;
   company: string;
   status: "succeed" | "failed";
+  detailMode: "requirements" | "web_acquisition";
+  webAcquisitionStatus: AcquisitionWebAcquisitionStatus | null;
   requirements: AcquisitionRequirementResult[];
 };
 
@@ -43,6 +53,8 @@ type InfoAcquisitionDetailApiResponse = {
   company_name: string;
   website: string | null;
   overall_status: "success" | "failed";
+  detail_mode: "requirements" | "web_acquisition";
+  web_acquisition_status: AcquisitionWebAcquisitionStatus | null;
   requirements: Array<
     Omit<AcquisitionRequirementResult, "requirement_index"> & {
       requirement_index: number | null;
@@ -68,21 +80,43 @@ function mapInfoAcquisitionDetail(
     id: String(data.id),
     company: data.company_name,
     status: data.overall_status === "success" ? "succeed" : "failed",
-    requirements: (data.requirements ?? []).map((row, index) => ({
-      requirement_index: row.requirement_index ?? index + 1,
-      requirement_text: row.requirement_text,
-      has_url_no_web_content_miss: row.has_url_no_web_content_miss,
-      insufficient_content_miss: row.insufficient_content_miss,
-      status: row.status,
-      final_stage: row.final_stage,
-      reason: row.reason,
-      no_facts_extracted_miss: row.no_facts_extracted_miss,
-      no_best_url_subset_miss: row.no_best_url_subset_miss,
-    })),
+    detailMode: data.detail_mode,
+    webAcquisitionStatus: data.web_acquisition_status,
+    requirements:
+      data.detail_mode === "web_acquisition"
+        ? []
+        : (data.requirements ?? []).map((row, index) => ({
+            requirement_index: row.requirement_index ?? index + 1,
+            requirement_text: row.requirement_text,
+            has_url_no_web_content_miss: row.has_url_no_web_content_miss,
+            insufficient_content_miss: row.insufficient_content_miss,
+            status: row.status ?? null,
+            final_stage: row.final_stage,
+            reason: row.reason,
+            google_review_status: row.google_review_status ?? null,
+            google_review_sufficient: row.google_review_sufficient ?? null,
+            no_facts_extracted_miss: row.no_facts_extracted_miss,
+            no_best_url_subset_miss: row.no_best_url_subset_miss,
+          })),
   };
 }
 
 export type InfoAcquisitionStatusFilter = "all" | "succeed" | "failed";
+
+export type InfoAcquisitionWebsiteUrlStats = {
+  totalInput: number;
+  acquired: number;
+  failed: number;
+};
+
+export type InfoAcquisitionRequirementSummaryStats = {
+  totalInput: number;
+  succeed: number;
+  failed: number;
+  passRatePool: number;
+  reviewFactsSuccess: number;
+  reviewFactsSufficient: number;
+};
 
 export type InfoAcquisitionSummaryStats = {
   totalInput: number;
@@ -98,6 +132,7 @@ export type InfoAcquisitionSummaryScope = {
 
 type InfoAcquisitionSummaryApiResponse = {
   overall: InfoAcquisitionSummaryStats;
+  websiteUrlAcquisition: InfoAcquisitionWebsiteUrlStats;
   requirements: Array<{
     requirement_index: number;
     requirement_text: string;
@@ -105,13 +140,14 @@ type InfoAcquisitionSummaryApiResponse = {
 };
 
 type InfoAcquisitionRequirementSummaryApiResponse =
-  InfoAcquisitionSummaryStats & {
+  InfoAcquisitionRequirementSummaryStats & {
     requirement_index: number;
     requirement_text: string;
   };
 
 export async function fetchInfoAcquisitionSummary(): Promise<{
   overall: InfoAcquisitionSummaryStats;
+  websiteUrlAcquisition: InfoAcquisitionWebsiteUrlStats;
   requirements: Array<{
     requirement_index: number;
     requirement_text: string;
@@ -676,62 +712,6 @@ export async function fetchContactCandidateDetail(
 
   const data = (await response.json()) as ContactDetailApiResponse;
   return mapContactDetail(data);
-}
-
-export type ContactWorkflowStageCount = {
-  final_stage: string;
-  failed_candidates: number;
-};
-
-export type ContactStageDetailCandidate = {
-  id: string;
-  company: string;
-  website: string | null;
-  reason: string;
-};
-
-export async function fetchContactWorkflow(): Promise<{
-  stages: ContactWorkflowStageCount[];
-}> {
-  const response = await authenticatedFetch(
-    ENDPOINTS.SYSTEM_DASHBOARD_CONTACT_WORKFLOW
-  );
-
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    throw new Error(
-      typeof data.error === "string"
-        ? data.error
-        : "Failed to load contact workflow counts"
-    );
-  }
-
-  return (await response.json()) as { stages: ContactWorkflowStageCount[] };
-}
-
-export async function fetchContactStageDetail(finalStage: string): Promise<{
-  final_stage: string;
-  candidates: ContactStageDetailCandidate[];
-}> {
-  const query = new URLSearchParams({ final_stage: finalStage });
-
-  const response = await authenticatedFetch(
-    `${ENDPOINTS.SYSTEM_DASHBOARD_CONTACT_WORKFLOW_STAGE}?${query.toString()}`
-  );
-
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    throw new Error(
-      typeof data.error === "string"
-        ? data.error
-        : "Failed to load stage candidates"
-    );
-  }
-
-  return (await response.json()) as {
-    final_stage: string;
-    candidates: ContactStageDetailCandidate[];
-  };
 }
 
 export type OutreachStatus =

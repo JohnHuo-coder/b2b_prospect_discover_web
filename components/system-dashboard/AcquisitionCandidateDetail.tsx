@@ -23,6 +23,24 @@ function DetailField({
   );
 }
 
+function isAcquisitionSuccessStatus(status: string | null | undefined): boolean {
+  if (!status) return false;
+  const normalized = status.trim().toLowerCase();
+  return normalized === "success" || normalized === "succeed";
+}
+
+function isGoogleReviewSuccessStatus(status: string | null | undefined): boolean {
+  if (!status) return false;
+  const normalized = status.trim().toLowerCase();
+  return normalized === "success" || normalized === "succeed";
+}
+
+function formatGoogleReviewStatus(status: string | null | undefined): string {
+  if (!status) return "—";
+  if (isGoogleReviewSuccessStatus(status)) return "Success";
+  return status;
+}
+
 const missMetricMeta = [
   {
     key: "has_url_no_web_content_miss" as const,
@@ -152,11 +170,42 @@ export function AcquisitionCandidateDetail({
 
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {loading ? (
-            <p className="text-sm text-gray-500">Loading requirement details...</p>
+            <p className="text-sm text-gray-500">Loading candidate details...</p>
           ) : error ? (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
+          ) : candidate.detailMode === "web_acquisition" &&
+            candidate.webAcquisitionStatus ? (
+            <section className="rounded-xl border border-gray-200 bg-gray-50/60 p-4">
+              <div className="mb-4 border-b border-gray-200 pb-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-sky-600">
+                  Company website URL acquisition
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-gray-600">
+                  This candidate failed before requirement evaluation because the
+                  company website URL could not be collected.
+                </p>
+              </div>
+
+              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <DetailField label="Status">
+                  <span className="font-medium capitalize">
+                    {candidate.webAcquisitionStatus.status ?? "—"}
+                  </span>
+                </DetailField>
+                <DetailField label="Final stage">
+                  <span className="font-mono text-xs">
+                    {candidate.webAcquisitionStatus.final_stage || "—"}
+                  </span>
+                </DetailField>
+                <div className="sm:col-span-2">
+                  <DetailField label="Reason">
+                    {candidate.webAcquisitionStatus.reason || "—"}
+                  </DetailField>
+                </div>
+              </dl>
+            </section>
           ) : candidate.requirements.length === 0 ? (
             <p className="text-sm text-gray-500">No requirement details found.</p>
           ) : (
@@ -184,11 +233,32 @@ export function AcquisitionCandidateDetail({
 
                     <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <DetailField label="Status">
-                        <span className="font-medium capitalize">{req.status}</span>
+                        <span className="font-medium capitalize">
+                          {req.status ?? "—"}
+                        </span>
                       </DetailField>
                       <DetailField label="Final stage">
                         <span className="font-mono text-xs">{req.final_stage}</span>
                       </DetailField>
+                      <DetailField label="Google review status">
+                        {isGoogleReviewSuccessStatus(req.google_review_status) ? (
+                          <span className="font-medium text-emerald-700">Success</span>
+                        ) : (
+                          <span className="[overflow-wrap:anywhere]">
+                            {formatGoogleReviewStatus(req.google_review_status)}
+                          </span>
+                        )}
+                      </DetailField>
+                      {isAcquisitionSuccessStatus(req.status) &&
+                      req.google_review_sufficient != null ? (
+                        <DetailField label="Met via Google reviews only">
+                          {req.google_review_sufficient ? (
+                            <span className="font-medium text-emerald-700">Yes</span>
+                          ) : (
+                            <span className="font-medium text-gray-700">No</span>
+                          )}
+                        </DetailField>
+                      ) : null}
                       <div className="sm:col-span-2">
                         <DetailField label="Reason">{req.reason}</DetailField>
                       </div>

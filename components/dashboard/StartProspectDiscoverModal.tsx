@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, Play } from "lucide-react";
+import { AlertCircle, CheckCircle2, Play } from "lucide-react";
 import { fetchBusinessConfig } from "@/lib/api/business-config-client";
+import { startProspectDiscovery } from "@/lib/api/dashboard-client";
 import type { BusinessConfigState } from "@/lib/types/business-config";
 import { validateBusinessConfigForRun } from "@/lib/validation/business-config-readiness";
 import { Modal } from "@/components/ui/Modal";
@@ -12,18 +13,24 @@ import { SkeletonBar } from "@/components/ui/SkeletonBar";
 export function StartProspectDiscoverModal({
   open,
   onClose,
+  candidateCount: candidateCountOverride,
 }: {
   open: boolean;
   onClose: () => void;
+  candidateCount?: number;
 }) {
   const [config, setConfig] = useState<BusinessConfigState | null>(null);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     if (!open) {
       setConfig(null);
       setError("");
+      setSuccessMessage("");
+      setSubmitting(false);
       return;
     }
 
@@ -61,14 +68,34 @@ export function StartProspectDiscoverModal({
   }, [open]);
 
   const readiness = config
-    ? validateBusinessConfigForRun(config)
+    ? validateBusinessConfigForRun({
+        ...config,
+        number_of_candidates_per_run:
+          candidateCountOverride ?? config.number_of_candidates_per_run,
+      })
     : { ready: false, issues: [] };
 
-  const candidateCount = config?.number_of_candidates_per_run ?? 0;
+  const candidateCount =
+    candidateCountOverride ?? config?.number_of_candidates_per_run ?? 0;
 
-  const handleConfirm = () => {
-    if (!readiness.ready) return;
-    onClose();
+  const handleConfirm = async () => {
+    if (!readiness.ready || submitting || successMessage) return;
+
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const result = await startProspectDiscovery();
+      setSuccessMessage(result.message);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to start discovery. Please try again later or contact your technical team."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -78,33 +105,46 @@ export function StartProspectDiscoverModal({
       onClose={onClose}
       footer={
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-
-          {!loading && !error && !readiness.ready ? (
-            <Link
-              href="/configuration"
+          {successMessage ? (
+            <button
+              type="button"
               onClick={onClose}
-              className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-100"
+              className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700"
             >
-              Go to Configuration
-            </Link>
-          ) : null}
+              OK
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={submitting}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </button>
 
-          <button
-            type="button"
-            disabled={loading || Boolean(error) || !readiness.ready}
-            onClick={handleConfirm}
-            className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Play className="h-4 w-4" />
-            Confirm
-          </button>
+              {!loading && !error && !readiness.ready ? (
+                <Link
+                  href="/configuration"
+                  onClick={onClose}
+                  className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-100"
+                >
+                  Go to Configuration
+                </Link>
+              ) : null}
+
+              <button
+                type="button"
+                disabled={loading || Boolean(error) || !readiness.ready || submitting}
+                onClick={() => void handleConfirm()}
+                className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Play className="h-4 w-4" />
+                {submitting ? "Starting..." : "Confirm"}
+              </button>
+            </>
+          )}
         </div>
       }
     >
@@ -122,7 +162,19 @@ export function StartProspectDiscoverModal({
         </div>
       ) : null}
 
-      {!loading && !error && config ? (
+      {successMessage ? (
+        <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+          <div>
+            <p className="text-sm font-medium text-emerald-900">
+              Task sent successfully
+            </p>
+            <p className="mt-1 text-sm text-emerald-800">{successMessage}</p>
+          </div>
+        </div>
+      ) : null}
+
+      {!loading && !error && config && !successMessage ? (
         <div className="space-y-5">
           {readiness.ready ? (
             <>

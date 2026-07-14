@@ -2,14 +2,15 @@ import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
 import {
+  getConfigScope,
+  requireBusinessAffiliation,
+  type DbUserWithConfig,
+} from "@/lib/api/server-config-scope";
+import {
   getContactEmailSource,
   type ContactEmailSource,
 } from "@/lib/system-dashboard/contact-status";
 import systemDashboardRepository from "@/server/repositories/systemDashboardRepository.js";
-
-type DbUser = {
-  business_id?: number | string | null;
-};
 
 type ContactListRow = {
   id: number | string;
@@ -25,11 +26,16 @@ function mapContactStatus(status: string) {
 }
 
 export const GET = withAuth(
-  withApproved(async (request: Request, _context: unknown, user: DbUser) => {
+  withApproved(async (request: Request, _context: unknown, user: DbUserWithConfig) => {
     try {
-      const business_id = user.business_id;
-      if (!business_id) {
-        return errorResponse("Business affiliation required", 400);
+      const affiliationError = requireBusinessAffiliation(user);
+      if (affiliationError) {
+        return affiliationError;
+      }
+
+      const scope = getConfigScope(user);
+      if (!scope) {
+        return jsonResponse({ candidates: [], total: 0 });
       }
 
       const { searchParams } = new URL(request.url);
@@ -45,7 +51,7 @@ export const GET = withAuth(
             : undefined;
 
       const result = await systemDashboardRepository.getFindContactStatus({
-        business_id,
+        ...scope,
         page,
         limit,
         search,

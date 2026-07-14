@@ -5,11 +5,21 @@ import leadRepository from "@/server/repositories/leadRepository.js";
 
 type DbUser = {
   business_id?: number | string | null;
+  config_version?: number | null;
 };
 
 export const GET = withAuth(
   withApproved(async (request: Request, _context: unknown, user: DbUser) => {
     try {
+      if (!user.business_id) {
+        return errorResponse("You need to join a company first", 403);
+      }
+
+      const version = Number(user.config_version) || 0;
+      if (version === 0) {
+        return jsonResponse({ rows: [], total: 0 });
+      }
+
       const { searchParams } = new URL(request.url);
       const search = searchParams.get("search") || undefined;
       const statusParam = searchParams.get("status");
@@ -23,7 +33,8 @@ export const GET = withAuth(
         status,
         page,
         limit,
-        business_id: user.business_id ?? undefined,
+        business_id: user.business_id,
+        version,
       });
 
       return jsonResponse(result);

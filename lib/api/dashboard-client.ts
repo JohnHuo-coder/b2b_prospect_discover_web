@@ -36,3 +36,39 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
     rejected: data.total_rejected,
   };
 }
+
+export type StartDiscoveryResult = {
+  status: "accepted";
+  message: string;
+};
+
+export async function startProspectDiscovery(): Promise<StartDiscoveryResult> {
+  const response = await authenticatedFetch(ENDPOINTS.DASHBOARD_START_DISCOVERY, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(
+      typeof data.error === "string"
+        ? data.error
+        : "Failed to start discovery. Please try again later or contact your technical team."
+    );
+  }
+
+  if (data.status !== "accepted") {
+    throw new Error(
+      "Failed to start discovery. Please try again later or contact your technical team."
+    );
+  }
+
+  return {
+    status: "accepted",
+    message:
+      typeof data.message === "string" && data.message.trim()
+        ? data.message.trim()
+        : "Discovery workflow started.",
+  };
+}

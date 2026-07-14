@@ -1,15 +1,58 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Percent, XCircle } from "lucide-react";
+import { BadgeCheck, Globe, Percent, Sparkles } from "lucide-react";
 import {
   fetchInfoAcquisitionRequirementSummary,
   fetchInfoAcquisitionSummary,
+  type InfoAcquisitionRequirementSummaryStats,
   type InfoAcquisitionSummaryScope,
   type InfoAcquisitionSummaryStats,
+  type InfoAcquisitionWebsiteUrlStats,
 } from "@/lib/api/system-dashboard-client";
 import { SkeletonBar } from "@/components/ui/SkeletonBar";
 import { MetricCard } from "./MetricCard";
+
+const emptyWebsiteUrlStats: InfoAcquisitionWebsiteUrlStats = {
+  totalInput: 0,
+  acquired: 0,
+  failed: 0,
+};
+
+const emptyRequirementStats: InfoAcquisitionRequirementSummaryStats = {
+  totalInput: 0,
+  succeed: 0,
+  failed: 0,
+  passRatePool: 0,
+  reviewFactsSuccess: 0,
+  reviewFactsSufficient: 0,
+};
+
+function computePercent(numerator: number, denominator: number): number {
+  if (denominator <= 0) return 0;
+  return Math.round((numerator / denominator) * 100);
+}
+
+function SummaryCardSkeleton({ count }: { count: number }) {
+  return (
+    <div
+      className={`grid grid-cols-1 gap-5 ${
+        count === 2 ? "md:grid-cols-2" : "md:grid-cols-3"
+      }`}
+    >
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={index}
+          className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
+        >
+          <SkeletonBar className="h-4 w-24" />
+          <SkeletonBar className="mt-3 h-9 w-20" />
+          <SkeletonBar className="mt-4 h-2 w-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function InformationAcquisitionSummaryCards() {
   const [scopes, setScopes] = useState<InfoAcquisitionSummaryScope[]>([]);
@@ -17,6 +60,11 @@ export function InformationAcquisitionSummaryCards() {
   const [scopeStats, setScopeStats] = useState<
     Record<string, InfoAcquisitionSummaryStats>
   >({});
+  const [requirementStats, setRequirementStats] = useState<
+    Record<string, InfoAcquisitionRequirementSummaryStats>
+  >({});
+  const [websiteUrlStats, setWebsiteUrlStats] =
+    useState<InfoAcquisitionWebsiteUrlStats>(emptyWebsiteUrlStats);
   const [loading, setLoading] = useState(true);
   const [scopeLoading, setScopeLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +95,7 @@ export function InformationAcquisitionSummaryCards() {
 
         setScopes(nextScopes);
         setScopeStats({ all: result.overall });
+        setWebsiteUrlStats(result.websiteUrlAcquisition ?? emptyWebsiteUrlStats);
         setScopeId("all");
       } catch (loadError) {
         if (cancelled) return;
@@ -57,6 +106,7 @@ export function InformationAcquisitionSummaryCards() {
         );
         setScopes([]);
         setScopeStats({});
+        setWebsiteUrlStats(emptyWebsiteUrlStats);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -72,8 +122,9 @@ export function InformationAcquisitionSummaryCards() {
   useEffect(() => {
     if (scopeId === "all") return;
 
-    const cacheKey = String(scopeId);
-    if (scopeStats[cacheKey]) return;
+    const requirementIndex = scopeId;
+    const cacheKey = String(requirementIndex);
+    if (requirementStats[cacheKey]) return;
 
     let cancelled = false;
 
@@ -82,21 +133,20 @@ export function InformationAcquisitionSummaryCards() {
       setError(null);
 
       try {
-        const result = await fetchInfoAcquisitionRequirementSummary(scopeId);
+        const result =
+          await fetchInfoAcquisitionRequirementSummary(requirementIndex);
         if (cancelled) return;
 
-        const stats = {
+        const stats: InfoAcquisitionRequirementSummaryStats = {
           totalInput: result.totalInput,
           succeed: result.succeed,
           failed: result.failed,
+          passRatePool: result.passRatePool,
+          reviewFactsSuccess: result.reviewFactsSuccess,
+          reviewFactsSufficient: result.reviewFactsSufficient,
         };
 
-        setScopeStats((prev) => ({ ...prev, [cacheKey]: stats }));
-        setScopes((prev) =>
-          prev.map((scope) =>
-            scope.id === scopeId ? { ...scope, stats } : scope
-          )
-        );
+        setRequirementStats((prev) => ({ ...prev, [cacheKey]: stats }));
       } catch (loadError) {
         if (!cancelled) {
           setError(
@@ -115,40 +165,46 @@ export function InformationAcquisitionSummaryCards() {
     return () => {
       cancelled = true;
     };
-  }, [scopeId, scopeStats]);
+  }, [scopeId, requirementStats]);
 
   const activeScope = useMemo(
     () => scopes.find((scope) => scope.id === scopeId) ?? scopes[0],
     [scopeId, scopes]
   );
 
-  const activeStats =
+  const activeAllStats = scopeStats.all ?? { totalInput: 0, succeed: 0, failed: 0 };
+  const activeRequirementStats =
     scopeId === "all"
-      ? scopeStats.all
-      : scopeStats[String(scopeId)] ?? activeScope?.stats;
+      ? emptyRequirementStats
+      : requirementStats[String(scopeId)] ?? emptyRequirementStats;
 
-  const { totalInput, succeed, failed } = activeStats ?? {
-    totalInput: 0,
-    succeed: 0,
-    failed: 0,
-  };
-  const passRate =
-    totalInput > 0 ? Math.round((succeed / totalInput) * 100) : 0;
+  const { totalInput: allTotalInput, succeed: allSucceed } = activeAllStats;
+  const allPassRate = computePercent(allSucceed, allTotalInput);
+  const { totalInput: urlTotalInput, acquired: urlAcquired } = websiteUrlStats;
+  const websiteUrlAcquisitionRate = computePercent(urlAcquired, urlTotalInput);
+
+  const {
+    totalInput: reqTotalInput,
+    succeed: reqSucceed,
+    passRatePool,
+    reviewFactsSuccess,
+    reviewFactsSufficient,
+  } = activeRequirementStats;
+  const requirementPassRate = computePercent(reqSucceed, passRatePool);
+  const reviewExtractionRate = computePercent(reviewFactsSuccess, reqTotalInput);
+  const reviewSufficientRate = computePercent(
+    reviewFactsSufficient,
+    reqSucceed
+  );
+
   const cardsLoading = loading || (scopeId !== "all" && scopeLoading);
+  const isAllScope = scopeId === "all";
+  const skeletonCount = isAllScope ? 2 : 3;
 
   if (loading) {
     return (
-      <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <div
-            key={index}
-            className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
-          >
-            <SkeletonBar className="h-4 w-24" />
-            <SkeletonBar className="mt-3 h-9 w-20" />
-            <SkeletonBar className="mt-4 h-2 w-full" />
-          </div>
-        ))}
+      <div className="mb-6">
+        <SummaryCardSkeleton count={2} />
       </div>
     );
   }
@@ -197,25 +253,39 @@ export function InformationAcquisitionSummaryCards() {
       ) : null}
 
       {cardsLoading ? (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div
-              key={index}
-              className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
-            >
-              <SkeletonBar className="h-4 w-24" />
-              <SkeletonBar className="mt-3 h-9 w-20" />
-              <SkeletonBar className="mt-4 h-2 w-full" />
-            </div>
-          ))}
+        <SummaryCardSkeleton count={skeletonCount} />
+      ) : isAllScope ? (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <MetricCard
+            label="Company website URL acquisition rate"
+            value={`${websiteUrlAcquisitionRate}%`}
+            progress={websiteUrlAcquisitionRate}
+            subtext={`${urlAcquired} of ${urlTotalInput}`}
+            icon={Globe}
+            iconClassName="text-sky-600"
+            iconBoxClassName="bg-sky-100"
+            valueClassName="text-sky-600"
+            progressClassName="bg-sky-500"
+          />
+          <MetricCard
+            label="Pass Rate"
+            value={`${allPassRate}%`}
+            progress={allPassRate}
+            subtext={`${allSucceed} of ${allTotalInput}`}
+            icon={Percent}
+            iconClassName="text-violet-600"
+            iconBoxClassName="bg-violet-100"
+            valueClassName="text-violet-600"
+            progressClassName="bg-violet-500"
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
           <MetricCard
             label="Pass Rate"
-            value={`${passRate}%`}
-            progress={passRate}
-            subtext={`${passRate}% passed · ${totalInput} total input`}
+            value={`${requirementPassRate}%`}
+            progress={requirementPassRate}
+            subtext={`${reqSucceed} of ${passRatePool}`}
             icon={Percent}
             iconClassName="text-violet-600"
             iconBoxClassName="bg-violet-100"
@@ -223,30 +293,26 @@ export function InformationAcquisitionSummaryCards() {
             progressClassName="bg-violet-500"
           />
           <MetricCard
-            label="Succeed"
-            value={succeed}
-            subtext={
-              scopeId === "all"
-                ? "Candidates that passed information acquisition"
-                : `Candidates that passed ${activeScope.label.toLowerCase()}`
-            }
-            icon={CheckCircle2}
+            label="Google review fact extraction success rate"
+            value={`${reviewExtractionRate}%`}
+            progress={reviewExtractionRate}
+            subtext={`${reviewFactsSuccess} of ${reqTotalInput}`}
+            icon={Sparkles}
+            iconClassName="text-amber-600"
+            iconBoxClassName="bg-amber-100"
+            valueClassName="text-amber-600"
+            progressClassName="bg-amber-500"
+          />
+          <MetricCard
+            label="Review facts sufficient rate"
+            value={`${reviewSufficientRate}%`}
+            progress={reviewSufficientRate}
+            subtext={`${reviewFactsSufficient} of ${reqSucceed}`}
+            icon={BadgeCheck}
             iconClassName="text-emerald-600"
             iconBoxClassName="bg-emerald-100"
             valueClassName="text-emerald-600"
-          />
-          <MetricCard
-            label="Failed"
-            value={failed}
-            subtext={
-              scopeId === "all"
-                ? "Candidates that failed information acquisition"
-                : `Candidates that failed ${activeScope.label.toLowerCase()}`
-            }
-            icon={XCircle}
-            iconClassName="text-red-600"
-            iconBoxClassName="bg-red-100"
-            valueClassName="text-red-600"
+            progressClassName="bg-emerald-500"
           />
         </div>
       )}

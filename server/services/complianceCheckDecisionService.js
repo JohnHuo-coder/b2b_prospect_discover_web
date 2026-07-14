@@ -1,6 +1,13 @@
 import { pool } from '../../lib/db/client.ts';
 import systemDashboardProvider from '../providers/systemDashboardProvider.js';
 import { triggerComplianceCheckContinue } from '../../lib/services/complianceCheckN8n.ts';
+import {
+  joinBusinessConfigOnConfigId,
+  joinInitialCandidateOnConfigPlace,
+  requireConfigScope,
+  scopeParams,
+  whereBusinessConfigScope,
+} from '../providers/shared/configScopeHelpers.js';
 
 function normalizeEmailTextType(type) {
   const normalized = String(type ?? '').trim().toLowerCase().replace(/_/g, ' ');
@@ -11,6 +18,7 @@ function normalizeEmailTextType(type) {
 
 export async function submitComplianceCheckDecision({
   business_id,
+  version,
   candidate_id,
   action,
   original_outreach_email,
@@ -22,6 +30,7 @@ export async function submitComplianceCheckDecision({
 }) {
   const updateResult = await systemDashboardProvider.updateOutreachStatus({
     business_id,
+    version,
     candidate_id,
     action,
   });
@@ -30,12 +39,15 @@ export async function submitComplianceCheckDecision({
     return { affectedRows: 0 };
   }
 
+  const scope = requireConfigScope({ business_id, version });
+
   const { rows } = await pool.query(
-    `SELECT ic.place_id
+    `SELECT ic.place_id, bc.id AS config_id
      FROM prospect_discover.initial_candidates ic
-     WHERE ic.business_id = $1
-       AND ic.id = $2`,
-    [business_id, candidate_id]
+     ${joinBusinessConfigOnConfigId('ic')}
+     WHERE ${whereBusinessConfigScope()}
+       AND ic.id = $3`,
+    [...scopeParams(scope), candidate_id]
   );
 
   if (rows.length === 0) {
@@ -43,7 +55,7 @@ export async function submitComplianceCheckDecision({
   }
 
   const webhookPayload = {
-    business_id,
+    config_id: rows[0].config_id,
     place_id: rows[0].place_id,
     original_outreach_email: String(original_outreach_email ?? ''),
     outreach_email: String(outreach_email ?? original_outreach_email ?? ''),

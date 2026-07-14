@@ -111,9 +111,10 @@ export const businessConfig = {
     "The hotel should serve health-conscious or wellness-oriented guests.",
     "The property must be able to offer room packages in coordination with external wellness providers.",
   ],
-  latitude: "13.737",
-  longitude: "100.557",
-  max_distance: "10 km",
+  has_distance_requirement: true,
+  lat: 13.737,
+  lon: 100.557,
+  max_distance_km: 10,
   fit_score_cutoff: 75,
   low_conf_cutoff_email_classification: 30,
   qualified_conf_email_classification: 70,
@@ -130,10 +131,6 @@ export const businessConfig = {
   min_words: 90,
   max_words: 160,
   number_of_candidates_per_run: 50,
-  test_mode: true,
-  test_email_override: "c.weaver1on1@gmail.com",
-  follow_up_delay: "7 days",
-  excluded_partners: ["Rembrandt Hotel Bangkok", "Rembrandt Residences Bangkok"],
 };
 
 export const statusLabels: Record<LeadStatus | "all", string> = {

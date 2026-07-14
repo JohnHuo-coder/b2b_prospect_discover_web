@@ -1,11 +1,8 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
+import { getConfigScope, type DbUserWithConfig } from "@/lib/api/server-config-scope";
 import systemDashboardRepository from "@/server/repositories/systemDashboardRepository.js";
-
-type DbUser = {
-  business_id?: number | string | null;
-};
 
 type WorkflowStageRow = {
   final_stage: string;
@@ -13,15 +10,15 @@ type WorkflowStageRow = {
 };
 
 export const GET = withAuth(
-  withApproved(async (_request: Request, _context: unknown, user: DbUser) => {
+  withApproved(async (_request: Request, _context: unknown, user: DbUserWithConfig) => {
     try {
-      const business_id = user.business_id;
-      if (!business_id) {
-        return errorResponse("Business affiliation required", 400);
+      const scope = getConfigScope(user);
+      if (!scope) {
+        return jsonResponse({ stages: [] });
       }
 
       const result = await systemDashboardRepository.getOutreachStatusWorkflow({
-        business_id,
+        ...scope,
       });
 
       return jsonResponse({

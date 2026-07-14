@@ -1,11 +1,8 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
+import { getConfigScope, type DbUserWithConfig } from "@/lib/api/server-config-scope";
 import systemDashboardRepository from "@/server/repositories/systemDashboardRepository.js";
-
-type DbUser = {
-  business_id?: number | string | null;
-};
 
 type RouteContext = {
   params: Promise<{ source: string }>;
@@ -25,18 +22,18 @@ function mapStatusDetailRows(rows: StatusDetailRow[], labelKey: "status" | "fina
 }
 
 export const GET = withAuth(
-  withApproved(async (_request: Request, context: RouteContext, user: DbUser) => {
+  withApproved(async (_request: Request, context: RouteContext, user: DbUserWithConfig) => {
     try {
-      const business_id = user.business_id;
-      if (!business_id) {
-        return errorResponse("Business affiliation required", 400);
-      }
-
+      const scope = getConfigScope(user);
       const { source } = await context.params;
 
       if (source === "apollo") {
+        if (!scope) {
+          return jsonResponse({ items: [] });
+        }
+
         const result = await systemDashboardRepository.getFindContactStatusApolloDetail({
-          business_id,
+          ...scope,
         });
         return jsonResponse({
           items: mapStatusDetailRows(
@@ -47,9 +44,13 @@ export const GET = withAuth(
       }
 
       if (source === "anymail") {
+        if (!scope) {
+          return jsonResponse({ items: [] });
+        }
+
         const result =
           await systemDashboardRepository.getFindContactStatusAnymailDetail({
-            business_id,
+            ...scope,
           });
         return jsonResponse({
           items: mapStatusDetailRows(
@@ -60,8 +61,12 @@ export const GET = withAuth(
       }
 
       if (source === "website") {
+        if (!scope) {
+          return jsonResponse({ items: [] });
+        }
+
         const result = await systemDashboardRepository.getFindContactStatusWebDetail({
-          business_id,
+          ...scope,
         });
         return jsonResponse({
           items: mapStatusDetailRows(

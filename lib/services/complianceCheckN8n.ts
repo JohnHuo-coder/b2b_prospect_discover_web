@@ -1,7 +1,7 @@
 import { triggerN8nWebhook } from "@/lib/services/n8n";
 
 export type ComplianceCheckContinuePayload = {
-  business_id: number | string;
+  config_id: number | string;
   place_id: string;
   original_outreach_email: string;
   outreach_email: string;

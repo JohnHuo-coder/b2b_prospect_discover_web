@@ -116,6 +116,8 @@ export function InformationAcquisitionContent() {
         id: summary.id,
         company: summary.company,
         status: summary.status,
+        detailMode: "requirements",
+        webAcquisitionStatus: null,
         requirements: [],
       });
 

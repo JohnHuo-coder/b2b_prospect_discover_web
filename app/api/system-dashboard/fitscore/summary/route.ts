@@ -1,11 +1,8 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
+import { getConfigScope, type DbUserWithConfig } from "@/lib/api/server-config-scope";
 import systemDashboardRepository from "@/server/repositories/systemDashboardRepository.js";
-
-type DbUser = {
-  business_id?: number | string | null;
-};
 
 type FitScoreSummaryRow = {
   total_candidates: number | string;
@@ -24,12 +21,9 @@ function mapFitScoreCounts(row: FitScoreSummaryRow) {
 }
 
 export const GET = withAuth(
-  withApproved(async (request: Request, _context: unknown, user: DbUser) => {
+  withApproved(async (request: Request, _context: unknown, user: DbUserWithConfig) => {
     try {
-      const business_id = user.business_id;
-      if (!business_id) {
-        return errorResponse("Business affiliation required", 400);
-      }
+      const scope = getConfigScope(user);
 
       const { searchParams } = new URL(request.url);
       const requirementIndexParam = searchParams.get("requirement_index");
@@ -40,9 +34,20 @@ export const GET = withAuth(
           return errorResponse("Invalid requirement_index", 400);
         }
 
+        if (!scope) {
+          return jsonResponse({
+            requirement_index,
+            requirement_text: "",
+            totalInput: 0,
+            accepted: 0,
+            rejected: 0,
+            failed: 0,
+          });
+        }
+
         const result =
           await systemDashboardRepository.getFitScoreStatusSummaryByReq({
-            business_id,
+            ...scope,
             requirement_index,
           });
 
@@ -53,8 +58,15 @@ export const GET = withAuth(
         });
       }
 
+      if (!scope) {
+        return jsonResponse({
+          overall: { totalInput: 0, accepted: 0, rejected: 0, failed: 0 },
+          requirements: [],
+        });
+      }
+
       const result = await systemDashboardRepository.getFitScoreStatusSummary({
-        business_id,
+        ...scope,
       });
 
       return jsonResponse({

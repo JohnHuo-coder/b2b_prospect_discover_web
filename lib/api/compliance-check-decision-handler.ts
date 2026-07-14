@@ -32,7 +32,8 @@ function parseDecisionBody(body: ComplianceCheckDecisionBody) {
 export async function handleComplianceCheckDecisionPatch(
   request: Request,
   candidateId: string,
-  business_id: number | string
+  business_id: number | string,
+  version: number
 ) {
   const body = (await request.json()) as ComplianceCheckDecisionBody;
   const parsed = parseDecisionBody(body);
@@ -43,6 +44,7 @@ export async function handleComplianceCheckDecisionPatch(
 
   const result = await submitComplianceCheckDecision({
     business_id,
+    version,
     candidate_id: candidateId,
     ...parsed,
   });

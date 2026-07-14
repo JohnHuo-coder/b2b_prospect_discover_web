@@ -44,6 +44,5 @@ export function formatDefaultRunSettingsHelp(): string {
     "Default values:",
     `Min. words per email: ${defaults.min_words}`,
     `Max. words per email: ${defaults.max_words}`,
-    `Candidates per run: ${defaults.number_of_candidates_per_run}`,
   ].join("\n");
 }

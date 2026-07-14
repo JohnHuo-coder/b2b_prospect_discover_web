@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SkeletonBar } from "@/components/ui/SkeletonBar";
 import { Pagination } from "@/components/ui/Pagination";
 import { StartProspectDiscoverModal } from "@/components/dashboard/StartProspectDiscoverModal";
+import { CandidatesPerRunControl } from "@/components/dashboard/CandidatesPerRunControl";
 import { fetchDashboardSummary } from "@/lib/api/dashboard-client";
 import { fetchLeads, updateLeadStatus } from "@/lib/api/leads-client";
 import {
@@ -329,8 +330,10 @@ function PendingDashboard() {
 }
 
 export function DashboardContent() {
-  const { user, isLoading: authLoading } = useUser();
+  const { user, isLoading: authLoading, refreshUser } = useUser();
   const isPending = Boolean(user && (!user.role || user.role === "pending"));
+  const configVersion = Number(user?.config_version) || 0;
+  const needsConfiguration = configVersion < 1;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
   const [summary, setSummary] = useState<Record<
@@ -344,15 +347,21 @@ export function DashboardContent() {
   const [leadsLoading, setLeadsLoading] = useState(true);
   const [leadsError, setLeadsError] = useState("");
   const [runModalOpen, setRunModalOpen] = useState(false);
+  const [candidatesPerRun, setCandidatesPerRun] = useState<number | null>(null);
   const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
   const [statusUpdateError, setStatusUpdateError] = useState("");
+
+  useEffect(() => {
+    if (authLoading || isPending) return;
+    void refreshUser();
+  }, [authLoading, isPending, refreshUser]);
 
   useEffect(() => {
     setPage(1);
   }, [search, statusFilter]);
 
   useEffect(() => {
-    if (authLoading || isPending) return;
+    if (authLoading || isPending || needsConfiguration) return;
 
     if (!user) {
       setSummary(null);
@@ -387,10 +396,10 @@ export function DashboardContent() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, user, isPending]);
+  }, [authLoading, user, isPending, needsConfiguration, configVersion]);
 
   useEffect(() => {
-    if (authLoading || isPending) return;
+    if (authLoading || isPending || needsConfiguration) return;
 
     if (!user) {
       setLeadsError("Please sign in to view leads.");
@@ -439,7 +448,7 @@ export function DashboardContent() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [search, statusFilter, page, authLoading, user, isPending]);
+  }, [search, statusFilter, page, authLoading, user, isPending, needsConfiguration, configVersion]);
 
   const totalPages = Math.max(1, Math.ceil(total / LEADS_PAGE_SIZE));
 
@@ -481,6 +490,7 @@ export function DashboardContent() {
   };
 
   const showSummarySkeleton =
+    !needsConfiguration &&
     !isPending &&
     !summaryError &&
     summary === null &&
@@ -514,38 +524,64 @@ export function DashboardContent() {
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="mt-1 text-sm text-gray-500">All lead candidates</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setRunModalOpen(true)}
-          className="shrink-0 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-violet-700"
-        >
-          Start Prospect Discover
-        </button>
+        {!needsConfiguration ? (
+          <div className="flex shrink-0 flex-wrap items-end justify-end gap-3">
+            <CandidatesPerRunControl onValueChange={setCandidatesPerRun} />
+            <button
+              type="button"
+              onClick={() => setRunModalOpen(true)}
+              className="rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-violet-700"
+            >
+              Start Prospect Discover
+            </button>
+          </div>
+        ) : null}
       </div>
 
-      <StartProspectDiscoverModal
-        open={runModalOpen}
-        onClose={() => setRunModalOpen(false)}
-      />
+      {!needsConfiguration ? (
+        <StartProspectDiscoverModal
+          open={runModalOpen}
+          onClose={() => setRunModalOpen(false)}
+          candidateCount={candidatesPerRun ?? undefined}
+        />
+      ) : null}
 
-      {summaryError ? (
+      {needsConfiguration ? (
+        <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-6 py-5 text-sm text-amber-800">
+          <p className="font-medium text-amber-900">Configuration required</p>
+          <p className="mt-1">
+            Complete your business configuration before starting prospect discovery
+            or viewing pipeline summary.
+          </p>
+          <Link
+            href="/configuration"
+            className="mt-3 inline-flex text-sm font-medium text-violet-700 transition hover:text-violet-800 hover:underline"
+          >
+            Go to Configuration
+          </Link>
+        </div>
+      ) : null}
+
+      {!needsConfiguration && summaryError ? (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {summaryError}
         </div>
       ) : null}
 
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {summaryCardMeta.map((card) => (
-          <SummaryStatCard
-            key={card.key}
-            label={card.label}
-            value={summary?.[card.key] ?? 0}
-            valueClass={card.valueClass}
-            bgClass={card.bgClass}
-            loading={showSummarySkeleton}
-          />
-        ))}
-      </div>
+      {!needsConfiguration ? (
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {summaryCardMeta.map((card) => (
+            <SummaryStatCard
+              key={card.key}
+              label={card.label}
+              value={summary?.[card.key] ?? 0}
+              valueClass={card.valueClass}
+              bgClass={card.bgClass}
+              loading={showSummarySkeleton}
+            />
+          ))}
+        </div>
+      ) : null}
 
       <div className="mb-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="relative max-w-xl flex-1">

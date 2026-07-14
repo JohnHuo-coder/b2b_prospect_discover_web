@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   BarChart3,
@@ -9,76 +9,44 @@ import {
   List,
   Mail,
   MapPin,
-  Settings2,
+  Pencil,
   Target,
   Users,
-  Wrench,
 } from "lucide-react";
 import {
+  buildBusinessConfigSavePayload,
   fetchBusinessConfig,
+  isBusinessConfigDraftDirty,
   normalizeRequirements,
   rephraseRequirements,
-  saveBusinessProfile,
-  saveClassificationCutoffs,
-  saveContactFilters,
-  saveRequirements,
-  saveRunSettings,
-  saveSearchConfig,
+  saveBusinessConfig,
   type RephraseSuggestion,
 } from "@/lib/api/business-config-client";
-import type {
-  BusinessConfigState,
-  ConfigSection,
-} from "@/lib/types/business-config";
+import type { BusinessConfigState } from "@/lib/types/business-config";
+import {
+  ConfigurationEditForm,
+  validateBusinessConfigDraft,
+} from "@/components/configuration/ConfigurationEditForm";
 import { ConfigCard, Field, TagList } from "@/components/ui/ConfigCard";
-import {
-  RequirementsEditForm,
-  RequirementsModalFooter,
-} from "@/components/configuration/RequirementsEditForm";
-import { ContactPreferencesEditForm } from "@/components/configuration/ContactPreferencesEditForm";
-import {
-  getDefaultRunSettingsDraft,
-  OutreachSettingsEditForm,
-} from "@/components/configuration/OutreachSettingsEditForm";
-import {
-  CheckboxInput,
-  linesToList,
-  listToLines,
-  Modal,
-  ModalActions,
-  NumberInput,
-  TextArea,
-  TextInput,
-} from "@/components/ui/Modal";
 import { SkeletonBar } from "@/components/ui/SkeletonBar";
 import { useUser } from "@/components/providers/UserProvider";
-import { normalizeContactCategories } from "@/lib/constants/contact-categories";
 import {
   DEFAULT_CONTACT_TITLES,
   DEFAULT_RUN_SETTINGS,
 } from "@/lib/constants/config-defaults";
 
-const SCORING_THRESHOLD_MIN = 0;
-const SCORING_THRESHOLD_MAX = 100;
-
-function isValidScoringThreshold(value: number | null): value is number {
-  return (
-    value !== null &&
-    value >= SCORING_THRESHOLD_MIN &&
-    value <= SCORING_THRESHOLD_MAX
-  );
-}
-
 const emptyConfig: BusinessConfigState = {
+  version: 0,
   business_id: "",
   business_name: "",
   sender_name: "",
   sender_email: "",
   collaboration_intent: "",
   requirements: [],
-  latitude: "",
-  longitude: "",
-  max_distance: "",
+  has_distance_requirement: null,
+  lat: null,
+  lon: null,
+  max_distance_km: null,
   fit_score_cutoff: null,
   low_conf_cutoff_email_classification: null,
   qualified_conf_email_classification: null,
@@ -89,10 +57,6 @@ const emptyConfig: BusinessConfigState = {
   min_words: DEFAULT_RUN_SETTINGS.min_words,
   max_words: DEFAULT_RUN_SETTINGS.max_words,
   number_of_candidates_per_run: DEFAULT_RUN_SETTINGS.number_of_candidates_per_run,
-  test_mode: null,
-  test_email_override: "",
-  follow_up_delay: "",
-  excluded_partners: [],
 };
 
 function hasText(value: string | null | undefined): value is string {
@@ -150,10 +114,10 @@ function displayBoolean(enabled: boolean | null | undefined): ReactNode {
 
 export function ConfigurationContent() {
   const router = useRouter();
-  const { user, isLoading: authLoading } = useUser();
+  const { user, isLoading: authLoading, refreshUser } = useUser();
   const [config, setConfig] = useState<BusinessConfigState>(emptyConfig);
   const [draft, setDraft] = useState<BusinessConfigState>(emptyConfig);
-  const [activeSection, setActiveSection] = useState<ConfigSection | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [rephrasing, setRephrasing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -166,6 +130,10 @@ export function ConfigurationContent() {
   const isPending = Boolean(user && (!user.role || user.role === "pending"));
   const isApproved = Boolean(user && user.role && user.role !== "pending");
   const isOwner = user?.role === "owner";
+  const isDraftDirty = useMemo(
+    () => isBusinessConfigDraftDirty(draft, config),
+    [draft, config]
+  );
 
   useEffect(() => {
     if (authLoading) return;
@@ -187,6 +155,10 @@ export function ConfigurationContent() {
         const data = await fetchBusinessConfig();
         if (!cancelled) {
           setConfig(data);
+          if (data.version === 0 && user?.role === "owner") {
+            setDraft(data);
+            setIsEditing(true);
+          }
           setConfigLoaded(true);
         }
       } catch (err) {
@@ -205,25 +177,38 @@ export function ConfigurationContent() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, isApproved]);
+  }, [authLoading, isApproved, user?.role]);
 
-  const openSection = useCallback(
-    (section: ConfigSection) => {
-      if (!isOwner) return;
-      setDraft({ ...config });
-      setRephraseSuggestions([]);
-      setActiveSection(section);
-      setError(null);
+  const patchDraft = useCallback(
+    <K extends keyof BusinessConfigState>(key: K, value: BusinessConfigState[K]) => {
+      setDraft((prev) => ({ ...prev, [key]: value }));
     },
-    [config, isOwner]
+    []
   );
 
-  const closeSection = useCallback(() => {
-    setActiveSection(null);
+  const handleRequirementsChange = useCallback((requirements: string[]) => {
+    patchDraft("requirements", requirements);
+    setRephraseSuggestions((prev) => {
+      if (prev.every((item) => item === null)) return prev;
+      if (prev.length !== requirements.length) return [];
+      return prev;
+    });
+  }, [patchDraft]);
+
+  const handleStartEditing = () => {
+    setDraft({ ...config });
     setRephraseSuggestions([]);
     setError(null);
-    setRephrasing(false);
-  }, []);
+    setIsEditing(true);
+  };
+
+  const handleCancelEditing = () => {
+    if (config.version === 0) return;
+    setDraft({ ...config });
+    setRephraseSuggestions([]);
+    setError(null);
+    setIsEditing(false);
+  };
 
   const handleRephraseRequirements = async () => {
     setRephrasing(true);
@@ -247,22 +232,6 @@ export function ConfigurationContent() {
       setRephrasing(false);
     }
   };
-
-  const patchDraft = useCallback(
-    <K extends keyof BusinessConfigState>(key: K, value: BusinessConfigState[K]) => {
-      setDraft((prev) => ({ ...prev, [key]: value }));
-    },
-    []
-  );
-
-  const handleRequirementsChange = useCallback((requirements: string[]) => {
-    patchDraft("requirements", requirements);
-    setRephraseSuggestions((prev) => {
-      if (prev.every((item) => item === null)) return prev;
-      if (prev.length !== requirements.length) return [];
-      return prev;
-    });
-  }, [patchDraft]);
 
   const handleUpdateRephraseSuggestion = useCallback(
     (index: number, clarified: string) => {
@@ -295,209 +264,33 @@ export function ConfigurationContent() {
   }, []);
 
   const handleSave = async () => {
+    if (!isBusinessConfigDraftDirty(draft, config)) {
+      return;
+    }
+
+    const validationError = validateBusinessConfigDraft(draft);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
     try {
-      switch (activeSection) {
-        case "identity": {
-          const business_name = draft.business_name.trim();
-          const collaboration_intent = draft.collaboration_intent.trim();
-          const sender_name = draft.sender_name.trim();
-
-          if (!business_name) {
-            setError("Business name is required.");
-            return;
-          }
-
-          if (!collaboration_intent) {
-            setError("Collaboration intent is required.");
-            return;
-          }
-
-          await saveBusinessProfile({
-            business_name,
-            collaboration_intent,
-            sender_name,
-          });
-          setConfig((prev) => ({
-            ...prev,
-            business_name,
-            sender_name,
-            collaboration_intent,
-          }));
-          break;
-        }
-        case "requirements": {
-          const requirements = normalizeRequirements(draft.requirements);
-          await saveRequirements({ requirements });
-          setConfig((prev) => ({ ...prev, requirements }));
-          setRephraseSuggestions([]);
-          break;
-        }
-        case "location":
-          setConfig((prev) => ({
-            ...prev,
-            latitude: draft.latitude,
-            longitude: draft.longitude,
-            max_distance: draft.max_distance,
-          }));
-          break;
-        case "scoring": {
-          const {
-            fit_score_cutoff,
-            low_conf_cutoff_email_classification,
-            qualified_conf_email_classification,
-          } = draft;
-
-          if (
-            fit_score_cutoff === null ||
-            low_conf_cutoff_email_classification === null ||
-            qualified_conf_email_classification === null
-          ) {
-            setError("All scoring threshold fields are required.");
-            return;
-          }
-
-          if (
-            !isValidScoringThreshold(fit_score_cutoff) ||
-            !isValidScoringThreshold(low_conf_cutoff_email_classification) ||
-            !isValidScoringThreshold(qualified_conf_email_classification)
-          ) {
-            setError(
-              `Scoring thresholds must be between ${SCORING_THRESHOLD_MIN} and ${SCORING_THRESHOLD_MAX}.`
-            );
-            return;
-          }
-
-          await saveClassificationCutoffs({
-            fit_score_cutoff,
-            low_conf_cutoff_email_classification,
-            qualified_conf_email_classification,
-          });
-          setConfig((prev) => ({
-            ...prev,
-            fit_score_cutoff,
-            low_conf_cutoff_email_classification,
-            qualified_conf_email_classification,
-          }));
-          break;
-        }
-        case "target": {
-          const search_keyword = draft.search_keyword.trim();
-          const search_location = draft.search_location.trim();
-
-          if (!search_keyword) {
-            setError("Search keyword is required.");
-            return;
-          }
-
-          if (!search_location) {
-            setError("Search location is required.");
-            return;
-          }
-
-          await saveSearchConfig({
-            search_keyword,
-            search_location,
-          });
-          setConfig((prev) => ({
-            ...prev,
-            search_keyword,
-            search_location,
-          }));
-          break;
-        }
-        case "contact": {
-          const contact_titles = draft.contact_titles
-            .map((title) => title.trim())
-            .filter(Boolean);
-          const contact_categories = normalizeContactCategories(
-            draft.contact_categories
-          );
-
-          await saveContactFilters({
-            contact_titles,
-            contact_categories,
-          });
-          setConfig((prev) => ({
-            ...prev,
-            contact_titles,
-            contact_categories,
-          }));
-          break;
-        }
-        case "outreach": {
-          const { min_words, max_words, number_of_candidates_per_run } = draft;
-
-          if (
-            min_words === null ||
-            max_words === null ||
-            number_of_candidates_per_run === null
-          ) {
-            setError("All outreach settings fields are required.");
-            return;
-          }
-
-          if (min_words < 1 || max_words < 1 || number_of_candidates_per_run < 1) {
-            setError("Outreach settings must be positive integers.");
-            return;
-          }
-
-          if (min_words >= max_words) {
-            setError("Max words must be greater than min words.");
-            return;
-          }
-
-          await saveRunSettings({
-            number_of_candidates_per_run,
-            min_words,
-            max_words,
-          });
-          setConfig((prev) => ({
-            ...prev,
-            number_of_candidates_per_run,
-            min_words,
-            max_words,
-          }));
-          break;
-        }
-        case "system":
-          setConfig((prev) => ({
-            ...prev,
-            test_mode: draft.test_mode,
-            test_email_override: draft.test_email_override,
-            follow_up_delay: draft.follow_up_delay,
-          }));
-          break;
-        case "partners":
-          setConfig((prev) => ({
-            ...prev,
-            excluded_partners: draft.excluded_partners,
-          }));
-          break;
-        default:
-          break;
-      }
-
-      closeSection();
+      const saved = await saveBusinessConfig(buildBusinessConfigSavePayload(draft));
+      setConfig({
+        ...saved,
+        sender_email: draft.sender_email,
+      });
+      setRephraseSuggestions([]);
+      setIsEditing(false);
+      await refreshUser();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      setError(err instanceof Error ? err.message : "Failed to save configuration");
     } finally {
       setSaving(false);
     }
-  };
-
-  const modalTitle: Record<ConfigSection, string> = {
-    identity: "Edit Business Identity",
-    requirements: "Edit Requirements",
-    location: "Edit Location",
-    scoring: "Edit Scoring Thresholds",
-    target: "Edit Target Partner",
-    contact: "Edit Contact Preferences",
-    outreach: "Edit Outreach Settings",
-    system: "Edit System Settings",
-    partners: "Edit Known Partners",
   };
 
   if (authLoading) {
@@ -530,20 +323,70 @@ export function ConfigurationContent() {
     );
   }
 
-  const editHandler = isOwner ? openSection : undefined;
-
   return (
     <div className="px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Configuration</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          System configuration for the lead generation pipeline
-        </p>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Configuration</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            System configuration for the lead generation pipeline
+          </p>
+          {config.version > 0 ? (
+            <p className="mt-1 text-xs text-gray-400">Version: {config.version}</p>
+          ) : null}
+        </div>
+
+        {isOwner && configLoaded ? (
+          isEditing ? (
+            <div className="flex flex-wrap items-center gap-3">
+              {config.version > 0 ? (
+                <button
+                  type="button"
+                  onClick={handleCancelEditing}
+                  disabled={saving || rephrasing}
+                  className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving || rephrasing || !isDraftDirty}
+                className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saving ? "Saving..." : config.version === 0 ? "Save and continue" : "Save configuration"}
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleStartEditing}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-violet-300 hover:text-violet-700"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit configuration
+            </button>
+          )
+        ) : null}
       </div>
 
       {loadError ? (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {loadError}
+        </div>
+      ) : null}
+
+      {error ? (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      ) : null}
+
+      {configLoaded && config.version === 0 && isEditing ? (
+        <div className="mb-6 rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800">
+          Complete your business configuration to get started. This is required before
+          you can run the pipeline.
         </div>
       ) : null}
 
@@ -553,13 +396,21 @@ export function ConfigurationContent() {
           <SkeletonBar className="h-40 w-full" />
           <SkeletonBar className="h-40 w-full" />
         </div>
+      ) : isEditing ? (
+        <ConfigurationEditForm
+          draft={draft}
+          onPatch={patchDraft}
+          onRequirementsChange={handleRequirementsChange}
+          rephraseSuggestions={rephraseSuggestions}
+          onUpdateRephraseSuggestion={handleUpdateRephraseSuggestion}
+          onKeepRephraseSuggestion={handleKeepRephraseSuggestion}
+          onDiscardRephraseSuggestion={handleDiscardRephraseSuggestion}
+          onRephraseRequirements={handleRephraseRequirements}
+          rephrasing={rephrasing}
+        />
       ) : (
         <div className="space-y-6">
-          <ConfigCard
-            icon={Building2}
-            title="Business Identity"
-            onEdit={editHandler ? () => editHandler("identity") : undefined}
-          >
+          <ConfigCard icon={Building2} title="Business Identity">
             <div className="grid gap-6 md:grid-cols-3">
               <Field label="Business Name" value={displayText(config.business_name)} />
               <Field label="Sender / Team" value={displayText(config.sender_name)} />
@@ -581,18 +432,13 @@ export function ConfigurationContent() {
             </div>
           </ConfigCard>
 
-          <ConfigCard
-            icon={List}
-            title="Requirements"
-            onEdit={editHandler ? () => editHandler("requirements") : undefined}
-          >
+          <ConfigCard icon={List} title="Requirements">
             {displayRequirements(config.requirements)}
           </ConfigCard>
 
           <ConfigCard
             icon={MapPin}
             title="Location"
-            onEdit={editHandler ? () => editHandler("location") : undefined}
             footer={
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <Info className="h-3.5 w-3.5" />
@@ -600,18 +446,18 @@ export function ConfigurationContent() {
               </div>
             }
           >
-            <div className="grid gap-6 md:grid-cols-3">
-              <Field label="Latitude" value={displayText(config.latitude)} />
-              <Field label="Longitude" value={displayText(config.longitude)} />
-              <Field label="Max Distance" value={displayText(config.max_distance)} />
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <Field
+                label="Distance Requirement"
+                value={displayBoolean(config.has_distance_requirement)}
+              />
+              <Field label="Latitude" value={displayNumber(config.lat)} />
+              <Field label="Longitude" value={displayNumber(config.lon)} />
+              <Field label="Max Distance (km)" value={displayNumber(config.max_distance_km)} />
             </div>
           </ConfigCard>
 
-          <ConfigCard
-            icon={BarChart3}
-            title="Scoring Thresholds"
-            onEdit={editHandler ? () => editHandler("scoring") : undefined}
-          >
+          <ConfigCard icon={BarChart3} title="Scoring Thresholds">
             <div className="grid gap-6 md:grid-cols-3">
               <Field
                 label="Fit Score Cutoff"
@@ -628,22 +474,14 @@ export function ConfigurationContent() {
             </div>
           </ConfigCard>
 
-          <ConfigCard
-            icon={Target}
-            title="Target Partner"
-            onEdit={editHandler ? () => editHandler("target") : undefined}
-          >
+          <ConfigCard icon={Target} title="Target Partner">
             <div className="grid gap-6 md:grid-cols-2">
               <Field label="Search Keyword" value={displayText(config.search_keyword)} />
               <Field label="Search Location" value={displayText(config.search_location)} />
             </div>
           </ConfigCard>
 
-          <ConfigCard
-            icon={Users}
-            title="Contact Preferences"
-            onEdit={editHandler ? () => editHandler("contact") : undefined}
-          >
+          <ConfigCard icon={Users} title="Contact Preferences">
             <div className="space-y-6">
               <Field
                 label="Contact Titles (Apollo API)"
@@ -658,258 +496,14 @@ export function ConfigurationContent() {
             </div>
           </ConfigCard>
 
-          <ConfigCard
-            icon={Mail}
-            title="Outreach Settings"
-            onEdit={editHandler ? () => editHandler("outreach") : undefined}
-          >
-            <div className="grid gap-6 md:grid-cols-3">
+          <ConfigCard icon={Mail} title="Outreach Settings">
+            <div className="grid gap-6 md:grid-cols-2">
               <Field label="Min. Words per Email" value={displayNumber(config.min_words)} />
               <Field label="Max. Words per Email" value={displayNumber(config.max_words)} />
-              <Field
-                label="Candidates per Run"
-                value={displayNumber(config.number_of_candidates_per_run)}
-              />
             </div>
-          </ConfigCard>
-
-          <ConfigCard
-            icon={Wrench}
-            title="System Settings"
-            onEdit={editHandler ? () => editHandler("system") : undefined}
-          >
-            <div className="grid gap-6 md:grid-cols-3">
-              <Field label="Test Mode" value={displayBoolean(config.test_mode)} />
-              <Field
-                label="Test Email Override"
-                value={displayEmail(config.test_email_override)}
-              />
-              <Field label="Follow Up Delay" value={displayText(config.follow_up_delay)} />
-            </div>
-          </ConfigCard>
-
-          <ConfigCard
-            icon={Settings2}
-            title="Known Partners"
-            onEdit={editHandler ? () => editHandler("partners") : undefined}
-          >
-            <Field
-              label="Excluded from Outreach"
-              value={<TagList items={config.excluded_partners} />}
-            />
           </ConfigCard>
         </div>
       )}
-
-      <Modal
-        open={activeSection !== null}
-        title={activeSection ? modalTitle[activeSection] : ""}
-        onClose={closeSection}
-        size={activeSection === "requirements" ? "lg" : "default"}
-        footer={
-          activeSection === "requirements" ? (
-            <RequirementsModalFooter
-              onCancel={closeSection}
-              onSave={handleSave}
-              onRephrase={handleRephraseRequirements}
-              saving={saving}
-              rephrasing={rephrasing}
-            />
-          ) : (
-            <div className="flex justify-end gap-3">
-              <ModalActions
-                onCancel={closeSection}
-                onSave={handleSave}
-                saving={saving}
-              />
-            </div>
-          )
-        }
-      >
-        {error ? (
-          <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-            {error}
-          </p>
-        ) : null}
-
-        {activeSection === "identity" ? (
-          <div className="space-y-4">
-            <TextInput
-              label="Business Name"
-              required
-              value={draft.business_name}
-              onChange={(v) => patchDraft("business_name", v)}
-            />
-            <TextInput
-              label="Sender / Team"
-              value={draft.sender_name}
-              onChange={(v) => patchDraft("sender_name", v)}
-              placeholder="Optional"
-            />
-            <TextInput
-              label="Sender Email"
-              type="email"
-              value={draft.sender_email}
-              onChange={(v) => patchDraft("sender_email", v)}
-            />
-            <TextArea
-              label="Collaboration Intent"
-              required
-              rows={6}
-              value={draft.collaboration_intent}
-              onChange={(v) => patchDraft("collaboration_intent", v)}
-            />
-          </div>
-        ) : null}
-
-        {activeSection === "requirements" ? (
-          <RequirementsEditForm
-            requirements={draft.requirements}
-            onChange={handleRequirementsChange}
-            rephraseSuggestions={rephraseSuggestions}
-            onUpdateRephraseSuggestion={handleUpdateRephraseSuggestion}
-            onKeepRephraseSuggestion={handleKeepRephraseSuggestion}
-            onDiscardRephraseSuggestion={handleDiscardRephraseSuggestion}
-          />
-        ) : null}
-
-        {activeSection === "location" ? (
-          <div className="space-y-4">
-            <TextInput
-              label="Latitude"
-              value={draft.latitude}
-              onChange={(v) => patchDraft("latitude", v)}
-            />
-            <TextInput
-              label="Longitude"
-              value={draft.longitude}
-              onChange={(v) => patchDraft("longitude", v)}
-            />
-            <TextInput
-              label="Max Distance"
-              value={draft.max_distance}
-              onChange={(v) => patchDraft("max_distance", v)}
-            />
-          </div>
-        ) : null}
-
-        {activeSection === "scoring" ? (
-          <div className="space-y-4">
-            <NumberInput
-              label="Fit Score Cutoff"
-              required
-              min={SCORING_THRESHOLD_MIN}
-              max={SCORING_THRESHOLD_MAX}
-              hint={`Must be between ${SCORING_THRESHOLD_MIN} and ${SCORING_THRESHOLD_MAX}.`}
-              value={draft.fit_score_cutoff}
-              onChange={(v) => patchDraft("fit_score_cutoff", v)}
-            />
-            <NumberInput
-              label="Email Classification — Low Confidence Cutoff"
-              required
-              min={SCORING_THRESHOLD_MIN}
-              max={SCORING_THRESHOLD_MAX}
-              hint={`Must be between ${SCORING_THRESHOLD_MIN} and ${SCORING_THRESHOLD_MAX}.`}
-              value={draft.low_conf_cutoff_email_classification}
-              onChange={(v) =>
-                patchDraft("low_conf_cutoff_email_classification", v)
-              }
-            />
-            <NumberInput
-              label="Email Classification — Qualified Confidence"
-              required
-              min={SCORING_THRESHOLD_MIN}
-              max={SCORING_THRESHOLD_MAX}
-              hint={`Must be between ${SCORING_THRESHOLD_MIN} and ${SCORING_THRESHOLD_MAX}.`}
-              value={draft.qualified_conf_email_classification}
-              onChange={(v) =>
-                patchDraft("qualified_conf_email_classification", v)
-              }
-            />
-          </div>
-        ) : null}
-
-        {activeSection === "target" ? (
-          <div className="space-y-4">
-            <TextInput
-              label="Search Keyword"
-              required
-              value={draft.search_keyword}
-              onChange={(v) => patchDraft("search_keyword", v)}
-            />
-            <TextInput
-              label="Search Location"
-              required
-              value={draft.search_location}
-              onChange={(v) => patchDraft("search_location", v)}
-            />
-          </div>
-        ) : null}
-
-        {activeSection === "contact" ? (
-          <ContactPreferencesEditForm
-            contactTitles={draft.contact_titles}
-            contactCategories={draft.contact_categories}
-            onContactTitlesChange={(contact_titles) =>
-              patchDraft("contact_titles", contact_titles)
-            }
-            onContactCategoriesChange={(contact_categories) =>
-              patchDraft("contact_categories", contact_categories)
-            }
-          />
-        ) : null}
-
-        {activeSection === "outreach" ? (
-          <OutreachSettingsEditForm
-            minWords={draft.min_words}
-            maxWords={draft.max_words}
-            numberOfCandidatesPerRun={draft.number_of_candidates_per_run}
-            onMinWordsChange={(min_words) => patchDraft("min_words", min_words)}
-            onMaxWordsChange={(max_words) => patchDraft("max_words", max_words)}
-            onNumberOfCandidatesPerRunChange={(number_of_candidates_per_run) =>
-              patchDraft("number_of_candidates_per_run", number_of_candidates_per_run)
-            }
-            onRestoreDefaults={() => {
-              setDraft((prev) => ({
-                ...prev,
-                ...getDefaultRunSettingsDraft(),
-              }));
-            }}
-          />
-        ) : null}
-
-        {activeSection === "system" ? (
-          <div className="space-y-4">
-            <CheckboxInput
-              label="Test Mode Enabled"
-              checked={draft.test_mode ?? false}
-              onChange={(v) => patchDraft("test_mode", v)}
-            />
-            <TextInput
-              label="Test Email Override"
-              type="email"
-              value={draft.test_email_override}
-              onChange={(v) => patchDraft("test_email_override", v)}
-            />
-            <TextInput
-              label="Follow Up Delay"
-              value={draft.follow_up_delay}
-              onChange={(v) => patchDraft("follow_up_delay", v)}
-              placeholder="e.g. 7 days"
-            />
-          </div>
-        ) : null}
-
-        {activeSection === "partners" ? (
-          <TextArea
-            label="Excluded from Outreach"
-            rows={6}
-            hint="One partner name per line."
-            value={listToLines(draft.excluded_partners)}
-            onChange={(v) => patchDraft("excluded_partners", linesToList(v))}
-          />
-        ) : null}
-      </Modal>
     </div>
   );
 }

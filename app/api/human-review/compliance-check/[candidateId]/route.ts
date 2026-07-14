@@ -2,11 +2,12 @@ import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
 import { handleComplianceCheckDecisionPatch } from "@/lib/api/compliance-check-decision-handler";
+import {
+  getConfigScope,
+  requireBusinessAffiliation,
+  type DbUserWithConfig,
+} from "@/lib/api/server-config-scope";
 import humanReviewRepository from "@/server/repositories/humanReviewRepository.js";
-
-type DbUser = {
-  business_id?: number | string | null;
-};
 
 type RouteContext = {
   params: Promise<{ candidateId: string }>;
@@ -29,22 +30,27 @@ type FactsInventoryRow = {
 };
 
 export const GET = withAuth(
-  withApproved(async (_request: Request, context: RouteContext, user: DbUser) => {
+  withApproved(async (_request: Request, context: RouteContext, user: DbUserWithConfig) => {
     try {
-      const { candidateId } = await context.params;
-      const business_id = user.business_id;
-
-      if (!business_id) {
-        return errorResponse("Business affiliation required", 400);
+      const affiliationError = requireBusinessAffiliation(user);
+      if (affiliationError) {
+        return affiliationError;
       }
+
+      const scope = getConfigScope(user);
+      if (!scope) {
+        return errorResponse("Compliance check record not found", 404);
+      }
+
+      const { candidateId } = await context.params;
 
       if (!candidateId) {
         return errorResponse("Candidate id is required", 400);
       }
 
       const result = (await humanReviewRepository.getComplianceCheckDetail({
+        ...scope,
         candidate_id: candidateId,
-        business_id,
       })) as {
         draft: ComplianceCheckDraftRow | undefined;
         facts: FactsInventoryRow[];
@@ -78,20 +84,30 @@ export const GET = withAuth(
 );
 
 export const PATCH = withAuth(
-  withApproved(async (request: Request, context: RouteContext, user: DbUser) => {
+  withApproved(async (request: Request, context: RouteContext, user: DbUserWithConfig) => {
     try {
-      const { candidateId } = await context.params;
-      const business_id = user.business_id;
-
-      if (!business_id) {
-        return errorResponse("Business affiliation required", 400);
+      const affiliationError = requireBusinessAffiliation(user);
+      if (affiliationError) {
+        return affiliationError;
       }
+
+      const scope = getConfigScope(user);
+      if (!scope) {
+        return errorResponse("Compliance check record not found", 404);
+      }
+
+      const { candidateId } = await context.params;
 
       if (!candidateId) {
         return errorResponse("Candidate id is required", 400);
       }
 
-      return handleComplianceCheckDecisionPatch(request, candidateId, business_id);
+      return handleComplianceCheckDecisionPatch(
+        request,
+        candidateId,
+        scope.business_id,
+        scope.version
+      );
     } catch (error) {
       console.error("[PATCH /api/human-review/compliance-check/[candidateId]]", error);
       return errorResponse("Internal server error", 500);

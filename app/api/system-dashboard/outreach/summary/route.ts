@@ -1,12 +1,9 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
+import { getConfigScope, type DbUserWithConfig } from "@/lib/api/server-config-scope";
 import { safeSummaryCount } from "@/lib/system-dashboard/outreach-status";
 import systemDashboardRepository from "@/server/repositories/systemDashboardRepository.js";
-
-type DbUser = {
-  business_id?: number | string | null;
-};
 
 type SummaryCountsRow = {
   total_candidates?: number | string;
@@ -60,15 +57,15 @@ function mapCounts(row: SummaryCountsRow) {
 }
 
 export const GET = withAuth(
-  withApproved(async (_request: Request, _context: unknown, user: DbUser) => {
+  withApproved(async (_request: Request, _context: unknown, user: DbUserWithConfig) => {
     try {
-      const business_id = user.business_id;
-      if (!business_id) {
-        return errorResponse("Business affiliation required", 400);
+      const scope = getConfigScope(user);
+      if (!scope) {
+        return jsonResponse(mapCounts({}));
       }
 
       const result = await systemDashboardRepository.getOutreachStatusSummary({
-        business_id,
+        ...scope,
       });
 
       return jsonResponse(mapCounts(result as SummaryCountsRow));

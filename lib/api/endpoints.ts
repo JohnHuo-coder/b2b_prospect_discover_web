@@ -8,7 +8,9 @@ export const ENDPOINTS = {
     ADMIN_MEMBERS: "/api/admin/members",
     LEADS: "/api/leads",
     DASHBOARD_SUMMARY: "/api/dashboard/summary",
+    DASHBOARD_START_DISCOVERY: "/api/dashboard/start-discovery",
     BUSINESS_CONFIG: "/api/business/config",
+    BUSINESS_CONFIG_CANDIDATES_PER_RUN: "/api/business/config/candidates-per-run",
     BUSINESS_SEARCH: "/api/business/search",
     BUSINESS_JOIN: "/api/business/join",
     BUSINESS_CONFIG_REPHRASE: "/api/business/config/requirements/rephrase",
@@ -29,10 +31,6 @@ export const ENDPOINTS = {
     SYSTEM_DASHBOARD_CONTACT_SUMMARY: "/api/system-dashboard/contact/summary",
     contactEmailSourceDetail: (source: "apollo" | "anymail" | "website") =>
       `/api/system-dashboard/contact/email-source/${source}`,
-    SYSTEM_DASHBOARD_CONTACT_WORKFLOW:
-      "/api/system-dashboard/contact/workflow",
-    SYSTEM_DASHBOARD_CONTACT_WORKFLOW_STAGE:
-      "/api/system-dashboard/contact/workflow/stage",
     contactDetail: (id: string) => `/api/system-dashboard/contact/${id}`,
     SYSTEM_DASHBOARD_OUTREACH: "/api/system-dashboard/outreach",
     SYSTEM_DASHBOARD_OUTREACH_SUMMARY: "/api/system-dashboard/outreach/summary",

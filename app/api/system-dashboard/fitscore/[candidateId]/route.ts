@@ -1,11 +1,8 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
+import { getConfigScope, type DbUserWithConfig } from "@/lib/api/server-config-scope";
 import systemDashboardRepository from "@/server/repositories/systemDashboardRepository.js";
-
-type DbUser = {
-  business_id?: number | string | null;
-};
 
 type RouteContext = {
   params: Promise<{ candidateId: string }>;
@@ -29,21 +26,21 @@ function computeOverallStatus(rows: FitScoreDetailRow[]) {
 }
 
 export const GET = withAuth(
-  withApproved(async (_request: Request, context: RouteContext, user: DbUser) => {
+  withApproved(async (_request: Request, context: RouteContext, user: DbUserWithConfig) => {
     try {
-      const { candidateId } = await context.params;
-      const business_id = user.business_id;
-
-      if (!business_id) {
-        return errorResponse("Business affiliation required", 400);
+      const scope = getConfigScope(user);
+      if (!scope) {
+        return errorResponse("Candidate not found", 404);
       }
+
+      const { candidateId } = await context.params;
 
       if (!candidateId) {
         return errorResponse("Candidate id is required", 400);
       }
 
       const rows = (await systemDashboardRepository.getFitScoreStatusDetail({
-        business_id,
+        ...scope,
         candidate_id: candidateId,
       })) as FitScoreDetailRow[];
 

@@ -1,16 +1,18 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
+import { getConfigScope, type DbUserWithConfig } from "@/lib/api/server-config-scope";
 import systemDashboardRepository from "@/server/repositories/systemDashboardRepository.js";
-
-type DbUser = {
-  business_id?: number | string | null;
-};
 
 type SummaryCountsRow = {
   total_candidates: number | string;
   success_candidates: number | string;
   failed_candidates: number | string;
+};
+
+type RequirementSummaryRow = SummaryCountsRow & {
+  get_review_facts_success_candidates: number | string;
+  review_facts_sufficient_candidates: number | string;
 };
 
 function mapCounts(row: SummaryCountsRow) {
@@ -21,13 +23,44 @@ function mapCounts(row: SummaryCountsRow) {
   };
 }
 
+function mapRequirementSummary(row: RequirementSummaryRow) {
+  const totalInput = Number(row.total_candidates);
+  const succeed = Number(row.success_candidates);
+  const failed = Number(row.failed_candidates);
+  const passRatePool = succeed + failed;
+
+  return {
+    totalInput,
+    succeed,
+    failed,
+    passRatePool,
+    reviewFactsSuccess: Number(row.get_review_facts_success_candidates),
+    reviewFactsSufficient: Number(row.review_facts_sufficient_candidates),
+  };
+}
+
+type WebsiteUrlCollectionRow = {
+  url_collection_failed: number | string;
+};
+
+function mapWebsiteUrlAcquisition(
+  totalInput: number,
+  row: WebsiteUrlCollectionRow
+) {
+  const failed = Number(row.url_collection_failed);
+  const acquired = Math.max(totalInput - failed, 0);
+
+  return {
+    totalInput,
+    acquired,
+    failed,
+  };
+}
+
 export const GET = withAuth(
-  withApproved(async (request: Request, _context: unknown, user: DbUser) => {
+  withApproved(async (request: Request, _context: unknown, user: DbUserWithConfig) => {
     try {
-      const business_id = user.business_id;
-      if (!business_id) {
-        return errorResponse("Business affiliation required", 400);
-      }
+      const scope = getConfigScope(user);
 
       const { searchParams } = new URL(request.url);
       const requirementIndexParam = searchParams.get("requirement_index");
@@ -38,25 +71,52 @@ export const GET = withAuth(
           return errorResponse("Invalid requirement_index", 400);
         }
 
+        if (!scope) {
+          return jsonResponse({
+            requirement_index,
+            requirement_text: "",
+            totalInput: 0,
+            succeed: 0,
+            failed: 0,
+            passRatePool: 0,
+            reviewFactsSuccess: 0,
+            reviewFactsSufficient: 0,
+          });
+        }
+
         const result =
           await systemDashboardRepository.getInfoAcquisitionStatusSummaryByReq({
-            business_id,
+            ...scope,
             requirement_index,
           });
 
         return jsonResponse({
           requirement_index,
           requirement_text: result.requirement?.clarified ?? "",
-          ...mapCounts(result.stats as SummaryCountsRow),
+          ...mapRequirementSummary(result.stats as RequirementSummaryRow),
+        });
+      }
+
+      if (!scope) {
+        return jsonResponse({
+          overall: { totalInput: 0, succeed: 0, failed: 0 },
+          websiteUrlAcquisition: { totalInput: 0, acquired: 0, failed: 0 },
+          requirements: [],
         });
       }
 
       const result = await systemDashboardRepository.getInfoAcquisitionStatusSummary({
-        business_id,
+        ...scope,
       });
 
+      const overall = mapCounts(result.overall as SummaryCountsRow);
+
       return jsonResponse({
-        overall: mapCounts(result.overall as SummaryCountsRow),
+        overall,
+        websiteUrlAcquisition: mapWebsiteUrlAcquisition(
+          overall.totalInput,
+          result.companyWebsiteUrl as WebsiteUrlCollectionRow
+        ),
         requirements: (result.requirements ?? []).map(
           (row: { req_index: number; clarified: string }) => ({
             requirement_index: row.req_index,

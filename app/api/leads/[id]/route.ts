@@ -5,6 +5,7 @@ import leadRepository from "@/server/repositories/leadRepository.js";
 
 type DbUser = {
   business_id?: number | string | null;
+  config_version?: number | null;
 };
 
 type RouteContext = {
@@ -16,9 +17,14 @@ export const PATCH = withAuth(
     try {
       const { id } = await context.params;
       const business_id = user.business_id;
+      const version = Number(user.config_version) || 0;
 
       if (!business_id) {
         return errorResponse("Business affiliation required", 400);
+      }
+
+      if (version === 0) {
+        return errorResponse("Lead not found", 404);
       }
 
       if (!id) {
@@ -35,6 +41,7 @@ export const PATCH = withAuth(
       const result = await leadRepository.updateLeadStatus({
         id,
         business_id,
+        version,
         status,
       });
 
@@ -59,9 +66,19 @@ export const GET = withAuth(
         return errorResponse("Lead id is required", 400);
       }
 
+      if (!user.business_id) {
+        return errorResponse("You need to join a company first", 403);
+      }
+
+      const version = Number(user.config_version) || 0;
+      if (version === 0) {
+        return errorResponse("Lead not found", 404);
+      }
+
       const result = await leadRepository.getById({
         id,
-        business_id: user.business_id ?? undefined,
+        business_id: user.business_id,
+        version,
       });
 
       if (!result) {

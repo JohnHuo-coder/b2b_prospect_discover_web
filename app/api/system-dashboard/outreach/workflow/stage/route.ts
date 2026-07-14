@@ -1,12 +1,9 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
+import { getConfigScope, type DbUserWithConfig } from "@/lib/api/server-config-scope";
 import { mapOutreachDbStatus } from "@/lib/system-dashboard/outreach-status";
 import systemDashboardRepository from "@/server/repositories/systemDashboardRepository.js";
-
-type DbUser = {
-  business_id?: number | string | null;
-};
 
 type StageDetailRow = {
   id: number | string;
@@ -17,13 +14,8 @@ type StageDetailRow = {
 };
 
 export const GET = withAuth(
-  withApproved(async (request: Request, _context: unknown, user: DbUser) => {
+  withApproved(async (request: Request, _context: unknown, user: DbUserWithConfig) => {
     try {
-      const business_id = user.business_id;
-      if (!business_id) {
-        return errorResponse("Business affiliation required", 400);
-      }
-
       const { searchParams } = new URL(request.url);
       const finalStage = searchParams.get("final_stage");
 
@@ -31,8 +23,16 @@ export const GET = withAuth(
         return errorResponse("final_stage is required", 400);
       }
 
+      const scope = getConfigScope(user);
+      if (!scope) {
+        return jsonResponse({
+          final_stage: finalStage,
+          candidates: [],
+        });
+      }
+
       const rows = await systemDashboardRepository.getOutreachStageDetail({
-        business_id,
+        ...scope,
         final_stage: finalStage,
       });
 

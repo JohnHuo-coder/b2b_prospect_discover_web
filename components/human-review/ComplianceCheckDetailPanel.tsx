@@ -182,7 +182,7 @@ export function ComplianceCheckDetailPanel({
                 onClick={() => void handleAction("keep")}
                 className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {submitting === "keep" ? "Keeping..." : "Keep"}
+                {submitting === "keep" ? "Sending..." : "Keep and Send"}
               </button>
             </div>
           </div>

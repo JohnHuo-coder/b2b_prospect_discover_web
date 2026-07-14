@@ -10,13 +10,28 @@ async function findByUid(uid) {
        u.business_id,
        u.first_name,
        u.last_name,
-       b.business_name
+       b.business_name,
+       GREATEST(
+         COALESCE(b.version, 0),
+         COALESCE(
+           (SELECT MAX(bc.version)
+            FROM prospect_discover.business_configs bc
+            WHERE bc.business_id = u.business_id),
+           0
+         )
+       ) AS config_version
      FROM prospect_discover.users u
      LEFT JOIN prospect_discover.businesses b ON b.id = u.business_id
      WHERE u.firebase_uid = $1`,
     [uid]
   );
-  return rows[0] ?? null;
+
+  const user = rows[0] ?? null;
+  if (user) {
+    user.config_version = Number(user.config_version) || 0;
+  }
+
+  return user;
 }
 
 export default {

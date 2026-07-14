@@ -1,26 +1,84 @@
-import { pool } from '../../../lib/db/client.ts';
+const BUSINESS_CONFIG_COLUMNS = [
+  'business_id',
+  'version',
+  'business_name',
+  'sender_name',
+  'collaboration_intent',
+  'search_keyword',
+  'search_location',
+  'number_of_candidates_per_run',
+  'email_min_words',
+  'email_max_words',
+  'low_conf_cutoff_email_classification',
+  'qualified_conf_email_classification',
+  'fit_score_cutoff',
+  'contact_titles',
+  'contact_categories',
+  'has_distance_requirement',
+  'lat',
+  'lon',
+  'max_distance_km',
+];
 
-export async function upsertBusinessConfigPartial(business_id, fields, client = pool) {
-  if (!business_id) {
-    throw new Error('business_id is required');
-  }
+export function buildBusinessConfigInsertQuery() {
+  const columnList = BUSINESS_CONFIG_COLUMNS.join(', ');
+  const placeholders = BUSINESS_CONFIG_COLUMNS.map((_, index) => `$${index + 1}`).join(', ');
 
-  const columns = Object.keys(fields);
-  const values = Object.values(fields);
-  const columnList = ['business_id', ...columns].join(', ');
-  const placeholders = columns.map((_, index) => `$${index + 2}`).join(', ');
-  const setClause = columns
-    .map((column) => `${column} = EXCLUDED.${column}`)
-    .join(',\n        ');
+  return {
+    columnList,
+    placeholders,
+    valuesFromPayload(business_id, version, payload) {
+      return [
+        business_id,
+        version,
+        payload.business_name,
+        payload.sender_name,
+        payload.collaboration_intent,
+        payload.search_keyword,
+        payload.search_location,
+        payload.number_of_candidates_per_run,
+        payload.email_min_words,
+        payload.email_max_words,
+        payload.low_conf_cutoff_email_classification,
+        payload.qualified_conf_email_classification,
+        payload.fit_score_cutoff,
+        payload.contact_titles,
+        payload.contact_categories,
+        payload.has_distance_requirement,
+        payload.lat,
+        payload.lon,
+        payload.max_distance_km,
+      ];
+    },
+  };
+}
 
-  const { rows, rowCount } = await client.query(
-    `INSERT INTO prospect_discover.business_configs (${columnList})
-     VALUES ($1, ${placeholders})
-     ON CONFLICT (business_id) DO UPDATE SET
-       ${setClause}
-     RETURNING *`,
-    [business_id, ...values]
-  );
+export const BUSINESS_CONFIG_SELECT_FIELDS = `
+  id,
+  business_id,
+  version,
+  business_name,
+  sender_name,
+  collaboration_intent,
+  search_keyword,
+  search_location,
+  number_of_candidates_per_run,
+  email_min_words AS min_words,
+  email_max_words AS max_words,
+  low_conf_cutoff_email_classification,
+  qualified_conf_email_classification,
+  fit_score_cutoff,
+  contact_titles,
+  contact_categories,
+  has_distance_requirement,
+  lat,
+  lon,
+  max_distance_km
+`;
 
-  return { row: rows[0] ?? null, affectedRows: rowCount };
+export function toPublicBusinessConfig(row) {
+  if (!row) return null;
+
+  const { id: _configId, ...publicConfig } = row;
+  return publicConfig;
 }
