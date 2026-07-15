@@ -5,8 +5,6 @@ import {
   AtSign,
   BarChart3,
   ChevronRight,
-  Gauge,
-  LayoutGrid,
   ScanSearch,
   Send,
   type LucideIcon,
@@ -22,14 +20,6 @@ type WorkflowStage = {
 };
 
 const workflowStages: WorkflowStage[] = [
-  {
-    title: "Overview",
-    description:
-      "Pipeline overview — stat cards, pipeline timeline, and recent candidate activity.",
-    icon: LayoutGrid,
-    iconBoxClassName: "bg-violet-100",
-    iconClassName: "text-violet-600",
-  },
   {
     title: "Information Acquisition",
     description:
@@ -65,14 +55,6 @@ const workflowStages: WorkflowStage[] = [
     icon: Send,
     iconBoxClassName: "bg-amber-100",
     iconClassName: "text-amber-600",
-  },
-  {
-    title: "Usage",
-    description:
-      "Resource usage — monitor API calls, credits consumed, and prospect discover run history.",
-    icon: Gauge,
-    iconBoxClassName: "bg-emerald-100",
-    iconClassName: "text-emerald-600",
   },
 ];
 
