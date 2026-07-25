@@ -1,11 +1,20 @@
+import {
+  CANDIDATES_PER_RUN_RANGE_ERROR,
+  isValidCandidatesPerRun,
+} from "@/lib/constants/candidates-per-run";
 import type { BusinessConfigState } from "@/lib/types/business-config";
 import { ENDPOINTS } from "@/lib/api/endpoints";
+import { formatRephraseErrorMessage } from "@/lib/constants/rephrase-requirements";
 import { authenticatedFetch } from "@/lib/api/authenticatedFetch";
 import {
   resolveContactTitles,
   resolveRunSettings,
 } from "@/lib/constants/config-defaults";
 import { normalizeContactCategories } from "@/lib/constants/contact-categories";
+import {
+  industriesFromState,
+  splitIndustrySelection,
+} from "@/lib/constants/industries";
 import type { BusinessConfigSavePayload } from "@/lib/types/business-config";
 
 const base = ENDPOINTS.BUSINESS_CONFIG;
@@ -17,6 +26,8 @@ type BusinessConfigRow = {
   collaboration_intent?: string | null;
   search_keyword?: string | null;
   search_location?: string | null;
+  industry?: string | string[] | null;
+  industry_id?: number | string | Array<number | string> | null;
   number_of_candidates_per_run?: number | null;
   min_words?: number | null;
   max_words?: number | null;
@@ -58,6 +69,26 @@ function toStringValue(value: unknown): string {
   return String(value);
 }
 
+function toNumberArray(value: unknown): number[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => Number(item))
+      .filter((item) => Number.isInteger(item) && item >= 1);
+  }
+
+  const single = toNumber(value);
+  return single !== null && Number.isInteger(single) && single >= 1 ? [single] : [];
+}
+
+function toIndustryLabels(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+
+  const single = toStringValue(value).trim();
+  return single ? [single] : [];
+}
+
 function toBoolean(value: unknown): boolean | null {
   if (value === null || value === undefined) return null;
   if (typeof value === "boolean") return value;
@@ -76,6 +107,12 @@ export function mapBusinessConfigResponse(
     .filter((value): value is string => Boolean(value));
 
   const contact_titles = resolveContactTitles(toStringArray(cfg.contact_titles));
+  const { industry, industry_id } = splitIndustrySelection(
+    industriesFromState(
+      toIndustryLabels(cfg.industry),
+      toNumberArray(cfg.industry_id)
+    )
+  );
   const runSettings = resolveRunSettings({
     min_words: toNumber(cfg.min_words),
     max_words: toNumber(cfg.max_words),
@@ -100,7 +137,9 @@ export function mapBusinessConfigResponse(
     qualified_conf_email_classification:
       toNumber(cfg.qualified_conf_email_classification),
     search_keyword: toStringValue(cfg.search_keyword),
-    search_location: toStringValue(cfg.search_location),
+    search_location: toStringValue(cfg.search_location ?? cfg.location),
+    industry,
+    industry_id,
     contact_titles,
     contact_categories: toStringArray(cfg.contact_categories),
     min_words: runSettings.min_words,
@@ -109,8 +148,12 @@ export function mapBusinessConfigResponse(
   };
 }
 
-export async function fetchBusinessConfig(): Promise<BusinessConfigState> {
-  const response = await authenticatedFetch(base);
+export async function fetchBusinessConfig(
+  version?: number
+): Promise<BusinessConfigState> {
+  const query =
+    version !== undefined ? `?version=${encodeURIComponent(String(version))}` : "";
+  const response = await authenticatedFetch(`${base}${query}`);
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
@@ -168,7 +211,7 @@ export async function rephraseRequirements(
     throw new Error(
       typeof data.error === "string"
         ? data.error
-        : "Rephrase failed. Please try again later or contact your technical team."
+        : formatRephraseErrorMessage()
     );
   }
 
@@ -190,7 +233,7 @@ export async function rephraseRequirements(
       );
   }
 
-  throw new Error("Invalid rephrase response from server");
+  throw new Error(formatRephraseErrorMessage());
 }
 
 export function normalizeRequirements(requirements: string[]): string[] {
@@ -211,7 +254,6 @@ export function buildBusinessConfigSavePayload(
   draft: BusinessConfigState
 ): BusinessConfigSavePayload {
   return {
-    business_name: draft.business_name.trim(),
     sender_name: draft.sender_name.trim(),
     collaboration_intent: draft.collaboration_intent.trim(),
     requirements: normalizeRequirements(draft.requirements),
@@ -226,6 +268,8 @@ export function buildBusinessConfigSavePayload(
       draft.qualified_conf_email_classification as number,
     search_keyword: draft.search_keyword.trim(),
     search_location: draft.search_location.trim(),
+    industry: draft.industry,
+    industry_id: draft.industry_id,
     contact_titles: draft.contact_titles.map((title) => title.trim()).filter(Boolean),
     contact_categories: normalizeContactCategories(draft.contact_categories),
     min_words: draft.min_words as number,
@@ -235,7 +279,6 @@ export function buildBusinessConfigSavePayload(
 
 function snapshotSavableConfig(draft: BusinessConfigState): string {
   return JSON.stringify({
-    business_name: draft.business_name.trim(),
     sender_name: draft.sender_name.trim(),
     collaboration_intent: draft.collaboration_intent.trim(),
     requirements: normalizeRequirements(draft.requirements),
@@ -250,6 +293,8 @@ function snapshotSavableConfig(draft: BusinessConfigState): string {
       draft.qualified_conf_email_classification,
     search_keyword: draft.search_keyword.trim(),
     search_location: draft.search_location.trim(),
+    industry: draft.industry,
+    industry_id: draft.industry_id,
     contact_titles: draft.contact_titles.map((title) => title.trim()).filter(Boolean),
     contact_categories: normalizeContactCategories(draft.contact_categories),
     min_words: draft.min_words,
@@ -267,6 +312,10 @@ export function isBusinessConfigDraftDirty(
 export async function updateCandidatesPerRun(
   number_of_candidates_per_run: number
 ): Promise<number> {
+  if (!isValidCandidatesPerRun(number_of_candidates_per_run)) {
+    throw new Error(CANDIDATES_PER_RUN_RANGE_ERROR);
+  }
+
   const response = await authenticatedFetch(
     ENDPOINTS.BUSINESS_CONFIG_CANDIDATES_PER_RUN,
     {
@@ -289,7 +338,7 @@ export async function updateCandidatesPerRun(
     number_of_candidates_per_run?: number | null;
   };
   const value = toNumber(data.number_of_candidates_per_run);
-  if (value === null || value < 1) {
+  if (value === null || !isValidCandidatesPerRun(value)) {
     throw new Error("Invalid candidates per run response from server");
   }
   return value;

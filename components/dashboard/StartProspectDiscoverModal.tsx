@@ -5,6 +5,8 @@ import Link from "next/link";
 import { AlertCircle, CheckCircle2, Play } from "lucide-react";
 import { fetchBusinessConfig } from "@/lib/api/business-config-client";
 import { startProspectDiscovery } from "@/lib/api/dashboard-client";
+import type { DiscoveryQuota } from "@/lib/api/dashboard-client";
+import { formatProspectUsage } from "@/lib/constants/automation-jobs";
 import type { BusinessConfigState } from "@/lib/types/business-config";
 import { validateBusinessConfigForRun } from "@/lib/validation/business-config-readiness";
 import { Modal } from "@/components/ui/Modal";
@@ -13,22 +15,30 @@ import { SkeletonBar } from "@/components/ui/SkeletonBar";
 export function StartProspectDiscoverModal({
   open,
   onClose,
+  configVersion,
   candidateCount: candidateCountOverride,
+  discoveryQuota = null,
+  onDiscoveryFinished,
 }: {
   open: boolean;
   onClose: () => void;
+  configVersion: number;
   candidateCount?: number;
+  discoveryQuota?: DiscoveryQuota | null;
+  onDiscoveryFinished?: () => void;
 }) {
   const [config, setConfig] = useState<BusinessConfigState | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [usageLabel, setUsageLabel] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     if (!open) {
       setConfig(null);
       setError("");
+      setUsageLabel("");
       setSuccessMessage("");
       setSubmitting(false);
       return;
@@ -41,7 +51,7 @@ export function StartProspectDiscoverModal({
       setError("");
 
       try {
-        const data = await fetchBusinessConfig();
+        const data = await fetchBusinessConfig(configVersion);
         if (!cancelled) {
           setConfig(data);
         }
@@ -65,7 +75,7 @@ export function StartProspectDiscoverModal({
     return () => {
       cancelled = true;
     };
-  }, [open]);
+  }, [open, configVersion]);
 
   const readiness = config
     ? validateBusinessConfigForRun({
@@ -78,21 +88,33 @@ export function StartProspectDiscoverModal({
   const candidateCount =
     candidateCountOverride ?? config?.number_of_candidates_per_run ?? 0;
 
+  const quotaLabel = discoveryQuota
+    ? formatProspectUsage(discoveryQuota.prospectUsage)
+    : null;
+
   const handleConfirm = async () => {
     if (!readiness.ready || submitting || successMessage) return;
 
     setSubmitting(true);
     setError("");
+    setUsageLabel("");
 
     try {
-      const result = await startProspectDiscovery();
+      const result = await startProspectDiscovery(configVersion);
       setSuccessMessage(result.message);
+      setUsageLabel(result.prospectUsageLabel);
+      onDiscoveryFinished?.();
     } catch (err) {
+      const prospectError = err as Error & { prospectUsageLabel?: string };
       setError(
         err instanceof Error
           ? err.message
           : "Failed to start discovery. Please try again later or contact your technical team."
       );
+      if (prospectError.prospectUsageLabel) {
+        setUsageLabel(prospectError.prospectUsageLabel);
+      }
+      onDiscoveryFinished?.();
     } finally {
       setSubmitting(false);
     }
@@ -158,7 +180,10 @@ export function StartProspectDiscoverModal({
 
       {error ? (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+          <p>{error}</p>
+          {usageLabel ? (
+            <p className="mt-2 font-medium">{usageLabel} prospects today</p>
+          ) : null}
         </div>
       ) : null}
 
@@ -170,6 +195,11 @@ export function StartProspectDiscoverModal({
               Task sent successfully
             </p>
             <p className="mt-1 text-sm text-emerald-800">{successMessage}</p>
+            {usageLabel ? (
+              <p className="mt-2 text-sm font-medium text-emerald-900">
+                {usageLabel} prospects today
+              </p>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -193,6 +223,12 @@ export function StartProspectDiscoverModal({
                   <span className="font-medium">Candidates per Run</span>{" "}
                   setting.
                 </p>
+                {quotaLabel ? (
+                  <p className="mt-2 text-sm text-violet-800">
+                    Daily usage so far:{" "}
+                    <span className="font-medium">{quotaLabel}</span> prospects
+                  </p>
+                ) : null}
               </div>
 
               <p className="text-sm text-gray-500">

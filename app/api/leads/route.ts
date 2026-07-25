@@ -1,6 +1,7 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
+import { resolveRequestedConfigVersion } from "@/server/providers/shared/dashboardVersionHelpers.js";
 import leadRepository from "@/server/repositories/leadRepository.js";
 
 type DbUser = {
@@ -15,12 +16,19 @@ export const GET = withAuth(
         return errorResponse("You need to join a company first", 403);
       }
 
-      const version = Number(user.config_version) || 0;
-      if (version === 0) {
-        return jsonResponse({ rows: [], total: 0 });
+      const { searchParams } = new URL(request.url);
+      const resolved = resolveRequestedConfigVersion(
+        user,
+        searchParams.get("version")
+      );
+
+      if (!resolved.ok) {
+        if (resolved.reason === "no_config") {
+          return jsonResponse({ rows: [], total: 0 });
+        }
+        return errorResponse("Invalid version", 400);
       }
 
-      const { searchParams } = new URL(request.url);
       const search = searchParams.get("search") || undefined;
       const statusParam = searchParams.get("status");
       const status =
@@ -34,7 +42,7 @@ export const GET = withAuth(
         page,
         limit,
         business_id: user.business_id,
-        version,
+        version: resolved.version,
       });
 
       return jsonResponse(result);

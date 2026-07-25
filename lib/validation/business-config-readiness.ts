@@ -1,3 +1,7 @@
+import {
+  CANDIDATES_PER_RUN_RANGE_ERROR,
+  isValidCandidatesPerRun,
+} from "@/lib/constants/candidates-per-run";
 import type { BusinessConfigState } from "@/lib/types/business-config";
 
 const SCORING_THRESHOLD_MIN = 0;
@@ -84,6 +88,13 @@ export function validateBusinessConfigForRun(
     });
   }
 
+  if (config.industry.length !== config.industry_id.length) {
+    issues.push({
+      section: "Target Partner",
+      message: "Industry selections are out of sync",
+    });
+  }
+
   if (config.contact_titles.length === 0) {
     issues.push({
       section: "Contact Preferences",
@@ -118,11 +129,11 @@ export function validateBusinessConfigForRun(
 
   if (
     config.number_of_candidates_per_run === null ||
-    config.number_of_candidates_per_run < 1
+    !isValidCandidatesPerRun(config.number_of_candidates_per_run)
   ) {
     issues.push({
       section: "Run Settings",
-      message: "Candidates per run is required",
+      message: CANDIDATES_PER_RUN_RANGE_ERROR,
     });
   }
 

@@ -6,7 +6,8 @@ const businessRepository = {
   deleteByUid: (uid) => businessProvider.deleteBusinessByUid(uid),
   getAllBusinessMember: (bid) => userProvider.getAllBusinessMember(bid),
   getBusinesses: (query) => userProvider.getBusinesses(query),
-  getBusinessConfig: (business_id) => businessProvider.getBusinessConfig(business_id),
+  getBusinessConfig: (business_id, version) =>
+    businessProvider.getBusinessConfig(business_id, version),
   insertBusinessConfig: (body) => businessProvider.insertBusinessConfig(body),
   updateCandidatesPerRun: (body) => businessProvider.updateCandidatesPerRun(body),
 };

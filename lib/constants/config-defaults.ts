@@ -1,3 +1,5 @@
+import { clampCandidatesPerRun } from "@/lib/constants/candidates-per-run";
+
 export const DEFAULT_CONTACT_TITLES = [
   "Director of Sales",
   "Sales Manager",
@@ -28,9 +30,10 @@ export function resolveRunSettings(settings: {
   return {
     min_words: settings.min_words ?? DEFAULT_RUN_SETTINGS.min_words,
     max_words: settings.max_words ?? DEFAULT_RUN_SETTINGS.max_words,
-    number_of_candidates_per_run:
+    number_of_candidates_per_run: clampCandidatesPerRun(
       settings.number_of_candidates_per_run ??
-      DEFAULT_RUN_SETTINGS.number_of_candidates_per_run,
+        DEFAULT_RUN_SETTINGS.number_of_candidates_per_run
+    ),
   };
 }
 

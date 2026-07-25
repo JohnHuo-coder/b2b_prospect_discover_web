@@ -27,6 +27,7 @@ import {
   ConfigurationEditForm,
   validateBusinessConfigDraft,
 } from "@/components/configuration/ConfigurationEditForm";
+import { DISTANCE_REQUIREMENT_VIEW_FOOTER } from "@/lib/constants/distance-requirement";
 import { ConfigCard, Field, TagList } from "@/components/ui/ConfigCard";
 import { SkeletonBar } from "@/components/ui/SkeletonBar";
 import { useUser } from "@/components/providers/UserProvider";
@@ -34,6 +35,7 @@ import {
   DEFAULT_CONTACT_TITLES,
   DEFAULT_RUN_SETTINGS,
 } from "@/lib/constants/config-defaults";
+import { BUSINESS_NAME_IMMUTABLE_HINT } from "@/lib/constants/business-identity";
 
 const emptyConfig: BusinessConfigState = {
   version: 0,
@@ -52,6 +54,8 @@ const emptyConfig: BusinessConfigState = {
   qualified_conf_email_classification: null,
   search_keyword: "",
   search_location: "",
+  industry: [],
+  industry_id: [],
   contact_titles: [...DEFAULT_CONTACT_TITLES],
   contact_categories: [],
   min_words: DEFAULT_RUN_SETTINGS.min_words,
@@ -121,6 +125,7 @@ export function ConfigurationContent() {
   const [saving, setSaving] = useState(false);
   const [rephrasing, setRephrasing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rephraseError, setRephraseError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [configLoaded, setConfigLoaded] = useState(false);
   const [rephraseSuggestions, setRephraseSuggestions] = useState<
@@ -198,6 +203,7 @@ export function ConfigurationContent() {
   const handleStartEditing = () => {
     setDraft({ ...config });
     setRephraseSuggestions([]);
+    setRephraseError(null);
     setError(null);
     setIsEditing(true);
   };
@@ -206,19 +212,20 @@ export function ConfigurationContent() {
     if (config.version === 0) return;
     setDraft({ ...config });
     setRephraseSuggestions([]);
+    setRephraseError(null);
     setError(null);
     setIsEditing(false);
   };
 
   const handleRephraseRequirements = async () => {
     setRephrasing(true);
-    setError(null);
+    setRephraseError(null);
 
     try {
       const requirements = normalizeRequirements(draft.requirements);
 
       if (requirements.length === 0) {
-        setError("Add at least one requirement before rephrasing.");
+        setRephraseError("Add at least one requirement before rephrasing.");
         return;
       }
 
@@ -227,7 +234,9 @@ export function ConfigurationContent() {
         requirements.map((_, index) => suggestions[index] ?? null)
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to rephrase requirements");
+      setRephraseError(
+        err instanceof Error ? err.message : "Failed to rephrase requirements"
+      );
     } finally {
       setRephrasing(false);
     }
@@ -284,6 +293,7 @@ export function ConfigurationContent() {
         sender_email: draft.sender_email,
       });
       setRephraseSuggestions([]);
+      setRephraseError(null);
       setIsEditing(false);
       await refreshUser();
     } catch (err) {
@@ -407,12 +417,17 @@ export function ConfigurationContent() {
           onDiscardRephraseSuggestion={handleDiscardRephraseSuggestion}
           onRephraseRequirements={handleRephraseRequirements}
           rephrasing={rephrasing}
+          rephraseError={rephraseError}
         />
       ) : (
         <div className="space-y-6">
           <ConfigCard icon={Building2} title="Business Identity">
             <div className="grid gap-6 md:grid-cols-3">
-              <Field label="Business Name" value={displayText(config.business_name)} />
+              <Field
+                label="Business Name"
+                value={displayText(config.business_name)}
+                hint={BUSINESS_NAME_IMMUTABLE_HINT}
+              />
               <Field label="Sender / Team" value={displayText(config.sender_name)} />
               <Field label="Sender Email" value={displayEmail(config.sender_email)} />
             </div>
@@ -441,8 +456,8 @@ export function ConfigurationContent() {
             title="Location"
             footer={
               <div className="flex items-center gap-2 text-xs text-gray-500">
-                <Info className="h-3.5 w-3.5" />
-                Coordinates and distance are only used when geo-proximity matters.
+                <Info className="h-3.5 w-3.5 shrink-0" />
+                {DISTANCE_REQUIREMENT_VIEW_FOOTER}
               </div>
             }
           >
@@ -475,7 +490,11 @@ export function ConfigurationContent() {
           </ConfigCard>
 
           <ConfigCard icon={Target} title="Target Partner">
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-3">
+              <Field
+                label="Industry"
+                value={<TagList items={config.industry} variant="purple" />}
+              />
               <Field label="Search Keyword" value={displayText(config.search_keyword)} />
               <Field label="Search Location" value={displayText(config.search_location)} />
             </div>

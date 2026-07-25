@@ -27,6 +27,7 @@ type BackendUser = {
   config_version?: number;
   first_name?: string | null;
   last_name?: string | null;
+  is_admin?: boolean;
 };
 
 export type AppUser = FirebaseUser & BackendUser;

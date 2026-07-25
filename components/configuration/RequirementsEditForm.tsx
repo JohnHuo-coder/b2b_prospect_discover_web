@@ -162,6 +162,7 @@ export function RequirementsModalFooter({
   onRephrase,
   saving = false,
   rephrasing = false,
+  rephraseError = null,
   hideCancel = false,
   hideSave = false,
 }: {
@@ -170,43 +171,52 @@ export function RequirementsModalFooter({
   onRephrase: () => void;
   saving?: boolean;
   rephrasing?: boolean;
+  rephraseError?: string | null;
   hideCancel?: boolean;
   hideSave?: boolean;
 }) {
   return (
-    <div className="flex w-full items-center justify-between">
-      <button
-        type="button"
-        onClick={onRephrase}
-        disabled={saving || rephrasing}
-        className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-100 disabled:opacity-50"
-      >
-        <Sparkles className="h-4 w-4" />
-        {rephrasing ? "Rephrasing..." : "LLM Rephrase"}
-      </button>
+    <div>
+      <div className="flex w-full items-center justify-between">
+        <button
+          type="button"
+          onClick={onRephrase}
+          disabled={saving || rephrasing}
+          className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-100 disabled:opacity-50"
+        >
+          <Sparkles className="h-4 w-4" />
+          {rephrasing ? "Rephrasing..." : "LLM Rephrase"}
+        </button>
 
-      {!hideCancel || !hideSave ? (
-        <div className="flex items-center gap-4">
-          {!hideCancel ? (
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={saving || rephrasing}
-              className="text-sm font-medium text-gray-600 transition hover:text-gray-900 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-          ) : null}
-          {!hideSave ? (
-            <button
-              type="button"
-              onClick={onSave}
-              disabled={saving || rephrasing}
-              className="rounded-lg bg-violet-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:opacity-50"
-            >
-              {saving ? "Saving..." : "Save"}
-            </button>
-          ) : null}
+        {!hideCancel || !hideSave ? (
+          <div className="flex items-center gap-4">
+            {!hideCancel ? (
+              <button
+                type="button"
+                onClick={onCancel}
+                disabled={saving || rephrasing}
+                className="text-sm font-medium text-gray-600 transition hover:text-gray-900 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            ) : null}
+            {!hideSave ? (
+              <button
+                type="button"
+                onClick={onSave}
+                disabled={saving || rephrasing}
+                className="rounded-lg bg-violet-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:opacity-50"
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      {rephraseError ? (
+        <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {rephraseError}
         </div>
       ) : null}
     </div>

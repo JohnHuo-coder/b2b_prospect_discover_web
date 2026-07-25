@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import type { BusinessConfigState } from "@/lib/types/business-config";
 import type { RephraseSuggestion } from "@/lib/api/business-config-client";
+import { BUSINESS_NAME_IMMUTABLE_HINT } from "@/lib/constants/business-identity";
 import { ConfigCard } from "@/components/ui/ConfigCard";
 import {
   RequirementsEditForm,
@@ -22,13 +23,19 @@ import {
   OutreachSettingsEditForm,
 } from "@/components/configuration/OutreachSettingsEditForm";
 import {
-  CheckboxInput,
   linesToList,
   listToLines,
   NumberInput,
+  SwitchInput,
   TextArea,
   TextInput,
 } from "@/components/ui/Modal";
+import { IndustryMultiSelect } from "@/components/configuration/IndustryMultiSelect";
+import { DISTANCE_REQUIREMENT_HINT } from "@/lib/constants/distance-requirement";
+import {
+  industriesFromState,
+  splitIndustrySelection,
+} from "@/lib/constants/industries";
 
 const SCORING_THRESHOLD_MIN = 0;
 const SCORING_THRESHOLD_MAX = 100;
@@ -46,6 +53,7 @@ type ConfigurationEditFormProps = {
   onDiscardRephraseSuggestion: (index: number) => void;
   onRephraseRequirements: () => void;
   rephrasing: boolean;
+  rephraseError?: string | null;
 };
 
 export function ConfigurationEditForm({
@@ -58,7 +66,10 @@ export function ConfigurationEditForm({
   onDiscardRephraseSuggestion,
   onRephraseRequirements,
   rephrasing,
+  rephraseError = null,
 }: ConfigurationEditFormProps) {
+  const distanceEnabled = draft.has_distance_requirement ?? false;
+
   return (
     <div className="space-y-6">
       <ConfigCard icon={Building2} title="Business Identity">
@@ -67,7 +78,9 @@ export function ConfigurationEditForm({
             label="Business Name"
             required
             value={draft.business_name}
-            onChange={(value) => onPatch("business_name", value)}
+            onChange={() => undefined}
+            readOnly
+            hint={BUSINESS_NAME_IMMUTABLE_HINT}
           />
           <TextInput
             label="Sender / Team"
@@ -107,6 +120,7 @@ export function ConfigurationEditForm({
             onRephrase={onRephraseRequirements}
             saving={false}
             rephrasing={rephrasing}
+            rephraseError={rephraseError}
             hideCancel
             hideSave
           />
@@ -115,27 +129,32 @@ export function ConfigurationEditForm({
 
       <ConfigCard icon={MapPin} title="Location">
         <div className="space-y-4">
-          <CheckboxInput
+          <SwitchInput
             label="Enable distance requirement"
-            checked={draft.has_distance_requirement ?? false}
+            checked={distanceEnabled}
+            hint={DISTANCE_REQUIREMENT_HINT}
             onChange={(value) => onPatch("has_distance_requirement", value)}
           />
-          <NumberInput
-            label="Latitude"
-            value={draft.lat}
-            onChange={(value) => onPatch("lat", value)}
-          />
-          <NumberInput
-            label="Longitude"
-            value={draft.lon}
-            onChange={(value) => onPatch("lon", value)}
-          />
-          <NumberInput
-            label="Max Distance (km)"
-            min={0}
-            value={draft.max_distance_km}
-            onChange={(value) => onPatch("max_distance_km", value)}
-          />
+          {distanceEnabled ? (
+            <div className="space-y-4">
+              <NumberInput
+                label="Latitude"
+                value={draft.lat}
+                onChange={(value) => onPatch("lat", value)}
+              />
+              <NumberInput
+                label="Longitude"
+                value={draft.lon}
+                onChange={(value) => onPatch("lon", value)}
+              />
+              <NumberInput
+                label="Max Distance (km)"
+                min={0}
+                value={draft.max_distance_km}
+                onChange={(value) => onPatch("max_distance_km", value)}
+              />
+            </div>
+          ) : null}
         </div>
       </ConfigCard>
 
@@ -177,6 +196,15 @@ export function ConfigurationEditForm({
 
       <ConfigCard icon={Target} title="Target Partner">
         <div className="space-y-4">
+          <IndustryMultiSelect
+            label="Industry"
+            value={industriesFromState(draft.industry, draft.industry_id)}
+            onChange={(selection) => {
+              const next = splitIndustrySelection(selection);
+              onPatch("industry", next.industry);
+              onPatch("industry_id", next.industry_id);
+            }}
+          />
           <TextInput
             label="Search Keyword"
             required
@@ -188,6 +216,7 @@ export function ConfigurationEditForm({
             required
             value={draft.search_location}
             onChange={(value) => onPatch("search_location", value)}
+            placeholder="e.g. Bangkok, Thailand"
           />
         </div>
       </ConfigCard>
@@ -231,6 +260,9 @@ export function validateBusinessConfigDraft(
   }
   if (!draft.search_keyword.trim()) return "Search keyword is required.";
   if (!draft.search_location.trim()) return "Search location is required.";
+  if (draft.industry.length !== draft.industry_id.length) {
+    return "Industry selections are out of sync.";
+  }
   if (
     draft.fit_score_cutoff === null ||
     draft.low_conf_cutoff_email_classification === null ||

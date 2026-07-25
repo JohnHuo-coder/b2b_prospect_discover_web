@@ -17,6 +17,7 @@ type LeadsResponse = {
 };
 
 const KNOWN_STATUSES = new Set<LeadStatus>([
+  "ready",
   "sent",
   "heard_back",
   "pending",
@@ -64,6 +65,7 @@ export async function fetchLeads(params?: {
   status?: string;
   page?: number;
   limit?: number;
+  version?: number;
 }): Promise<{ leads: Lead[]; total: number }> {
   const query = new URLSearchParams();
 
@@ -71,6 +73,9 @@ export async function fetchLeads(params?: {
   if (params?.status) query.set("status", params.status);
   if (params?.page) query.set("page", String(params.page));
   if (params?.limit) query.set("limit", String(params.limit));
+  if (params?.version !== undefined) {
+    query.set("version", String(params.version));
+  }
 
   const url = query.size
     ? `${ENDPOINTS.LEADS}?${query.toString()}`
@@ -95,9 +100,12 @@ export async function fetchLeads(params?: {
 
 export async function updateLeadStatus(
   id: string,
-  status: LeadStatus
+  status: LeadStatus,
+  version?: number
 ): Promise<void> {
-  const response = await authenticatedFetch(ENDPOINTS.leadDetail(id), {
+  const query =
+    version !== undefined ? `?version=${encodeURIComponent(String(version))}` : "";
+  const response = await authenticatedFetch(`${ENDPOINTS.leadDetail(id)}${query}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),

@@ -8,7 +8,14 @@ import { SkeletonBar } from "@/components/ui/SkeletonBar";
 import { Pagination } from "@/components/ui/Pagination";
 import { StartProspectDiscoverModal } from "@/components/dashboard/StartProspectDiscoverModal";
 import { CandidatesPerRunControl } from "@/components/dashboard/CandidatesPerRunControl";
-import { fetchDashboardSummary } from "@/lib/api/dashboard-client";
+import { DiscoveryQuotaIndicator } from "@/components/dashboard/DiscoveryQuotaIndicator";
+import { GmailConnectionButton } from "@/components/dashboard/GmailConnectionButton";
+import { ConfigVersionSelect } from "@/components/dashboard/ConfigVersionSelect";
+import {
+  fetchDashboardSummary,
+  fetchDiscoveryQuota,
+  type DiscoveryQuota,
+} from "@/lib/api/dashboard-client";
 import { fetchLeads, updateLeadStatus } from "@/lib/api/leads-client";
 import {
   searchBusinesses,
@@ -20,6 +27,12 @@ import { getUserDisplayName, hasUserName } from "@/lib/auth/userDisplay";
 import { statusLabels, type Lead, type LeadStatus } from "@/lib/mock-data";
 
 const summaryCardMeta = [
+  {
+    key: "ready" as const,
+    label: "Ready",
+    valueClass: "text-violet-600",
+    bgClass: "bg-violet-50",
+  },
   {
     key: "sent" as const,
     label: "Email Sent",
@@ -48,6 +61,7 @@ const summaryCardMeta = [
 
 const statusFilters: Array<LeadStatus | "all"> = [
   "all",
+  "ready",
   "sent",
   "heard_back",
   "pending",
@@ -334,6 +348,9 @@ export function DashboardContent() {
   const isPending = Boolean(user && (!user.role || user.role === "pending"));
   const configVersion = Number(user?.config_version) || 0;
   const needsConfiguration = configVersion < 1;
+  const [selectedVersion, setSelectedVersion] = useState(configVersion);
+  const isAlternateVersion =
+    configVersion > 0 && selectedVersion > 0 && selectedVersion !== configVersion;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
   const [summary, setSummary] = useState<Record<
@@ -348,6 +365,10 @@ export function DashboardContent() {
   const [leadsError, setLeadsError] = useState("");
   const [runModalOpen, setRunModalOpen] = useState(false);
   const [candidatesPerRun, setCandidatesPerRun] = useState<number | null>(null);
+  const [discoveryQuota, setDiscoveryQuota] = useState<DiscoveryQuota | null>(
+    null
+  );
+  const [discoveryQuotaLoading, setDiscoveryQuotaLoading] = useState(true);
   const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
   const [statusUpdateError, setStatusUpdateError] = useState("");
 
@@ -357,8 +378,17 @@ export function DashboardContent() {
   }, [authLoading, isPending, refreshUser]);
 
   useEffect(() => {
+    setSelectedVersion(configVersion);
+  }, [configVersion]);
+
+  const leadDetailHref = (leadId: string) =>
+    isAlternateVersion
+      ? `/leads/${leadId}?version=${selectedVersion}`
+      : `/leads/${leadId}`;
+
+  useEffect(() => {
     setPage(1);
-  }, [search, statusFilter]);
+  }, [search, statusFilter, selectedVersion]);
 
   useEffect(() => {
     if (authLoading || isPending || needsConfiguration) return;
@@ -376,7 +406,7 @@ export function DashboardContent() {
       setSummaryError("");
 
       try {
-        const result = await fetchDashboardSummary();
+        const result = await fetchDashboardSummary(selectedVersion);
 
         if (!cancelled) {
           setSummary(result);
@@ -396,10 +426,70 @@ export function DashboardContent() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, user, isPending, needsConfiguration, configVersion]);
+  }, [authLoading, user, isPending, needsConfiguration, selectedVersion]);
 
   useEffect(() => {
-    if (authLoading || isPending || needsConfiguration) return;
+    if (authLoading || isPending || needsConfiguration) {
+      setDiscoveryQuota(null);
+      setDiscoveryQuotaLoading(false);
+      return;
+    }
+
+    if (!user) {
+      setDiscoveryQuota(null);
+      setDiscoveryQuotaLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadQuota = async () => {
+      setDiscoveryQuotaLoading(true);
+
+      try {
+        const result = await fetchDiscoveryQuota();
+        if (!cancelled) {
+          setDiscoveryQuota(result);
+        }
+      } catch {
+        if (!cancelled) {
+          setDiscoveryQuota(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setDiscoveryQuotaLoading(false);
+        }
+      }
+    };
+
+    void loadQuota();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user, isPending, needsConfiguration]);
+
+  const refreshDiscoveryQuota = async () => {
+    if (needsConfiguration || !user) return;
+
+    try {
+      const result = await fetchDiscoveryQuota();
+      setDiscoveryQuota(result);
+    } catch {
+      setDiscoveryQuota(null);
+    }
+  };
+
+  useEffect(() => {
+    if (authLoading || isPending) return;
+
+    if (needsConfiguration) {
+      setLeads([]);
+      setTotal(0);
+      setLeadsLoading(false);
+      setLeadsError("");
+      return;
+    }
 
     if (!user) {
       setLeadsError("Please sign in to view leads.");
@@ -421,6 +511,7 @@ export function DashboardContent() {
           status: statusFilter,
           page,
           limit: LEADS_PAGE_SIZE,
+          version: selectedVersion,
         });
 
         if (!cancelled) {
@@ -448,7 +539,7 @@ export function DashboardContent() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [search, statusFilter, page, authLoading, user, isPending, needsConfiguration, configVersion]);
+  }, [search, statusFilter, page, authLoading, user, isPending, needsConfiguration, selectedVersion]);
 
   const totalPages = Math.max(1, Math.ceil(total / LEADS_PAGE_SIZE));
 
@@ -461,7 +552,7 @@ export function DashboardContent() {
     setStatusUpdateError("");
 
     try {
-      await updateLeadStatus(leadId, nextStatus);
+      await updateLeadStatus(leadId, nextStatus, selectedVersion);
 
       setLeads((current) =>
         current.map((lead) =>
@@ -521,19 +612,39 @@ export function DashboardContent() {
     <div className="px-8 py-8">
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-500">All lead candidates</p>
+          <div className="flex flex-wrap items-center gap-4">
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            {!needsConfiguration ? (
+              <ConfigVersionSelect
+                currentVersion={configVersion}
+                selectedVersion={selectedVersion}
+                onChange={setSelectedVersion}
+              />
+            ) : null}
+          </div>
+          <p className="mt-1 text-sm text-gray-500">
+            {isAlternateVersion
+              ? `Viewing configuration version ${selectedVersion}`
+              : "All lead candidates"}
+          </p>
         </div>
         {!needsConfiguration ? (
-          <div className="flex shrink-0 flex-wrap items-end justify-end gap-3">
-            <CandidatesPerRunControl onValueChange={setCandidatesPerRun} />
-            <button
-              type="button"
-              onClick={() => setRunModalOpen(true)}
-              className="rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-violet-700"
-            >
-              Start Prospect Discover
-            </button>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <div className="flex flex-wrap items-end justify-end gap-3">
+              <GmailConnectionButton />
+              <CandidatesPerRunControl onValueChange={setCandidatesPerRun} />
+              <button
+                type="button"
+                onClick={() => setRunModalOpen(true)}
+                className="rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-violet-700"
+              >
+                Start Prospect Discover
+              </button>
+            </div>
+            <DiscoveryQuotaIndicator
+              quota={discoveryQuota}
+              loading={discoveryQuotaLoading}
+            />
           </div>
         ) : null}
       </div>
@@ -542,7 +653,10 @@ export function DashboardContent() {
         <StartProspectDiscoverModal
           open={runModalOpen}
           onClose={() => setRunModalOpen(false)}
+          configVersion={selectedVersion}
           candidateCount={candidatesPerRun ?? undefined}
+          discoveryQuota={discoveryQuota}
+          onDiscoveryFinished={() => void refreshDiscoveryQuota()}
         />
       ) : null}
 
@@ -569,7 +683,7 @@ export function DashboardContent() {
       ) : null}
 
       {!needsConfiguration ? (
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {summaryCardMeta.map((card) => (
             <SummaryStatCard
               key={card.key}
@@ -653,19 +767,19 @@ export function DashboardContent() {
               >
                 <td className="px-6 py-4 text-sm text-gray-500">
                   <Link
-                    href={`/leads/${lead.id}`}
+                    href={leadDetailHref(lead.id)}
                     className="block text-violet-600 hover:text-violet-700"
                   >
                     {lead.id}
                   </Link>
                 </td>
                 <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                  <Link href={`/leads/${lead.id}`} className="hover:text-violet-700">
+                  <Link href={leadDetailHref(lead.id)} className="hover:text-violet-700">
                     {lead.company}
                   </Link>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-700">
-                  <Link href={`/leads/${lead.id}`} className="block hover:text-violet-700">
+                  <Link href={leadDetailHref(lead.id)} className="block hover:text-violet-700">
                     {lead.contact}
                   </Link>
                 </td>
@@ -692,7 +806,7 @@ export function DashboardContent() {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <Link href={`/leads/${lead.id}`} className="inline-block">
+                    <Link href={leadDetailHref(lead.id)} className="inline-block">
                       <StatusBadge status={lead.status} />
                     </Link>
                     {lead.status === "sent" ? (
@@ -727,7 +841,7 @@ export function DashboardContent() {
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600">
-                  <Link href={`/leads/${lead.id}`} className="block hover:text-violet-700">
+                  <Link href={leadDetailHref(lead.id)} className="block hover:text-violet-700">
                     {lead.added}
                   </Link>
                 </td>
@@ -738,7 +852,9 @@ export function DashboardContent() {
 
         {!leadsLoading && leads.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm text-gray-500">
-            No leads match your filters.
+            {needsConfiguration
+              ? "Complete your configuration to view leads."
+              : "No leads match your filters."}
           </div>
         ) : null}
 

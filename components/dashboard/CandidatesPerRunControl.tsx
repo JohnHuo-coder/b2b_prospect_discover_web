@@ -5,6 +5,13 @@ import {
   fetchBusinessConfig,
   updateCandidatesPerRun,
 } from "@/lib/api/business-config-client";
+import {
+  CANDIDATES_PER_RUN_RANGE_ERROR,
+  MAX_CANDIDATES_PER_RUN,
+  MIN_CANDIDATES_PER_RUN,
+  clampCandidatesPerRun,
+  isValidCandidatesPerRun,
+} from "@/lib/constants/candidates-per-run";
 import { DEFAULT_RUN_SETTINGS } from "@/lib/constants/config-defaults";
 
 type CandidatesPerRunControlProps = {
@@ -42,9 +49,10 @@ export function CandidatesPerRunControl({
         const config = await fetchBusinessConfig();
         if (cancelled) return;
 
-        const loaded =
+        const loaded = clampCandidatesPerRun(
           config.number_of_candidates_per_run ??
-          DEFAULT_RUN_SETTINGS.number_of_candidates_per_run;
+            DEFAULT_RUN_SETTINGS.number_of_candidates_per_run
+        );
         setValue(loaded);
         setSavedValue(loaded);
         onValueChangeRef.current?.(loaded);
@@ -76,8 +84,8 @@ export function CandidatesPerRunControl({
     if (disabled || loading || saving || savedValue === null || !isDirty) {
       return;
     }
-    if (!Number.isInteger(value) || value < 1) {
-      setError("Candidates per run must be a positive integer");
+    if (!isValidCandidatesPerRun(value)) {
+      setError(CANDIDATES_PER_RUN_RANGE_ERROR);
       return;
     }
 
@@ -107,13 +115,18 @@ export function CandidatesPerRunControl({
           <span className="whitespace-nowrap font-medium">Candidates per run</span>
           <input
             type="number"
-            min={1}
+            min={MIN_CANDIDATES_PER_RUN}
+            max={MAX_CANDIDATES_PER_RUN}
             step={1}
             disabled={disabled || loading || saving}
             value={value}
             onChange={(event) => {
               const parsed = Number(event.target.value);
-              if (!Number.isInteger(parsed) || parsed < 1) {
+              if (!Number.isInteger(parsed)) {
+                return;
+              }
+              if (parsed < MIN_CANDIDATES_PER_RUN || parsed > MAX_CANDIDATES_PER_RUN) {
+                setError(CANDIDATES_PER_RUN_RANGE_ERROR);
                 return;
               }
               setValue(parsed);

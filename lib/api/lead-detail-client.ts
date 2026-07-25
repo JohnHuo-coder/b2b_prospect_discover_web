@@ -9,6 +9,15 @@ type LeadInfoRow = {
   phone: string | null;
   status: string;
   created_at: string;
+  industry: string | null;
+  linkedin_url: string | null;
+  employee_count: number | string | null;
+  source: string | null;
+  address: string | null;
+  distance_km: number | string | null;
+  employee_count_range_start: number | string | null;
+  employee_count_range_end: number | string | null;
+  company_type: string | null;
 };
 
 type LeadScoreRow = {
@@ -29,6 +38,7 @@ type LeadEmailRow = {
   contact_role: string | null;
   from: string | null;
   outreach_email: string | null;
+  outreach_status: string | null;
 };
 
 type LeadDetailResponse = {
@@ -45,6 +55,10 @@ export type LeadRequirement = {
   supportingFacts: string[];
 };
 
+export type LeadContactEmailSource = "website" | "verified" | null;
+
+export type OutreachEmailStatus = "ready" | "sent";
+
 export type LeadContact = {
   email: string;
   firstName: string;
@@ -53,13 +67,26 @@ export type LeadContact = {
   contactRole: string;
   linkedinUrl: string;
   outreachEmail: string;
+  outreachStatus: OutreachEmailStatus | null;
+  emailSource: LeadContactEmailSource;
 };
+
+export const WEBSITE_SCRAPED_EMAIL_NOTE =
+  "This email was scraped from the company website. Please use with caution.";
 
 export type LeadDetail = {
   id: string;
   companyName: string;
-  website: string;
-  phone: string;
+  website: string | null;
+  phone: string | null;
+  industry: string | null;
+  linkedinUrl: string | null;
+  employeeCount: number | null;
+  employeeCountRange: string | null;
+  companyType: string | null;
+  source: string | null;
+  address: string | null;
+  distanceKm: number | null;
   status: LeadStatus;
   createdAt: string;
   requirements: LeadRequirement[];
@@ -67,6 +94,7 @@ export type LeadDetail = {
 };
 
 const KNOWN_STATUSES = new Set<LeadStatus>([
+  "ready",
   "sent",
   "heard_back",
   "pending",
@@ -94,10 +122,50 @@ function formatCreatedAt(value: string): string {
   });
 }
 
-function normalizeWebsite(value: string | null): string {
-  return (value ?? "")
-    .replace(/^https?:\/\//, "")
-    .replace(/\/$/, "");
+function normalizeWebsite(value: string | null): string | null {
+  const trimmed = (value ?? "").trim();
+  if (!trimmed) return null;
+
+  return trimmed.replace(/^https?:\/\//, "").replace(/\/$/, "");
+}
+
+function normalizeOptionalText(value: string | null | undefined): string | null {
+  const trimmed = typeof value === "string" ? value.trim() : "";
+  return trimmed || null;
+}
+
+function normalizeOptionalNumber(
+  value: number | string | null | undefined
+): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function formatEmployeeCountRange(
+  start: number | string | null | undefined,
+  end: number | string | null | undefined
+): string | null {
+  const rangeStart = normalizeOptionalNumber(start);
+  const rangeEnd = normalizeOptionalNumber(end);
+
+  if (rangeStart !== null && rangeEnd !== null) {
+    if (rangeStart === rangeEnd) return String(rangeStart);
+    return `${rangeStart} - ${rangeEnd}`;
+  }
+
+  if (rangeStart !== null) return String(rangeStart);
+  if (rangeEnd !== null) return String(rangeEnd);
+  return null;
+}
+
+function formatSourceLabel(value: string | null): string | null {
+  if (!value) return null;
+  return value
+    .split("_")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 function normalizeScore(value: number | string): number {
@@ -134,6 +202,23 @@ function parseSupportingFacts(value: unknown): string[] {
   return [];
 }
 
+function resolveContactEmailSource(from: string | null | undefined): LeadContactEmailSource {
+  const normalized = from?.trim().toLowerCase() ?? "";
+  if (normalized === "email_classification") return "website";
+  if (normalized === "anymail_finder" || normalized === "apollo") return "verified";
+  return null;
+}
+
+function normalizeOutreachStatus(
+  status: string | null | undefined
+): OutreachEmailStatus | null {
+  const normalized = status?.trim().toLowerCase() ?? "";
+  if (normalized === "ready" || normalized === "sent") {
+    return normalized;
+  }
+  return null;
+}
+
 function mapLeadDetail(data: LeadDetailResponse): LeadDetail {
   const info = data.lead_info;
 
@@ -141,7 +226,18 @@ function mapLeadDetail(data: LeadDetailResponse): LeadDetail {
     id: String(info.id),
     companyName: info.company_name,
     website: normalizeWebsite(info.website),
-    phone: info.phone?.trim() || "—",
+    phone: normalizeOptionalText(info.phone),
+    industry: normalizeOptionalText(info.industry),
+    linkedinUrl: normalizeOptionalText(info.linkedin_url),
+    employeeCount: normalizeOptionalNumber(info.employee_count),
+    employeeCountRange: formatEmployeeCountRange(
+      info.employee_count_range_start,
+      info.employee_count_range_end
+    ),
+    companyType: normalizeOptionalText(info.company_type),
+    source: formatSourceLabel(normalizeOptionalText(info.source)),
+    address: normalizeOptionalText(info.address),
+    distanceKm: normalizeOptionalNumber(info.distance_km),
     status: normalizeStatus(info.status),
     createdAt: formatCreatedAt(info.created_at),
     requirements: data.lead_scores.map((row) => ({
@@ -159,12 +255,19 @@ function mapLeadDetail(data: LeadDetailResponse): LeadDetail {
       contactRole: row.contact_role?.trim() || "—",
       linkedinUrl: row.linkedin_url?.trim() || "",
       outreachEmail: row.outreach_email?.trim() || "",
+      outreachStatus: normalizeOutreachStatus(row.outreach_status),
+      emailSource: resolveContactEmailSource(row.from),
     })),
   };
 }
 
-export async function fetchLeadById(id: string): Promise<LeadDetail> {
-  const response = await authenticatedFetch(ENDPOINTS.leadDetail(id));
+export async function fetchLeadById(
+  id: string,
+  version?: number
+): Promise<LeadDetail> {
+  const query =
+    version !== undefined ? `?version=${encodeURIComponent(String(version))}` : "";
+  const response = await authenticatedFetch(`${ENDPOINTS.leadDetail(id)}${query}`);
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -175,4 +278,134 @@ export async function fetchLeadById(id: string): Promise<LeadDetail> {
 
   const data = (await response.json()) as LeadDetailResponse;
   return mapLeadDetail(data);
+}
+
+function withVersionQuery(url: string, version?: number) {
+  if (version === undefined) return url;
+  return `${url}?version=${encodeURIComponent(String(version))}`;
+}
+
+export async function deleteLeadContact(
+  leadId: string,
+  email: string,
+  version?: number
+): Promise<void> {
+  const response = await authenticatedFetch(withVersionQuery(ENDPOINTS.leadContact(leadId), version), {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(
+      typeof data.error === "string" ? data.error : "Failed to delete contact"
+    );
+  }
+}
+
+export async function updateOutreachEmail(
+  leadId: string,
+  payload: {
+    email: string;
+    outreach_email?: string;
+    status?: OutreachEmailStatus;
+  },
+  version?: number
+): Promise<{ outreach_email: string; status: string }> {
+  const response = await authenticatedFetch(
+    withVersionQuery(ENDPOINTS.leadContactOutreach(leadId), version),
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(
+      typeof data.error === "string"
+        ? data.error
+        : "Failed to update outreach email"
+    );
+  }
+
+  return (await response.json()) as {
+    outreach_email: string;
+    status: string;
+  };
+}
+
+export async function sendOutreachEmail(
+  leadId: string,
+  payload: {
+    email: string;
+    outreach_email?: string;
+  },
+  version?: number
+): Promise<{ outreach_email: string; status: OutreachEmailStatus }> {
+  const response = await authenticatedFetch(
+    withVersionQuery(ENDPOINTS.leadContactSend(leadId), version),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const error = new Error(
+      typeof data.error === "string" ? data.error : "Failed to send outreach email"
+    ) as Error & { status?: number };
+    error.status = response.status;
+    throw error;
+  }
+
+  const data = (await response.json()) as {
+    outreach_email: string;
+    status: string;
+  };
+
+  return {
+    outreach_email: data.outreach_email,
+    status: normalizeOutreachStatus(data.status) ?? "sent",
+  };
+}
+
+export type BulkSendResult = {
+  sent: Array<{ email: string; outreach_email: string; status: OutreachEmailStatus }>;
+  failed: Array<{ email: string; error: string }>;
+};
+
+export async function sendAllOutreachEmails(
+  leadId: string,
+  emails: string[],
+  version?: number
+): Promise<BulkSendResult> {
+  const sent: BulkSendResult["sent"] = [];
+  const failed: BulkSendResult["failed"] = [];
+
+  for (const email of emails) {
+    try {
+      const result = await sendOutreachEmail(leadId, { email }, version);
+      sent.push({
+        email,
+        outreach_email: result.outreach_email,
+        status: result.status,
+      });
+    } catch (err) {
+      const error = err as Error & { status?: number };
+      if (error.status === 403) {
+        throw error;
+      }
+      failed.push({
+        email,
+        error: error.message || "Failed to send outreach email",
+      });
+    }
+  }
+
+  return { sent, failed };
 }

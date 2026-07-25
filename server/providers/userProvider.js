@@ -10,6 +10,7 @@ async function findByUid(uid) {
        u.business_id,
        u.first_name,
        u.last_name,
+       u.is_admin,
        b.business_name,
        GREATEST(
          COALESCE(b.version, 0),

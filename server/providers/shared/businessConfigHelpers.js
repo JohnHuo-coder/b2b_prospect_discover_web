@@ -4,8 +4,6 @@ const BUSINESS_CONFIG_COLUMNS = [
   'business_name',
   'sender_name',
   'collaboration_intent',
-  'search_keyword',
-  'search_location',
   'number_of_candidates_per_run',
   'email_min_words',
   'email_max_words',
@@ -34,8 +32,6 @@ export function buildBusinessConfigInsertQuery() {
         payload.business_name,
         payload.sender_name,
         payload.collaboration_intent,
-        payload.search_keyword,
-        payload.search_location,
         payload.number_of_candidates_per_run,
         payload.email_min_words,
         payload.email_max_words,
@@ -60,8 +56,6 @@ export const BUSINESS_CONFIG_SELECT_FIELDS = `
   business_name,
   sender_name,
   collaboration_intent,
-  search_keyword,
-  search_location,
   number_of_candidates_per_run,
   email_min_words AS min_words,
   email_max_words AS max_words,
@@ -81,4 +75,17 @@ export function toPublicBusinessConfig(row) {
 
   const { id: _configId, ...publicConfig } = row;
   return publicConfig;
+}
+
+export async function countTodayBusinessConfigSaves(business_id, client) {
+  const { rows } = await client.query(
+    `SELECT COUNT(*)::int AS count
+     FROM prospect_discover.business_configs
+     WHERE business_id = $1
+       AND created_at >= CURRENT_DATE
+       AND created_at < CURRENT_DATE + INTERVAL '1 day'`,
+    [business_id]
+  );
+
+  return Number(rows[0]?.count) || 0;
 }

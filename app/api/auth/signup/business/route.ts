@@ -13,11 +13,16 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const business_name = body.business_name;
+    const business_name =
+      typeof body.business_name === "string" ? body.business_name.trim() : "";
     const email = body.email;
     const password = body.password;
     const first_name = normalizeOptionalName(body.first_name);
     const last_name = normalizeOptionalName(body.last_name);
+
+    if (!business_name) {
+      return errorResponse("Business name is required", 400);
+    }
 
     if (!email || !password) {
       return errorResponse("Email and password are required");

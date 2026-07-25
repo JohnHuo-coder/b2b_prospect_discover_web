@@ -2,6 +2,7 @@ import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
 import { withOwner } from "@/lib/api/middleware/withOwnerMiddleware.js";
+import { formatRephraseErrorMessage } from "@/lib/constants/rephrase-requirements";
 import { N8nError, triggerN8nWebhook } from "@/lib/services/n8n";
 
 type DbUser = {
@@ -24,27 +25,51 @@ export type RephraseSuggestion = {
   reason?: string;
 };
 
-export const REPHRASE_FAILED_MESSAGE =
-  "Rephrase failed. Please try again later or contact your technical team.";
+export const REPHRASE_FAILED_MESSAGE = formatRephraseErrorMessage();
 
-function isRephraseWorkflowFailed(data: unknown): boolean {
-  if (!data || typeof data !== "object") return false;
+function parseRephraseWorkflowStatus(data: unknown): {
+  status: string | null;
+  reason?: string;
+} {
+  if (!data || typeof data !== "object") {
+    return { status: null };
+  }
 
   const record = data as Record<string, unknown>;
-  const status =
-    typeof record.status === "string" ? record.status.trim().toLowerCase() : "";
 
-  if (status === "failed") return true;
+  if (typeof record.status === "string") {
+    const reason =
+      typeof record.reason === "string" ? record.reason.trim() : undefined;
+    return { status: record.status.trim().toLowerCase(), reason };
+  }
 
   if (record.result) {
-    return isRephraseWorkflowFailed(record.result);
+    return parseRephraseWorkflowStatus(record.result);
   }
 
   if (record.data) {
-    return isRephraseWorkflowFailed(record.data);
+    return parseRephraseWorkflowStatus(record.data);
   }
 
-  return false;
+  return { status: null };
+}
+
+function extractReasonFromUnknown(data: unknown): string | undefined {
+  const workflow = parseRephraseWorkflowStatus(data);
+  if (workflow.reason) return workflow.reason;
+
+  if (!data || typeof data !== "object") return undefined;
+
+  const record = data as Record<string, unknown>;
+  if (typeof record.reason === "string" && record.reason.trim()) {
+    return record.reason.trim();
+  }
+
+  if (typeof record.message === "string" && record.message.trim()) {
+    return record.message.trim();
+  }
+
+  return undefined;
 }
 
 function parseSuggestionItem(item: unknown): RephraseSuggestion | null {
@@ -129,8 +154,9 @@ export const POST = withAuth(
           requirements,
         });
 
-        if (isRephraseWorkflowFailed(result)) {
-          return errorResponse(REPHRASE_FAILED_MESSAGE, 502);
+        const workflow = parseRephraseWorkflowStatus(result);
+        if (workflow.status !== null && workflow.status !== "ok") {
+          return errorResponse(formatRephraseErrorMessage(workflow.reason), 502);
         }
 
         const suggestions = extractRephraseSuggestions(result);
@@ -142,14 +168,12 @@ export const POST = withAuth(
       } catch (error) {
         if (error instanceof N8nError) {
           console.error("[POST /api/business/config/requirements/rephrase]", error);
-          return jsonResponse(
-            { error: error.message, details: error.data },
-            error.status
-          );
+          const reason = extractReasonFromUnknown(error.data);
+          return errorResponse(formatRephraseErrorMessage(reason), error.status);
         }
 
         console.error("[POST /api/business/config/requirements/rephrase]", error);
-        return errorResponse("Internal server error", 500);
+        return errorResponse(REPHRASE_FAILED_MESSAGE, 500);
       }
     })
   )

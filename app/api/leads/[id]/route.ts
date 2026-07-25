@@ -1,6 +1,7 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
+import { resolveRequestedConfigVersion } from "@/server/providers/shared/dashboardVersionHelpers.js";
 import leadRepository from "@/server/repositories/leadRepository.js";
 
 type DbUser = {
@@ -17,18 +18,26 @@ export const PATCH = withAuth(
     try {
       const { id } = await context.params;
       const business_id = user.business_id;
-      const version = Number(user.config_version) || 0;
 
       if (!business_id) {
         return errorResponse("Business affiliation required", 400);
       }
 
-      if (version === 0) {
-        return errorResponse("Lead not found", 404);
-      }
-
       if (!id) {
         return errorResponse("Lead id is required", 400);
+      }
+
+      const { searchParams } = new URL(request.url);
+      const resolved = resolveRequestedConfigVersion(
+        user,
+        searchParams.get("version")
+      );
+
+      if (!resolved.ok) {
+        if (resolved.reason === "no_config") {
+          return errorResponse("Lead not found", 404);
+        }
+        return errorResponse("Invalid version", 400);
       }
 
       const body = (await request.json()) as { status?: string };
@@ -41,7 +50,7 @@ export const PATCH = withAuth(
       const result = await leadRepository.updateLeadStatus({
         id,
         business_id,
-        version,
+        version: resolved.version,
         status,
       });
 
@@ -58,7 +67,7 @@ export const PATCH = withAuth(
 );
 
 export const GET = withAuth(
-  withApproved(async (_request: Request, context: RouteContext, user: DbUser) => {
+  withApproved(async (request: Request, context: RouteContext, user: DbUser) => {
     try {
       const { id } = await context.params;
 
@@ -70,15 +79,23 @@ export const GET = withAuth(
         return errorResponse("You need to join a company first", 403);
       }
 
-      const version = Number(user.config_version) || 0;
-      if (version === 0) {
-        return errorResponse("Lead not found", 404);
+      const { searchParams } = new URL(request.url);
+      const resolved = resolveRequestedConfigVersion(
+        user,
+        searchParams.get("version")
+      );
+
+      if (!resolved.ok) {
+        if (resolved.reason === "no_config") {
+          return errorResponse("Lead not found", 404);
+        }
+        return errorResponse("Invalid version", 400);
       }
 
       const result = await leadRepository.getById({
         id,
         business_id: user.business_id,
-        version,
+        version: resolved.version,
       });
 
       if (!result) {

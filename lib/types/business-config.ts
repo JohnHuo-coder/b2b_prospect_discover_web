@@ -15,6 +15,8 @@ export type BusinessConfigState = {
   qualified_conf_email_classification: number | null;
   search_keyword: string;
   search_location: string;
+  industry: string[];
+  industry_id: number[];
   contact_titles: string[];
   contact_categories: string[];
   min_words: number | null;
@@ -23,7 +25,6 @@ export type BusinessConfigState = {
 };
 
 export type BusinessConfigSavePayload = {
-  business_name: string;
   sender_name: string;
   collaboration_intent: string;
   requirements: string[];
@@ -36,6 +37,8 @@ export type BusinessConfigSavePayload = {
   qualified_conf_email_classification: number;
   search_keyword: string;
   search_location: string;
+  industry?: string[] | null;
+  industry_id?: number[] | null;
   contact_titles: string[];
   contact_categories: string[];
   min_words: number;

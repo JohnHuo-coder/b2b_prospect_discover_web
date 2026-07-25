@@ -13,6 +13,57 @@ function buildLeadConfigJoin() {
     ${joinBusinessConfigOnConfigId('ic')}`;
 }
 
+async function resolveLeadContactScope({ id, business_id, version, email }) {
+  const scope = resolveConfigScope({ business_id, version });
+  if (!scope) {
+    return null;
+  }
+
+  const leadParams = [...scopeParams(scope), id];
+  const leadWhere = `
+      WHERE ic.id = $3
+        AND ${whereBusinessConfigScope()}`;
+  const fromClause = buildLeadConfigJoin();
+
+  const { rows } = await pool.query(
+    `SELECT ic.place_id, ic.config_id, bc.sender_name
+     ${fromClause}
+     ${leadWhere}`,
+    leadParams
+  );
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const normalizedEmail = String(email).trim();
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const { rows: outreachRows } = await pool.query(
+    `SELECT oe.outreach_email, oe.status
+     FROM prospect_discover.outreach_email oe
+     WHERE oe.config_id = $1
+       AND oe.place_id = $2
+       AND oe.email = $3`,
+    [rows[0].config_id, rows[0].place_id, normalizedEmail]
+  );
+
+  if (outreachRows.length === 0) {
+    return null;
+  }
+
+  return {
+    scope,
+    place_id: rows[0].place_id,
+    config_id: rows[0].config_id,
+    sender_name: rows[0].sender_name,
+    email: normalizedEmail,
+    outreach: outreachRows[0],
+  };
+}
+
 export default {
   async getLeads({
     search,
@@ -92,7 +143,10 @@ export default {
 
     const [leadResult, scoreResult, emailResult] = await Promise.all([
       pool.query(
-        `SELECT ic.id, ic.company_name, ic.website, ic.phone, ic.status, ic.created_at
+        `SELECT ic.id, ic.company_name, ic.website, ic.phone, ic.status, ic.created_at,
+                ic.industry, ic.linkedin_url, ic.employee_count, ic.source, ic.address,
+                ic.distance_km, ic.employee_count_range_start, ic.employee_count_range_end,
+                ic.company_type
          ${fromClause}
          ${leadWhere}`,
         leadParams
@@ -113,16 +167,17 @@ export default {
       ),
       pool.query(
         `SELECT ec.email, ec.first_name, ec.last_name, ec.job_title, ec.linkedin_url,
-                ec.contact_role, ec.from, oe.outreach_email
+                ec.contact_role, ec."from", oe.outreach_email, oe.status AS outreach_status
          ${fromClause}
          JOIN prospect_discover.email_contact ec
            ON ic.place_id = ec.place_id
           AND ic.config_id = ec.config_id
-         JOIN prospect_discover.outreach_email oe
+         LEFT JOIN prospect_discover.outreach_email oe
            ON oe.config_id = ec.config_id
           AND oe.place_id = ec.place_id
           AND oe.email = ec.email
-         ${leadWhere}`,
+         ${leadWhere}
+         ORDER BY ec.email ASC`,
         leadParams
       ),
     ]);
@@ -160,5 +215,258 @@ export default {
     );
 
     return { rows, affectedRows: rowCount };
+  },
+
+  async updateOutreachEmail({
+    id,
+    business_id,
+    version,
+    email,
+    outreach_email,
+    status,
+  }) {
+    const contactScope = await resolveLeadContactScope({
+      id,
+      business_id,
+      version,
+      email,
+    });
+
+    if (!contactScope) {
+      return { affectedRows: 0 };
+    }
+
+    const currentStatus = String(contactScope.outreach.status || '').toLowerCase();
+    const updates = [];
+    const params = [
+      contactScope.config_id,
+      contactScope.place_id,
+      contactScope.email,
+    ];
+
+    if (typeof outreach_email === 'string') {
+      if (currentStatus !== 'ready') {
+        throw new Error('Only ready outreach emails can be edited');
+      }
+      params.push(outreach_email);
+      updates.push(`outreach_email = $${params.length}`);
+    }
+
+    if (typeof status === 'string') {
+      const nextStatus = status.trim().toLowerCase();
+      if (nextStatus !== 'ready' && nextStatus !== 'sent') {
+        throw new Error('Invalid outreach status');
+      }
+
+      if (nextStatus === 'ready' && currentStatus !== 'sent') {
+        throw new Error('Only sent outreach emails can be marked as ready');
+      }
+
+      if (nextStatus === 'sent' && currentStatus !== 'ready') {
+        throw new Error('Only ready outreach emails can be marked as sent');
+      }
+
+      params.push(nextStatus);
+      updates.push(`status = $${params.length}`);
+    }
+
+    if (updates.length === 0) {
+      throw new Error('No outreach updates provided');
+    }
+
+    const { rowCount } = await pool.query(
+      `UPDATE prospect_discover.outreach_email
+       SET ${updates.join(', ')}
+       WHERE config_id = $1
+         AND place_id = $2
+         AND email = $3`,
+      params
+    );
+
+    return {
+      affectedRows: rowCount,
+      outreach_email:
+        typeof outreach_email === 'string'
+          ? outreach_email
+          : contactScope.outreach.outreach_email,
+      status:
+        typeof status === 'string'
+          ? status.trim().toLowerCase()
+          : contactScope.outreach.status,
+    };
+  },
+
+  async getOutreachSendContext({
+    id,
+    business_id,
+    version,
+    email,
+    outreach_email,
+  }) {
+    const contactScope = await resolveLeadContactScope({
+      id,
+      business_id,
+      version,
+      email,
+    });
+
+    if (!contactScope) {
+      return null;
+    }
+
+    const currentStatus = String(contactScope.outreach.status || '').toLowerCase();
+    if (currentStatus !== 'ready') {
+      throw new Error('Only ready outreach emails can be sent');
+    }
+
+    const body =
+      typeof outreach_email === 'string' && outreach_email.trim()
+        ? outreach_email.trim()
+        : String(contactScope.outreach.outreach_email || '').trim();
+
+    if (!body) {
+      throw new Error('Outreach email body is empty');
+    }
+
+    return {
+      to: contactScope.email,
+      body,
+      sender_name: contactScope.sender_name,
+      config_id: contactScope.config_id,
+      place_id: contactScope.place_id,
+    };
+  },
+
+  async finalizeOutreachSend({
+    id,
+    business_id,
+    version,
+    email,
+    outreach_email,
+  }) {
+    const contactScope = await resolveLeadContactScope({
+      id,
+      business_id,
+      version,
+      email,
+    });
+
+    if (!contactScope) {
+      return { affectedRows: 0 };
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      if (typeof outreach_email === 'string' && outreach_email.trim()) {
+        await client.query(
+          `UPDATE prospect_discover.outreach_email
+           SET outreach_email = $4
+           WHERE config_id = $1
+             AND place_id = $2
+             AND email = $3
+             AND status = 'ready'`,
+          [
+            contactScope.config_id,
+            contactScope.place_id,
+            contactScope.email,
+            outreach_email.trim(),
+          ]
+        );
+      }
+
+      const { rowCount } = await client.query(
+        `UPDATE prospect_discover.outreach_email
+         SET status = 'sent'
+         WHERE config_id = $1
+           AND place_id = $2
+           AND email = $3
+           AND status = 'ready'`,
+        [contactScope.config_id, contactScope.place_id, contactScope.email]
+      );
+
+      if (!rowCount) {
+        throw new Error('Outreach email is no longer ready to send');
+      }
+
+      await client.query('COMMIT');
+      return {
+        affectedRows: rowCount,
+        outreach_email:
+          typeof outreach_email === 'string' && outreach_email.trim()
+            ? outreach_email.trim()
+            : contactScope.outreach.outreach_email,
+        status: 'sent',
+      };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  },
+
+  async deleteLeadContact({ id, business_id, version, email }) {
+    if (!id || !email) {
+      throw new Error('Lead id and email are required');
+    }
+
+    const scope = resolveConfigScope({ business_id, version });
+    if (!scope) {
+      return { affectedRows: 0 };
+    }
+
+    const leadParams = [...scopeParams(scope), id];
+    const fromClause = buildLeadConfigJoin();
+    const leadWhere = `
+      WHERE ic.id = $3
+        AND ${whereBusinessConfigScope()}`;
+
+    const { rows: leadRows } = await pool.query(
+      `SELECT ic.place_id, ic.config_id
+       ${fromClause}
+       ${leadWhere}`,
+      leadParams
+    );
+
+    if (leadRows.length === 0) {
+      return { affectedRows: 0 };
+    }
+
+    const { place_id, config_id } = leadRows[0];
+    const normalizedEmail = String(email).trim();
+    if (!normalizedEmail) {
+      throw new Error('email is required');
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      await client.query(
+        `DELETE FROM prospect_discover.outreach_email
+         WHERE config_id = $1
+           AND place_id = $2
+           AND email = $3`,
+        [config_id, place_id, normalizedEmail]
+      );
+
+      const { rowCount } = await client.query(
+        `DELETE FROM prospect_discover.email_contact
+         WHERE config_id = $1
+           AND place_id = $2
+           AND email = $3`,
+        [config_id, place_id, normalizedEmail]
+      );
+
+      await client.query('COMMIT');
+      return { affectedRows: rowCount };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   },
 };

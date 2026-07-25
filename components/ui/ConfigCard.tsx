@@ -44,10 +44,12 @@ export function Field({
   label,
   value,
   className = "",
+  hint,
 }: {
   label: string;
   value: React.ReactNode;
   className?: string;
+  hint?: string;
 }) {
   return (
     <div className={className}>
@@ -55,6 +57,7 @@ export function Field({
         {label}
       </p>
       <div className="text-sm text-gray-900">{value}</div>
+      {hint ? <p className="mt-1.5 text-xs text-gray-500">{hint}</p> : null}
     </div>
   );
 }

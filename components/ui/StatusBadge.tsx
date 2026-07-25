@@ -2,6 +2,11 @@ import type { LeadStatus } from "@/lib/mock-data";
 
 const styles: Record<LeadStatus, { dot: string; text: string; label: string }> =
   {
+    ready: {
+      dot: "bg-violet-500",
+      text: "text-violet-700",
+      label: "Ready",
+    },
     sent: {
       dot: "bg-blue-500",
       text: "text-blue-700",

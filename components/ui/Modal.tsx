@@ -114,6 +114,8 @@ export function TextInput({
   min,
   max,
   hint,
+  disabled = false,
+  readOnly = false,
 }: {
   label: string;
   value: string;
@@ -124,7 +126,11 @@ export function TextInput({
   min?: number;
   max?: number;
   hint?: string;
+  disabled?: boolean;
+  readOnly?: boolean;
 }) {
+  const locked = disabled || readOnly;
+
   return (
     <label className="block">
       <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
@@ -137,8 +143,12 @@ export function TextInput({
         placeholder={placeholder}
         min={min}
         max={max}
+        disabled={disabled}
+        readOnly={readOnly}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+        className={`w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100 ${
+          locked ? "cursor-not-allowed bg-gray-50 text-gray-600" : ""
+        }`}
       />
       {hint ? <p className="mt-1.5 text-xs text-gray-500">{hint}</p> : null}
     </label>
@@ -188,6 +198,7 @@ export function NumberInput({
   min,
   max,
   hint,
+  disabled = false,
 }: {
   label: string;
   value: number | null;
@@ -196,6 +207,7 @@ export function NumberInput({
   min?: number;
   max?: number;
   hint?: string;
+  disabled?: boolean;
 }) {
   return (
     <TextInput
@@ -205,6 +217,7 @@ export function NumberInput({
       min={min}
       max={max}
       hint={hint}
+      disabled={disabled}
       value={value === null || value === undefined ? "" : String(value)}
       onChange={(next) => {
         const trimmed = next.trim();
@@ -238,6 +251,44 @@ export function CheckboxInput({
       />
       {label}
     </label>
+  );
+}
+
+export function SwitchInput({
+  label,
+  checked,
+  onChange,
+  hint,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  hint?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-gray-700">{label}</p>
+        {hint ? <p className="mt-0.5 text-xs text-gray-500">{hint}</p> : null}
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-violet-100 focus:ring-offset-2 ${
+          checked ? "bg-violet-600" : "bg-gray-200"
+        }`}
+      >
+        <span
+          aria-hidden="true"
+          className={`pointer-events-none absolute top-0.5 left-0.5 inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+            checked ? "translate-x-5" : "translate-x-0"
+          }`}
+        />
+      </button>
+    </div>
   );
 }
 

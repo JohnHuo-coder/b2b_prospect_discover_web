@@ -1,6 +1,10 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
+import {
+  CANDIDATES_PER_RUN_RANGE_ERROR,
+  isValidCandidatesPerRun,
+} from "@/lib/constants/candidates-per-run";
 import businessRepository from "@/server/repositories/businessRepository.js";
 
 type DbUser = {
@@ -26,11 +30,11 @@ export const PATCH = withAuth(
         body.number_of_candidates_per_run
       );
 
-      if (number_of_candidates_per_run === null || number_of_candidates_per_run < 1) {
-        return errorResponse(
-          "number_of_candidates_per_run must be a positive integer",
-          400
-        );
+      if (
+        number_of_candidates_per_run === null ||
+        !isValidCandidatesPerRun(number_of_candidates_per_run)
+      ) {
+        return errorResponse(CANDIDATES_PER_RUN_RANGE_ERROR, 400);
       }
 
       const result = await businessRepository.updateCandidatesPerRun({
@@ -43,7 +47,10 @@ export const PATCH = withAuth(
       console.error("[PATCH /api/business/config/candidates-per-run]", error);
 
       if (error instanceof Error) {
-        if (error.message === "Configuration required before setting candidates per run") {
+        if (
+          error.message === "Configuration required before setting candidates per run" ||
+          error.message === CANDIDATES_PER_RUN_RANGE_ERROR
+        ) {
           return errorResponse(error.message, 400);
         }
         if (error.message === "Business config not found") {

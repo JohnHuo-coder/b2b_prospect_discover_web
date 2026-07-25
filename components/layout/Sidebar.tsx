@@ -17,14 +17,21 @@ import {
   getUserInitials,
   hasUserName,
 } from "@/lib/auth/userDisplay";
+import { isUserAdmin } from "@/lib/auth/isUserAdmin";
 
-const allNavItems = [
+const allNavItems: Array<{
+  href: string;
+  label: string;
+  icon: typeof LayoutGrid;
+  ownerOnly?: boolean;
+  adminOnly?: boolean;
+}> = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, ownerOnly: false },
   {
     href: "/system-dashboard",
     label: "System Dashboard",
     icon: Network,
-    ownerOnly: false,
+    adminOnly: true,
   },
   { href: "/admin", label: "Admin", icon: Shield, ownerOnly: true },
   {
@@ -65,9 +72,12 @@ export function Sidebar() {
     : "";
   const profileInitials = user ? getUserInitials(user) : "";
   const isOwner = user?.role === "owner";
-  const navItems = allNavItems.filter(
-    (item) => !item.ownerOnly || isOwner
-  );
+  const isAdmin = isUserAdmin(user);
+  const navItems = allNavItems.filter((item) => {
+    if (item.adminOnly && !isAdmin) return false;
+    if (item.ownerOnly && !isOwner) return false;
+    return true;
+  });
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-gray-200 bg-white">

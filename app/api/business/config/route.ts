@@ -1,11 +1,14 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
+import { CONFIG_SAVE_TOO_FREQUENT_MESSAGE } from "@/lib/constants/config-save-limit";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
 import { withOwner } from "@/lib/api/middleware/withOwnerMiddleware.js";
+import { resolveRequestedConfigVersion } from "@/server/providers/shared/dashboardVersionHelpers.js";
 import businessRepository from "@/server/repositories/businessRepository.js";
 
 type DbUser = {
   business_id?: number | string | null;
+  config_version?: number | null;
 };
 
 function parseString(value: unknown): string {
@@ -53,12 +56,28 @@ function parseOptionalFloat(
   return numeric;
 }
 
+function parseIntegerArray(value: unknown): number[] | null {
+  if (!Array.isArray(value)) return null;
+
+  const items: number[] = [];
+  for (const item of value) {
+    const numeric = Number(item);
+    if (!Number.isInteger(numeric) || numeric < 1) {
+      return null;
+    }
+    items.push(numeric);
+  }
+
+  return items;
+}
+
 function parseSaveBody(body: Record<string, unknown>) {
-  const business_name = parseString(body.business_name);
   const collaboration_intent = parseString(body.collaboration_intent);
   const sender_name = parseString(body.sender_name);
   const search_keyword = parseString(body.search_keyword);
   const search_location = parseString(body.search_location);
+  const industry = parseStringArray(body.industry);
+  const industry_id = parseIntegerArray(body.industry_id);
   const requirements = parseRequirements(body.requirements);
   const contact_titles = parseStringArray(body.contact_titles);
   const contact_categories = parseStringArray(body.contact_categories);
@@ -86,11 +105,15 @@ function parseSaveBody(body: Record<string, unknown>) {
     return max_distance_km;
   }
 
-  if (!business_name) return { error: "business_name is required" };
   if (!collaboration_intent) return { error: "collaboration_intent is required" };
   if (!requirements) return { error: "requirements must be a non-empty array" };
   if (!search_keyword) return { error: "search_keyword is required" };
   if (!search_location) return { error: "search_location is required" };
+  if (industry === null) return { error: "industry must be an array" };
+  if (industry_id === null) return { error: "industry_id must be an array" };
+  if (industry.length !== industry_id.length) {
+    return { error: "industry and industry_id must have the same length" };
+  }
   if (!contact_titles) return { error: "contact_titles must be an array" };
   if (!contact_categories) return { error: "contact_categories must be an array" };
   if (fit_score_cutoff === null) {
@@ -120,11 +143,12 @@ function parseSaveBody(body: Record<string, unknown>) {
 
   return {
     payload: {
-      business_name,
       sender_name,
       collaboration_intent,
       search_keyword,
       search_location,
+      industry,
+      industry_id,
       requirements,
       contact_titles,
       contact_categories,
@@ -142,13 +166,30 @@ function parseSaveBody(body: Record<string, unknown>) {
 }
 
 export const GET = withAuth(
-  withApproved(async (_request: Request, _context: unknown, user: DbUser) => {
+  withApproved(async (request: Request, _context: unknown, user: DbUser) => {
     try {
       if (!user.business_id) {
         return errorResponse("You need to join a company first", 403);
       }
 
-      const config = await businessRepository.getBusinessConfig(user.business_id);
+      const { searchParams } = new URL(request.url);
+      const resolved = resolveRequestedConfigVersion(
+        user,
+        searchParams.get("version")
+      );
+
+      if (!resolved.ok) {
+        if (resolved.reason === "no_config") {
+          const config = await businessRepository.getBusinessConfig(user.business_id, 0);
+          return jsonResponse(config);
+        }
+        return errorResponse("Invalid version", 400);
+      }
+
+      const config = await businessRepository.getBusinessConfig(
+        user.business_id,
+        resolved.version
+      );
       return jsonResponse(config);
     } catch (error) {
       console.error("[GET /api/business/config]", error);
@@ -180,6 +221,20 @@ export const POST = withAuth(
         return jsonResponse(result);
       } catch (error) {
         console.error("[POST /api/business/config]", error);
+        if (error instanceof Error) {
+          if (error.message === CONFIG_SAVE_TOO_FREQUENT_MESSAGE) {
+            return errorResponse(error.message, 429);
+          }
+
+          if (
+            error.message === "Select valid industries from the list" ||
+            error.message === "industry and industry_id must have the same length" ||
+            error.message === "search_keyword is required" ||
+            error.message === "search_location is required"
+          ) {
+            return errorResponse(error.message, 400);
+          }
+        }
         return errorResponse("Internal server error", 500);
       }
     })

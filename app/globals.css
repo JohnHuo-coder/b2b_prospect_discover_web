@@ -18,6 +18,16 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
+.location-autocomplete-host gmp-place-autocomplete {
+  width: 100%;
+  color-scheme: light;
+}
+
+.location-autocomplete-host .place-autocomplete-element-input {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 0.875rem;
+}
+
 @keyframes dashboard-card-shimmer {
   0% {
     background-position: 200% 0;

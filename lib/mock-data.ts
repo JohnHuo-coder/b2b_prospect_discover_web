@@ -1,4 +1,4 @@
-export type LeadStatus = "sent" | "heard_back" | "pending" | "rejected";
+export type LeadStatus = "ready" | "sent" | "heard_back" | "pending" | "rejected";
 
 export type Lead = {
   id: string;
@@ -10,6 +10,7 @@ export type Lead = {
 };
 
 export const dashboardSummary = {
+  ready: 1,
   sent: 2,
   heard_back: 3,
   pending: 3,
@@ -120,6 +121,8 @@ export const businessConfig = {
   qualified_conf_email_classification: 70,
   search_keyword: "luxury hotel",
   search_location: "Bangkok Thailand",
+  industry: ["Hospitality"],
+  industry_id: [31],
   contact_titles: [
     "Director of Sales",
     "Sales Manager",
@@ -135,6 +138,7 @@ export const businessConfig = {
 
 export const statusLabels: Record<LeadStatus | "all", string> = {
   all: "All statuses",
+  ready: "Ready",
   sent: "Sent",
   heard_back: "Heard Back",
   pending: "Pending",

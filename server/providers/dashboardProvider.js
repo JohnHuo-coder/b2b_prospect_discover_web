@@ -10,6 +10,7 @@ export default {
     const currentVersion = Number(version) || 0;
     if (currentVersion === 0) {
       return {
+        total_ready: 0,
         total_sent: 0,
         total_rejected: 0,
         total_heard_back: 0,
@@ -19,6 +20,7 @@ export default {
 
     const { rows } = await pool.query(
       `SELECT
+        COUNT(*) FILTER (WHERE ic.status = 'ready') AS total_ready,
         COUNT(*) FILTER (WHERE ic.status = 'sent') AS total_sent,
         COUNT(*) FILTER (WHERE ic.status = 'rejected') AS total_rejected,
         COUNT(*) FILTER (WHERE ic.status = 'heard_back') AS total_heard_back,
@@ -34,6 +36,7 @@ export default {
 
     const row = rows[0];
     return {
+      total_ready: Number(row.total_ready),
       total_sent: Number(row.total_sent),
       total_rejected: Number(row.total_rejected),
       total_heard_back: Number(row.total_heard_back),

@@ -1,9 +1,25 @@
 import { pool } from '../../lib/db/client.ts';
+import industryRepository from '../repositories/industryRepository.js';
+import {
+  CANDIDATES_PER_RUN_RANGE_ERROR,
+  clampCandidatesPerRun,
+  isValidCandidatesPerRun,
+} from '../../lib/constants/candidates-per-run.ts';
 import {
   buildBusinessConfigInsertQuery,
   BUSINESS_CONFIG_SELECT_FIELDS,
+  countTodayBusinessConfigSaves,
   toPublicBusinessConfig,
 } from './shared/businessConfigHelpers.js';
+import {
+  CONFIG_SAVE_TOO_FREQUENT_MESSAGE,
+  DAILY_CONFIG_SAVE_LIMIT,
+} from '../../lib/constants/config-save-limit.ts';
+import {
+  mergeTargetPartnerIntoConfig,
+  resolveSelectedSource,
+  TARGET_PARTNER_CONFIG_SELECT_FIELDS,
+} from './shared/targetPartnerConfigHelpers.js';
 
 const configInsert = buildBusinessConfigInsertQuery();
 const DEFAULT_CANDIDATES_PER_RUN = 50;
@@ -17,6 +33,16 @@ async function getRequirementsByConfigId(config_id, client = pool) {
     [config_id]
   );
   return rows;
+}
+
+async function getTargetPartnerConfigByConfigId(config_id, client = pool) {
+  const { rows } = await client.query(
+    `SELECT ${TARGET_PARTNER_CONFIG_SELECT_FIELDS}
+     FROM prospect_discover.target_partner_config
+     WHERE config_id = $1`,
+    [config_id]
+  );
+  return rows[0] ?? null;
 }
 
 async function getBusinessConfigRow(business_id, version, client = pool) {
@@ -49,25 +75,31 @@ async function getBusinessVersion(business_id, client = pool) {
 function buildConfigResponse(version, business_config, business_requirements) {
   return {
     version,
-    business_config: toPublicBusinessConfig(business_config),
+    business_config: business_config ? toPublicBusinessConfig(business_config) : null,
     business_requirements,
   };
 }
 
 export default {
   async createBusiness({ uid, business_name }) {
+    const normalizedName =
+      typeof business_name === "string" ? business_name.trim() : "";
+    if (!normalizedName) {
+      throw new Error("business_name is required");
+    }
+
     const { rows } = await pool.query(
       `INSERT INTO prospect_discover.businesses (firebase_uid, business_name, version)
        VALUES ($1, $2, 0)
        RETURNING id, version`,
-      [uid, business_name]
+      [uid, normalizedName]
     );
 
     return {
       business_id: rows[0].id,
       version: Number(rows[0].version) || 0,
       uid,
-      business_name,
+      business_name: normalizedName,
     };
   },
 
@@ -75,12 +107,16 @@ export default {
     await pool.query(`DELETE FROM prospect_discover.businesses WHERE firebase_uid = $1`, [uid]);
   },
 
-  async getBusinessConfig(business_id) {
+  async getBusinessConfig(business_id, requestedVersion = null) {
     if (!business_id) {
       throw new Error('business_id is required');
     }
 
-    const version = await getBusinessVersion(business_id);
+    const maxVersion = await getBusinessVersion(business_id);
+    const version =
+      requestedVersion !== null && requestedVersion !== undefined
+        ? Number(requestedVersion) || 0
+        : maxVersion;
 
     if (version === 0) {
       const { rows } = await pool.query(
@@ -108,17 +144,23 @@ export default {
     }
 
     const business_requirements = await getRequirementsByConfigId(business_config.id);
+    const target_partner_config = await getTargetPartnerConfigByConfigId(business_config.id);
+    const mergedConfig = mergeTargetPartnerIntoConfig(
+      business_config,
+      target_partner_config
+    );
 
-    return buildConfigResponse(version, business_config, business_requirements);
+    return buildConfigResponse(version, mergedConfig, business_requirements);
   },
 
   async insertBusinessConfig({
     business_id,
-    business_name,
     sender_name,
     collaboration_intent,
     search_keyword,
     search_location,
+    industry,
+    industry_id,
     email_min_words,
     email_max_words,
     low_conf_cutoff_email_classification,
@@ -142,12 +184,45 @@ export default {
       throw new Error('contact_titles and contact_categories must be arrays');
     }
 
+    if (!Array.isArray(industry) || !Array.isArray(industry_id)) {
+      throw new Error('industry and industry_id must be arrays');
+    }
+
+    const resolvedIndustry = industry.map((item) =>
+      typeof item === 'string' ? item.trim() : ''
+    );
+    const resolvedIndustryId = industry_id.map((item) => Number(item));
+
+    if (resolvedIndustry.length !== resolvedIndustryId.length) {
+      throw new Error('industry and industry_id must have the same length');
+    }
+
+    const isValidIndustries = await industryRepository.validateIndustrySelections(
+      resolvedIndustry,
+      resolvedIndustryId
+    );
+    if (!isValidIndustries) {
+      throw new Error('Select valid industries from the list');
+    }
+
+    const resolvedSearchKeyword =
+      typeof search_keyword === 'string' ? search_keyword.trim() : '';
+    if (!resolvedSearchKeyword) {
+      throw new Error('search_keyword is required');
+    }
+
+    const resolvedLocation =
+      typeof search_location === 'string' ? search_location.trim() : '';
+    if (!resolvedLocation) {
+      throw new Error('search_location is required');
+    }
+
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
       const { rows: businessRows } = await client.query(
-        `SELECT version
+        `SELECT version, business_name
          FROM prospect_discover.businesses
          WHERE id = $1
          FOR UPDATE`,
@@ -160,6 +235,15 @@ export default {
 
       const currentVersion = Number(businessRows[0].version) || 0;
       const nextVersion = currentVersion + 1;
+      const canonicalBusinessName = String(businessRows[0].business_name || '').trim();
+      if (!canonicalBusinessName) {
+        throw new Error('Business name is required');
+      }
+
+      const todaySaveCount = await countTodayBusinessConfigSaves(business_id, client);
+      if (todaySaveCount >= DAILY_CONFIG_SAVE_LIMIT) {
+        throw new Error(CONFIG_SAVE_TOO_FREQUENT_MESSAGE);
+      }
 
       let number_of_candidates_per_run = DEFAULT_CANDIDATES_PER_RUN;
       if (currentVersion > 0) {
@@ -169,16 +253,16 @@ export default {
           client
         );
         if (previousConfig?.number_of_candidates_per_run != null) {
-          number_of_candidates_per_run = previousConfig.number_of_candidates_per_run;
+          number_of_candidates_per_run = clampCandidatesPerRun(
+            Number(previousConfig.number_of_candidates_per_run)
+          );
         }
       }
 
       const insertValues = configInsert.valuesFromPayload(business_id, nextVersion, {
-        business_name,
+        business_name: canonicalBusinessName,
         sender_name: sender_name?.trim() ? sender_name.trim() : null,
         collaboration_intent,
-        search_keyword,
-        search_location,
         number_of_candidates_per_run,
         email_min_words,
         email_max_words,
@@ -201,6 +285,21 @@ export default {
       );
 
       const config_id = configRows[0].id;
+      const selected_source = resolveSelectedSource(has_distance_requirement);
+
+      await client.query(
+        `INSERT INTO prospect_discover.target_partner_config
+           (config_id, search_keyword, industry, industry_id, location, selected_source)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          config_id,
+          resolvedSearchKeyword,
+          resolvedIndustry,
+          resolvedIndustryId,
+          resolvedLocation,
+          selected_source,
+        ]
+      );
 
       if (requirements.length > 0) {
         await client.query(
@@ -213,21 +312,29 @@ export default {
 
       await client.query(
         `UPDATE prospect_discover.businesses
-         SET business_name = $2,
-             version = $3
+         SET version = $2
          WHERE id = $1`,
-        [business_id, business_name, nextVersion]
+        [business_id, nextVersion]
       );
 
       await client.query('COMMIT');
 
       const business_config = await getBusinessConfigRow(
         business_id,
-        nextVersion
+        nextVersion,
+        client
+      );
+      const target_partner_config = await getTargetPartnerConfigByConfigId(
+        config_id,
+        client
+      );
+      const mergedConfig = mergeTargetPartnerIntoConfig(
+        business_config,
+        target_partner_config
       );
       const business_requirements = await getRequirementsByConfigId(config_id);
 
-      return buildConfigResponse(nextVersion, business_config, business_requirements);
+      return buildConfigResponse(nextVersion, mergedConfig, business_requirements);
     } catch (err) {
       await client.query('ROLLBACK');
       throw err;
@@ -240,11 +347,8 @@ export default {
     if (!business_id) {
       throw new Error('business_id is required');
     }
-    if (
-      !Number.isInteger(number_of_candidates_per_run) ||
-      number_of_candidates_per_run < 1
-    ) {
-      throw new Error('number_of_candidates_per_run must be a positive integer');
+    if (!isValidCandidatesPerRun(number_of_candidates_per_run)) {
+      throw new Error(CANDIDATES_PER_RUN_RANGE_ERROR);
     }
 
     const version = await getBusinessVersion(business_id);

@@ -12,6 +12,7 @@ import {
   GoogleButton,
 } from "@/components/auth/AuthShell";
 import { businessSignup, memberSignup } from "@/lib/api/auth-client";
+import { BUSINESS_NAME_IMMUTABLE_HINT } from "@/lib/constants/business-identity";
 import { auth } from "@/lib/firebase/client";
 import { useUser } from "@/components/providers/UserProvider";
 import {
@@ -47,6 +48,12 @@ export function RegisterForm() {
     setError("");
     setIsSubmitting(true);
 
+    if (mode === "business" && !businessName.trim()) {
+      setError("Business name is required");
+      setIsSubmitting(false);
+      return;
+    }
+
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
       setIsSubmitting(false);
@@ -62,7 +69,7 @@ export function RegisterForm() {
       const response =
         mode === "business"
           ? await businessSignup({
-              business_name: businessName,
+              business_name: businessName.trim(),
               email,
               password,
               ...optionalNames,
@@ -155,6 +162,8 @@ export function RegisterForm() {
               onChange={setBusinessName}
               placeholder="Suvarnaveda Wellness"
               autoComplete="organization"
+              required
+              hint={BUSINESS_NAME_IMMUTABLE_HINT}
             />
             <AuthField
               label="Owner Email"
