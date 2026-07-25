@@ -5,7 +5,7 @@ import {
   getGmailAuthUrl,
   sendGmailMessage,
 } from '../services/gmailService.js';
-import { GMAIL_SEND_SCOPE } from '../../lib/constants/gmail.ts';
+import { GMAIL_OAUTH_SCOPES } from '../../lib/constants/gmail.ts';
 
 const gmailRepository = {
   ensureTable: () => gmailConnectionProvider.ensureTable(),
@@ -47,7 +47,7 @@ const gmailRepository = {
       tokenExpiry: tokens.expiry_date
         ? new Date(tokens.expiry_date).toISOString()
         : null,
-      scopes: GMAIL_SEND_SCOPE,
+      scopes: GMAIL_OAUTH_SCOPES.join(' '),
     });
 
     return { connected: true, email: googleEmail };

@@ -15,6 +15,30 @@ export function GmailConnectionButton() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    const resetConnecting = () => setConnecting(false);
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        resetConnecting();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        resetConnecting();
+      }
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
 
     const loadStatus = async () => {

@@ -17,16 +17,17 @@ function sanitizeReturnTo(value: string | null | undefined) {
 }
 
 function buildRedirectUrl(
+  request: NextRequest,
   returnTo: string,
   params: Record<string, string | null | undefined>
 ) {
-  const url = new URL(returnTo, 'http://local');
+  const url = new URL(returnTo, request.url);
   for (const [key, value] of Object.entries(params)) {
     if (value) {
       url.searchParams.set(key, value);
     }
   }
-  return `${url.pathname}${url.search}`;
+  return url;
 }
 
 async function resolveGmailCallbackUser(
@@ -49,8 +50,6 @@ async function resolveGmailCallbackUser(
 }
 
 export async function GET(request: NextRequest) {
-  const fallbackRedirect = '/dashboard?gmail=error';
-
   try {
     const user = await resolveGmailCallbackUser(request);
     if (!user?.id) {
@@ -69,13 +68,16 @@ export async function GET(request: NextRequest) {
 
     if (oauthError) {
       return NextResponse.redirect(
-        buildRedirectUrl('/dashboard', { gmail: 'denied' })
+        buildRedirectUrl(request, '/dashboard', { gmail: 'denied' })
       );
     }
 
     if (!code || !state || !storedStateRaw) {
       return NextResponse.redirect(
-        buildRedirectUrl('/dashboard', { gmail: 'error', reason: 'state' })
+        buildRedirectUrl(request, '/dashboard', {
+          gmail: 'error',
+          reason: 'state',
+        })
       );
     }
 
@@ -93,13 +95,19 @@ export async function GET(request: NextRequest) {
       storedState = JSON.parse(storedStateRaw);
     } catch {
       return NextResponse.redirect(
-        buildRedirectUrl('/dashboard', { gmail: 'error', reason: 'state' })
+        buildRedirectUrl(request, '/dashboard', {
+          gmail: 'error',
+          reason: 'state',
+        })
       );
     }
 
     if (!storedState.state || storedState.state !== state) {
       return NextResponse.redirect(
-        buildRedirectUrl('/dashboard', { gmail: 'error', reason: 'state' })
+        buildRedirectUrl(request, '/dashboard', {
+          gmail: 'error',
+          reason: 'state',
+        })
       );
     }
 
@@ -109,7 +117,7 @@ export async function GET(request: NextRequest) {
     });
 
     const returnTo = sanitizeReturnTo(storedState.returnTo ?? '/dashboard');
-    const redirectPath = buildRedirectUrl(returnTo, {
+    const redirectUrl = buildRedirectUrl(request, returnTo, {
       gmail: 'connected',
       autoSend: storedState.autoSend ? '1' : null,
       autoBulkSend: storedState.autoBulkSend ? '1' : null,
@@ -118,13 +126,16 @@ export async function GET(request: NextRequest) {
       leadId: storedState.leadId,
     });
 
-    const successResponse = NextResponse.redirect(redirectPath);
+    const successResponse = NextResponse.redirect(redirectUrl);
     successResponse.cookies.delete(GMAIL_OAUTH_STATE_COOKIE);
     return successResponse;
   } catch (error) {
     console.error('[GET /api/gmail/callback]', error);
     return NextResponse.redirect(
-      buildRedirectUrl(fallbackRedirect, { reason: 'callback' })
+      buildRedirectUrl(request, '/dashboard', {
+        gmail: 'error',
+        reason: 'callback',
+      })
     );
   }
 }

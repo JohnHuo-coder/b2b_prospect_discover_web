@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { GMAIL_SEND_SCOPE } from '../../lib/constants/gmail.ts';
+import { GMAIL_OAUTH_SCOPES } from '../../lib/constants/gmail.ts';
 
 function getOAuthClient() {
   const clientId = process.env.GOOGLE_GMAIL_CLIENT_ID?.trim();
@@ -18,7 +18,7 @@ export function getGmailAuthUrl(state) {
   return client.generateAuthUrl({
     access_type: 'offline',
     prompt: 'consent',
-    scope: [GMAIL_SEND_SCOPE],
+    scope: [...GMAIL_OAUTH_SCOPES],
     state,
   });
 }
