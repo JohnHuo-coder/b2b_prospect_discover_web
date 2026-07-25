@@ -15,5 +15,5 @@ export type ComplianceCheckContinuePayload = {
 export async function triggerComplianceCheckContinue(
   payload: ComplianceCheckContinuePayload
 ) {
-  return triggerN8nWebhook("webhook/compliance-check-continue", payload);
+  return triggerN8nWebhook("compliance-check-continue", payload);
 }
