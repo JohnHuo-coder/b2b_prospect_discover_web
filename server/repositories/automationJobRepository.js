@@ -7,6 +7,8 @@ const automationJobRepository = {
     automationJobProvider.getDiscoveryJobStats(business_id, version),
   validateStartDiscovery: (opts) =>
     automationJobProvider.validateStartDiscovery(opts),
+  reserveRunningAutomationJob: (opts) =>
+    automationJobProvider.reserveRunningAutomationJob(opts),
   createRunningAutomationJob: (opts) =>
     automationJobProvider.createRunningAutomationJob(opts),
   updateAutomationJobStatus: (jobId, status) =>

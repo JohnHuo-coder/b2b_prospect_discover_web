@@ -90,38 +90,34 @@ export const POST = withAuth(
 
       const version = resolved.version;
 
-      const validation = await automationJobRepository.validateStartDiscovery({
+      const reservation = await automationJobRepository.reserveRunningAutomationJob({
         business_id: user.business_id,
         version,
       });
 
-      if (!validation.allowed) {
+      if (!reservation.allowed) {
         const validationMessage =
-          validation.message ?? "Discovery cannot be started";
+          reservation.message ?? "Discovery cannot be started";
         return jsonResponse(
           {
             error: validationMessage,
             ...buildDiscoveryResponseBody(
               validationMessage,
-              validation.prospectUsage,
-              validation.runningJobs
+              reservation.prospectUsage,
+              reservation.runningJobs
             ),
           },
           429
         );
       }
 
-      const automationJobId =
-        await automationJobRepository.createRunningAutomationJob({
-          business_id: user.business_id,
-          version,
-        });
+      const automationJobId = reservation.automationJobId;
+      const prospectUsage = reservation.prospectUsage;
+      const runningJobs = reservation.runningJobs;
 
-      const statsAfterInsert =
-        await automationJobRepository.getDiscoveryJobStats(
-          user.business_id,
-          version
-        );
+      if (!automationJobId) {
+        return errorResponse("Failed to start discovery job", 500);
+      }
 
       let result: unknown;
       try {
@@ -139,8 +135,6 @@ export const POST = withAuth(
       }
 
       const parsed = parseStartDiscoveryResponse(result);
-      const prospectUsage = statsAfterInsert.prospectUsage;
-      const runningJobs = statsAfterInsert.runningJobs;
 
       if (!parsed.accepted) {
         await automationJobRepository.updateAutomationJobStatus(

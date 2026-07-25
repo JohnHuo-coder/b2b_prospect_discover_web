@@ -82,6 +82,14 @@ export const PATCH = withAuth(
       console.error('[PATCH /api/leads/[id]/contacts/outreach]', error);
       const message =
         error instanceof Error ? error.message : 'Internal server error';
+
+      if (
+        error instanceof Error &&
+        message.includes('modified elsewhere')
+      ) {
+        return errorResponse(message, 409);
+      }
+
       return errorResponse(message, error instanceof Error ? 400 : 500);
     }
   })

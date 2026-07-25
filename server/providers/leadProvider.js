@@ -7,6 +7,9 @@ import {
 } from './shared/configScopeHelpers.js';
 import { buildLeadStatusFilterClause } from './shared/leadStatusHelpers.js';
 
+const OUTREACH_UPDATE_CONFLICT_MESSAGE =
+  'Outreach email was modified elsewhere. Refresh and try again.';
+
 function buildLeadConfigJoin() {
   return `
     FROM prospect_discover.initial_candidates ic
@@ -274,14 +277,22 @@ export default {
       throw new Error('No outreach updates provided');
     }
 
+    params.push(currentStatus);
+    const expectedStatusParam = params.length;
+
     const { rowCount } = await pool.query(
       `UPDATE prospect_discover.outreach_email
        SET ${updates.join(', ')}
        WHERE config_id = $1
          AND place_id = $2
-         AND email = $3`,
+         AND email = $3
+         AND LOWER(status) = $${expectedStatusParam}`,
       params
     );
+
+    if (!rowCount) {
+      throw new Error(OUTREACH_UPDATE_CONFLICT_MESSAGE);
+    }
 
     return {
       affectedRows: rowCount,

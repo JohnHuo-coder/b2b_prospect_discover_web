@@ -11,8 +11,8 @@ import {
   MAX_RUNNING_AUTOMATION_JOBS,
 } from '../../lib/constants/automation-jobs.ts';
 
-async function getProspectNumberForRun(business_id, version) {
-  const { rows } = await pool.query(
+async function queryProspectNumberForRun(client, business_id, version) {
+  const { rows } = await client.query(
     `SELECT number_of_candidates_per_run
      FROM prospect_discover.business_configs
      WHERE business_id = $1
@@ -32,9 +32,9 @@ async function getProspectNumberForRun(business_id, version) {
   return clampCandidatesPerRun(value);
 }
 
-export async function getBusinessDiscoveryQuota(business_id) {
+async function queryDiscoveryJobStats(client, business_id, version) {
   const [usageResult, runningResult] = await Promise.all([
-    pool.query(
+    client.query(
       `SELECT COALESCE(SUM(prospect_number), 0)::int AS used_today
        FROM prospect_discover.automation_jobs
        WHERE business_id = $1
@@ -42,11 +42,15 @@ export async function getBusinessDiscoveryQuota(business_id) {
          AND created_at < CURRENT_DATE + INTERVAL '1 day'`,
       [business_id]
     ),
-    pool.query(
-      `SELECT COUNT(*) FILTER (WHERE LOWER(status) = 'running')::int AS running_count
+    client.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE LOWER(status) = 'running')::int AS running_count,
+         COUNT(*) FILTER (
+           WHERE LOWER(status) = 'running' AND version = $2
+         )::int AS running_same_version
        FROM prospect_discover.automation_jobs
        WHERE business_id = $1`,
-      [business_id]
+      [business_id, version]
     ),
   ]);
 
@@ -59,27 +63,54 @@ export async function getBusinessDiscoveryQuota(business_id) {
       count: Number(runningResult.rows[0]?.running_count) || 0,
       limit: MAX_RUNNING_AUTOMATION_JOBS,
     },
+    runningSameVersion:
+      Number(runningResult.rows[0]?.running_same_version) || 0,
+  };
+}
+
+function evaluateDiscoveryStart(stats, prospectNumber) {
+  if (stats.runningSameVersion >= 1) {
+    return {
+      allowed: false,
+      message: DISCOVERY_SAME_VERSION_RUNNING_MESSAGE,
+    };
+  }
+
+  if (stats.runningJobs.count >= MAX_RUNNING_AUTOMATION_JOBS) {
+    return {
+      allowed: false,
+      message: DISCOVERY_RUNNING_QUEUE_FULL_MESSAGE,
+    };
+  }
+
+  if (stats.prospectUsage.used + prospectNumber > DAILY_PROSPECT_LIMIT) {
+    return {
+      allowed: false,
+      message: DISCOVERY_QUOTA_EXCEEDED_MESSAGE,
+    };
+  }
+
+  return { allowed: true };
+}
+
+async function getProspectNumberForRun(business_id, version) {
+  return queryProspectNumberForRun(pool, business_id, version);
+}
+
+export async function getBusinessDiscoveryQuota(business_id) {
+  const stats = await queryDiscoveryJobStats(pool, business_id, null);
+  return {
+    prospectUsage: stats.prospectUsage,
+    runningJobs: stats.runningJobs,
   };
 }
 
 export async function getDiscoveryJobStats(business_id, version) {
-  const [businessQuota, runningResult] = await Promise.all([
-    getBusinessDiscoveryQuota(business_id),
-    pool.query(
-      `SELECT
-         COUNT(*) FILTER (
-           WHERE LOWER(status) = 'running' AND version = $2
-         )::int AS running_same_version
-       FROM prospect_discover.automation_jobs
-       WHERE business_id = $1`,
-      [business_id, version]
-    ),
-  ]);
-
+  const stats = await queryDiscoveryJobStats(pool, business_id, version);
   return {
-    ...businessQuota,
-    runningSameVersion:
-      Number(runningResult.rows[0]?.running_same_version) || 0,
+    prospectUsage: stats.prospectUsage,
+    runningJobs: stats.runningJobs,
+    runningSameVersion: stats.runningSameVersion,
   };
 }
 
@@ -90,29 +121,12 @@ export async function validateStartDiscovery({ business_id, version }) {
   }
 
   const stats = await getDiscoveryJobStats(business_id, version);
+  const decision = evaluateDiscoveryStart(stats, prospectNumber);
 
-  if (stats.runningSameVersion >= 1) {
+  if (!decision.allowed) {
     return {
       allowed: false,
-      message: DISCOVERY_SAME_VERSION_RUNNING_MESSAGE,
-      prospectUsage: stats.prospectUsage,
-      runningJobs: stats.runningJobs,
-    };
-  }
-
-  if (stats.runningJobs.count >= MAX_RUNNING_AUTOMATION_JOBS) {
-    return {
-      allowed: false,
-      message: DISCOVERY_RUNNING_QUEUE_FULL_MESSAGE,
-      prospectUsage: stats.prospectUsage,
-      runningJobs: stats.runningJobs,
-    };
-  }
-
-  if (stats.prospectUsage.used + prospectNumber > DAILY_PROSPECT_LIMIT) {
-    return {
-      allowed: false,
-      message: DISCOVERY_QUOTA_EXCEEDED_MESSAGE,
+      message: decision.message,
       prospectUsage: stats.prospectUsage,
       runningJobs: stats.runningJobs,
     };
@@ -126,6 +140,79 @@ export async function validateStartDiscovery({ business_id, version }) {
   };
 }
 
+/**
+ * Atomically validates quota/queue limits and inserts a running automation job.
+ * Serializes concurrent starts for the same business via businesses row lock.
+ */
+export async function reserveRunningAutomationJob({ business_id, version }) {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const { rows: businessRows } = await client.query(
+      `SELECT id
+       FROM prospect_discover.businesses
+       WHERE id = $1
+       FOR UPDATE`,
+      [business_id]
+    );
+
+    if (businessRows.length === 0) {
+      throw new Error('Business not found');
+    }
+
+    const prospectNumber = await queryProspectNumberForRun(
+      client,
+      business_id,
+      version
+    );
+    if (prospectNumber === null) {
+      await client.query('ROLLBACK');
+      throw new Error('Configuration required before starting discovery');
+    }
+
+    const stats = await queryDiscoveryJobStats(client, business_id, version);
+    const decision = evaluateDiscoveryStart(stats, prospectNumber);
+
+    if (!decision.allowed) {
+      await client.query('ROLLBACK');
+      return {
+        allowed: false,
+        message: decision.message,
+        prospectUsage: stats.prospectUsage,
+        runningJobs: stats.runningJobs,
+        automationJobId: null,
+      };
+    }
+
+    const { rows: insertRows } = await client.query(
+      `INSERT INTO prospect_discover.automation_jobs (business_id, version, status)
+       VALUES ($1, $2, 'running')
+       RETURNING id`,
+      [business_id, version]
+    );
+
+    await client.query('COMMIT');
+
+    const statsAfterInsert = await getDiscoveryJobStats(business_id, version);
+
+    return {
+      allowed: true,
+      message: null,
+      automationJobId: insertRows[0]?.id ?? null,
+      prospectUsage: statsAfterInsert.prospectUsage,
+      runningJobs: statsAfterInsert.runningJobs,
+    };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/** @deprecated Use reserveRunningAutomationJob for concurrent-safe starts. */
 export async function createRunningAutomationJob({ business_id, version }) {
   const { rows } = await pool.query(
     `INSERT INTO prospect_discover.automation_jobs (business_id, version, status)
@@ -152,6 +239,7 @@ export default {
   getBusinessDiscoveryQuota,
   getDiscoveryJobStats,
   validateStartDiscovery,
+  reserveRunningAutomationJob,
   createRunningAutomationJob,
   updateAutomationJobStatus,
 };
