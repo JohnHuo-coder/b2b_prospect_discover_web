@@ -13,8 +13,8 @@ export const DISCOVERY_SAME_VERSION_RUNNING_MESSAGE =
 /** How long the API waits for n8n to acknowledge the start-discovery webhook. */
 export const START_DISCOVERY_N8N_TIMEOUT_MS = 25_000;
 
-/** Client-side fetch timeout for start discovery (slightly above server n8n wait). */
-export const START_DISCOVERY_CLIENT_TIMEOUT_MS = 35_000;
+/** Client-side fetch timeout for start discovery (DB reservation only; n8n runs in background). */
+export const START_DISCOVERY_CLIENT_TIMEOUT_MS = 20_000;
 
 /** Running jobs with no progress older than this are treated as orphaned starts. */
 export const START_DISCOVERY_ORPHAN_JOB_GRACE_MS = 3 * 60 * 1000;

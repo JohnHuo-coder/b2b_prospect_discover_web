@@ -26,6 +26,13 @@ function getWebhookUrl(webhookPath: string) {
   return `${normalizedBase}/${normalizedPath}`;
 }
 
+export function getN8nWebhookTarget(webhookPath: string) {
+  return {
+    url: getWebhookUrl(webhookPath),
+    hasApiKey: Boolean(process.env.N8N_API_KEY?.trim()),
+  };
+}
+
 function buildHeaders() {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
