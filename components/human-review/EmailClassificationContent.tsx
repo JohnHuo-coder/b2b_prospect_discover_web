@@ -9,10 +9,16 @@ import {
   type EmailClassificationListItem,
 } from "@/lib/api/human-review-client";
 import { EmailClassificationDetailPanel } from "./EmailClassificationDetailPanel";
-import { HumanReviewBackLink } from "./HumanReviewShared";
+import {
+  HumanReviewBackLink,
+  JoinCompanyRequiredBanner,
+  useHumanReviewAccess,
+} from "./HumanReviewShared";
 import { DataTableSection } from "@/components/system-dashboard/MetricCard";
+import { SkeletonBar } from "@/components/ui/SkeletonBar";
 
 export function EmailClassificationContent() {
+  const { isLoading: authLoading, isPending, isApproved } = useHumanReviewAccess();
   const [items, setItems] = useState<EmailClassificationListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
@@ -25,6 +31,8 @@ export function EmailClassificationContent() {
   const [detailError, setDetailError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isApproved) return;
+
     let cancelled = false;
 
     const load = async () => {
@@ -55,7 +63,7 @@ export function EmailClassificationContent() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isApproved]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -115,6 +123,27 @@ export function EmailClassificationContent() {
       return haystack.includes(query);
     });
   }, [items, search]);
+
+  if (authLoading) {
+    return (
+      <div className="px-8 py-8">
+        <SkeletonBar className="h-8 w-48" />
+        <SkeletonBar className="mt-3 h-4 w-72" />
+      </div>
+    );
+  }
+
+  if (isPending) {
+    return (
+      <div className="px-8 py-8">
+        <HumanReviewBackLink
+          title="Email Classification"
+          subtitle="Contacts with uncertain email classification waiting for review"
+        />
+        <JoinCompanyRequiredBanner />
+      </div>
+    );
+  }
 
   return (
     <div className="px-8 py-8">

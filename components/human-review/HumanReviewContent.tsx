@@ -12,7 +12,12 @@ import {
   fetchComplianceCheckQueue,
   fetchEmailClassificationQueue,
 } from "@/lib/api/human-review-client";
-import { PendingReviewBadge } from "./HumanReviewShared";
+import { SkeletonBar } from "@/components/ui/SkeletonBar";
+import {
+  JoinCompanyRequiredBanner,
+  PendingReviewBadge,
+  useHumanReviewAccess,
+} from "./HumanReviewShared";
 
 type ReviewCategory = {
   title: string;
@@ -53,11 +58,14 @@ function ReviewCategoryCard({ category }: { category: ReviewCategory }) {
 }
 
 export function HumanReviewContent() {
+  const { isLoading: authLoading, isPending, isApproved } = useHumanReviewAccess();
   const [compliancePendingCount, setCompliancePendingCount] = useState(0);
   const [emailClassificationPendingCount, setEmailClassificationPendingCount] =
     useState(0);
 
   useEffect(() => {
+    if (!isApproved) return;
+
     let cancelled = false;
 
     const loadCounts = async () => {
@@ -82,7 +90,30 @@ export function HumanReviewContent() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isApproved]);
+
+  if (authLoading) {
+    return (
+      <div className="px-8 py-8">
+        <SkeletonBar className="h-8 w-48" />
+        <SkeletonBar className="mt-3 h-4 w-72" />
+      </div>
+    );
+  }
+
+  if (isPending) {
+    return (
+      <div className="px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Human Review</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Review and approve lead candidates flagged for manual review
+          </p>
+        </div>
+        <JoinCompanyRequiredBanner />
+      </div>
+    );
+  }
 
   const reviewCategories: ReviewCategory[] = [
     {

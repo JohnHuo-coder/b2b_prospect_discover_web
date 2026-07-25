@@ -9,10 +9,16 @@ import {
   type ComplianceCheckListItem,
 } from "@/lib/api/human-review-client";
 import { ComplianceCheckDetailPanel } from "./ComplianceCheckDetailPanel";
-import { HumanReviewBackLink } from "./HumanReviewShared";
+import {
+  HumanReviewBackLink,
+  JoinCompanyRequiredBanner,
+  useHumanReviewAccess,
+} from "./HumanReviewShared";
 import { DataTableSection } from "@/components/system-dashboard/MetricCard";
+import { SkeletonBar } from "@/components/ui/SkeletonBar";
 
 export function ComplianceCheckContent() {
+  const { isLoading: authLoading, isPending, isApproved } = useHumanReviewAccess();
   const [items, setItems] = useState<ComplianceCheckListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
@@ -31,6 +37,8 @@ export function ComplianceCheckContent() {
   }, []);
 
   useEffect(() => {
+    if (!isApproved) return;
+
     let cancelled = false;
 
     const load = async () => {
@@ -61,7 +69,7 @@ export function ComplianceCheckContent() {
     return () => {
       cancelled = true;
     };
-  }, [refreshToken]);
+  }, [isApproved, refreshToken]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -125,6 +133,27 @@ export function ComplianceCheckContent() {
       return haystack.includes(query);
     });
   }, [items, search]);
+
+  if (authLoading) {
+    return (
+      <div className="px-8 py-8">
+        <SkeletonBar className="h-8 w-48" />
+        <SkeletonBar className="mt-3 h-4 w-72" />
+      </div>
+    );
+  }
+
+  if (isPending) {
+    return (
+      <div className="px-8 py-8">
+        <HumanReviewBackLink
+          title="Compliance Check"
+          subtitle="Outreach emails waiting for manual compliance review"
+        />
+        <JoinCompanyRequiredBanner />
+      </div>
+    );
+  }
 
   return (
     <div className="px-8 py-8">

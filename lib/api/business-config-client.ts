@@ -9,8 +9,9 @@ import { authenticatedFetch } from "@/lib/api/authenticatedFetch";
 import {
   resolveContactTitles,
   resolveRunSettings,
+  resolveSubjectLine,
 } from "@/lib/constants/config-defaults";
-import { normalizeContactCategories } from "@/lib/constants/contact-categories";
+import { normalizeContactCategories, toStoredContactCategories } from "@/lib/constants/contact-categories";
 import {
   industriesFromState,
   splitIndustrySelection,
@@ -32,6 +33,7 @@ type BusinessConfigRow = {
   number_of_candidates_per_run?: number | null;
   min_words?: number | null;
   max_words?: number | null;
+  subject_line?: string | null;
   low_conf_cutoff_email_classification?: number | null;
   qualified_conf_email_classification?: number | null;
   fit_score_cutoff?: number | null;
@@ -119,13 +121,13 @@ export function mapBusinessConfigResponse(
     max_words: toNumber(cfg.max_words),
     number_of_candidates_per_run: toNumber(cfg.number_of_candidates_per_run),
   });
+  const business_name = toStringValue(cfg.business_name);
 
   return {
     version,
     business_id: toStringValue(cfg.business_id),
-    business_name: toStringValue(cfg.business_name),
+    business_name,
     sender_name: toStringValue(cfg.sender_name),
-    sender_email: "",
     collaboration_intent: toStringValue(cfg.collaboration_intent),
     requirements,
     has_distance_requirement: toBoolean(cfg.has_distance_requirement),
@@ -142,7 +144,8 @@ export function mapBusinessConfigResponse(
     industry,
     industry_id,
     contact_titles,
-    contact_categories: toStringArray(cfg.contact_categories),
+    contact_categories: normalizeContactCategories(toStringArray(cfg.contact_categories)),
+    subject_line: resolveSubjectLine(toStringValue(cfg.subject_line), business_name),
     min_words: runSettings.min_words,
     max_words: runSettings.max_words,
     number_of_candidates_per_run: runSettings.number_of_candidates_per_run,
@@ -272,7 +275,8 @@ export function buildBusinessConfigSavePayload(
     industry: draft.industry,
     industry_id: draft.industry_id,
     contact_titles: draft.contact_titles.map((title) => title.trim()).filter(Boolean),
-    contact_categories: normalizeContactCategories(draft.contact_categories),
+    contact_categories: toStoredContactCategories(draft.contact_categories),
+    subject_line: draft.subject_line.trim(),
     min_words: draft.min_words as number,
     max_words: draft.max_words as number,
   };
@@ -297,7 +301,8 @@ function snapshotSavableConfig(draft: BusinessConfigState): string {
     industry: draft.industry,
     industry_id: draft.industry_id,
     contact_titles: draft.contact_titles.map((title) => title.trim()).filter(Boolean),
-    contact_categories: normalizeContactCategories(draft.contact_categories),
+    contact_categories: toStoredContactCategories(draft.contact_categories),
+    subject_line: draft.subject_line.trim(),
     min_words: draft.min_words,
     max_words: draft.max_words,
   });

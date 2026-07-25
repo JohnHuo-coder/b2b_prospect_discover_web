@@ -78,7 +78,7 @@ export const POST = withAuth(
 
       const { subject, body: emailBody } = resolveOutreachSubject(
         sendContext.body,
-        sendContext.sender_name
+        sendContext.subject_line
       );
 
       await gmailRepository.sendOutreachEmail({

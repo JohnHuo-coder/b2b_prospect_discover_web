@@ -36,3 +36,21 @@ export function normalizeContactCategories(values: string[]): ContactCategory[] 
 
   return normalized;
 }
+
+export function toStoredContactCategory(value: string): string | null {
+  const normalized = normalizeContactCategory(value);
+  return normalized ? normalized.toLowerCase() : null;
+}
+
+export function toStoredContactCategories(values: string[]): string[] {
+  const stored: string[] = [];
+
+  for (const value of values) {
+    const category = toStoredContactCategory(value);
+    if (category && !stored.includes(category)) {
+      stored.push(category);
+    }
+  }
+
+  return stored;
+}

@@ -14,6 +14,29 @@ export const DEFAULT_RUN_SETTINGS = {
   number_of_candidates_per_run: 50,
 } as const;
 
+export const DEFAULT_SUBJECT_LINE_SUFFIX = " - Partnership Opportunity";
+
+export function buildDefaultSubjectLine(businessName: string): string {
+  const trimmed = businessName.trim();
+  if (!trimmed) {
+    return `Partnership Opportunity`;
+  }
+
+  return `${trimmed}${DEFAULT_SUBJECT_LINE_SUFFIX}`;
+}
+
+export function resolveSubjectLine(
+  subjectLine: string | null | undefined,
+  businessName: string
+): string {
+  const trimmed = typeof subjectLine === "string" ? subjectLine.trim() : "";
+  if (trimmed) {
+    return trimmed;
+  }
+
+  return buildDefaultSubjectLine(businessName);
+}
+
 export function resolveContactTitles(saved: string[]): string[] {
   if (saved.length === 0) {
     return [...DEFAULT_CONTACT_TITLES];
@@ -45,6 +68,7 @@ export function formatDefaultRunSettingsHelp(): string {
   const defaults = DEFAULT_RUN_SETTINGS;
   return [
     "Default values:",
+    `Subject line: {Business Name}${DEFAULT_SUBJECT_LINE_SUFFIX}`,
     `Min. words per email: ${defaults.min_words}`,
     `Max. words per email: ${defaults.max_words}`,
   ].join("\n");

@@ -42,7 +42,6 @@ const emptyConfig: BusinessConfigState = {
   business_id: "",
   business_name: "",
   sender_name: "",
-  sender_email: "",
   collaboration_intent: "",
   requirements: [],
   has_distance_requirement: null,
@@ -58,6 +57,7 @@ const emptyConfig: BusinessConfigState = {
   industry_id: [],
   contact_titles: [...DEFAULT_CONTACT_TITLES],
   contact_categories: [],
+  subject_line: "",
   min_words: DEFAULT_RUN_SETTINGS.min_words,
   max_words: DEFAULT_RUN_SETTINGS.max_words,
   number_of_candidates_per_run: DEFAULT_RUN_SETTINGS.number_of_candidates_per_run,
@@ -76,15 +76,6 @@ function displayNumber(value: number | null | undefined): ReactNode {
     return "—";
   }
   return value;
-}
-
-function displayEmail(value: string | null | undefined): ReactNode {
-  if (!hasText(value)) return "—";
-  return (
-    <a href={`mailto:${value}`} className="text-violet-600 hover:text-violet-700">
-      {value}
-    </a>
-  );
 }
 
 function displayRequirements(requirements: string[]): ReactNode {
@@ -288,10 +279,7 @@ export function ConfigurationContent() {
 
     try {
       const saved = await saveBusinessConfig(buildBusinessConfigSavePayload(draft));
-      setConfig({
-        ...saved,
-        sender_email: draft.sender_email,
-      });
+      setConfig(saved);
       setRephraseSuggestions([]);
       setRephraseError(null);
       setIsEditing(false);
@@ -422,14 +410,13 @@ export function ConfigurationContent() {
       ) : (
         <div className="space-y-6">
           <ConfigCard icon={Building2} title="Business Identity">
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2">
               <Field
                 label="Business Name"
                 value={displayText(config.business_name)}
                 hint={BUSINESS_NAME_IMMUTABLE_HINT}
               />
               <Field label="Sender / Team" value={displayText(config.sender_name)} />
-              <Field label="Sender Email" value={displayEmail(config.sender_email)} />
             </div>
             <div className="mt-6">
               <Field
@@ -516,7 +503,11 @@ export function ConfigurationContent() {
           </ConfigCard>
 
           <ConfigCard icon={Mail} title="Outreach Settings">
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-3">
+              <Field
+                label="Email Subject Line"
+                value={displayText(config.subject_line)}
+              />
               <Field label="Min. Words per Email" value={displayNumber(config.min_words)} />
               <Field label="Max. Words per Email" value={displayNumber(config.max_words)} />
             </div>

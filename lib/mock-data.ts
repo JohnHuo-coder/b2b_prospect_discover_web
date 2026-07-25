@@ -103,7 +103,6 @@ export const leads: Lead[] = [
 export const businessConfig = {
   business_name: "Suvarnaveda Wellness",
   sender_name: "Parvina Kuludomphongse",
-  sender_email: "parvina@suvarnaveda.com",
   collaboration_intent:
     "We run Suvarnaveda, a wellness/medspa program in Bangkok. Our guests receive treatments at our wellness center and need a quiet, restful hotel nearby to stay during treatment days. We are reaching out to explore whether your property would be interested in a B2B accommodation partnership — combined wellness packages where your hotel is the guest stay partner.",
   requirements: [
@@ -130,7 +129,8 @@ export const businessConfig = {
     "Director of Marketing",
     "Marketing Manager",
   ],
-  contact_categories: ["Sales", "Marketing"],
+  contact_categories: ["sales", "marketing"],
+  subject_line: "Suvarnaveda Wellness - Partnership Opportunity",
   min_words: 90,
   max_words: 160,
   number_of_candidates_per_run: 50,

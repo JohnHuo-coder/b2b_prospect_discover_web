@@ -39,6 +39,13 @@ export function validateBusinessConfigForRun(
     });
   }
 
+  if (!config.sender_name.trim()) {
+    issues.push({
+      section: "Business Identity",
+      message: "Sender / team is required",
+    });
+  }
+
   if (!config.collaboration_intent.trim()) {
     issues.push({
       section: "Business Identity",
@@ -106,6 +113,13 @@ export function validateBusinessConfigForRun(
     issues.push({
       section: "Outreach Settings",
       message: "Min. words per email is required",
+    });
+  }
+
+  if (!config.subject_line.trim()) {
+    issues.push({
+      section: "Outreach Settings",
+      message: "Email subject line is required",
     });
   }
 

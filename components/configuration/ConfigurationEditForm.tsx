@@ -19,7 +19,7 @@ import {
 } from "@/components/configuration/RequirementsEditForm";
 import { ContactPreferencesEditForm } from "@/components/configuration/ContactPreferencesEditForm";
 import {
-  getDefaultRunSettingsDraft,
+  getDefaultOutreachSettingsDraft,
   OutreachSettingsEditForm,
 } from "@/components/configuration/OutreachSettingsEditForm";
 import {
@@ -84,15 +84,9 @@ export function ConfigurationEditForm({
           />
           <TextInput
             label="Sender / Team"
+            required
             value={draft.sender_name}
             onChange={(value) => onPatch("sender_name", value)}
-            placeholder="Optional"
-          />
-          <TextInput
-            label="Sender Email"
-            type="email"
-            value={draft.sender_email}
-            onChange={(value) => onPatch("sender_email", value)}
           />
           <TextArea
             label="Collaboration Intent"
@@ -236,13 +230,18 @@ export function ConfigurationEditForm({
 
       <ConfigCard icon={Mail} title="Outreach Settings">
         <OutreachSettingsEditForm
+          businessName={draft.business_name}
+          subjectLine={draft.subject_line}
           minWords={draft.min_words}
           maxWords={draft.max_words}
+          onSubjectLineChange={(subject_line) => onPatch("subject_line", subject_line)}
           onMinWordsChange={(min_words) => onPatch("min_words", min_words)}
           onMaxWordsChange={(max_words) => onPatch("max_words", max_words)}
           onRestoreDefaults={() => {
-            onPatch("min_words", getDefaultRunSettingsDraft().min_words);
-            onPatch("max_words", getDefaultRunSettingsDraft().max_words);
+            const defaults = getDefaultOutreachSettingsDraft(draft.business_name);
+            onPatch("subject_line", defaults.subject_line);
+            onPatch("min_words", defaults.min_words);
+            onPatch("max_words", defaults.max_words);
           }}
         />
       </ConfigCard>
@@ -254,6 +253,8 @@ export function validateBusinessConfigDraft(
   draft: BusinessConfigState
 ): string | null {
   if (!draft.business_name.trim()) return "Business name is required.";
+  if (!draft.sender_name.trim()) return "Sender / team is required.";
+  if (!draft.subject_line.trim()) return "Email subject line is required.";
   if (!draft.collaboration_intent.trim()) return "Collaboration intent is required.";
   if (draft.requirements.map((item) => item.trim()).filter(Boolean).length === 0) {
     return "Add at least one requirement.";

@@ -1,27 +1,23 @@
 import { DEFAULT_OUTREACH_SUBJECT } from '@/lib/constants/gmail';
 
-export function resolveOutreachSubject(body: string, senderName?: string | null) {
+export function resolveOutreachSubject(
+  body: string,
+  subjectLine?: string | null
+) {
   const lines = body.split(/\r?\n/);
   const firstLine = lines[0]?.trim() ?? '';
+  const configuredSubject = subjectLine?.trim() || DEFAULT_OUTREACH_SUBJECT;
 
   if (/^subject:/i.test(firstLine)) {
-    const subject = firstLine.replace(/^subject:\s*/i, '').trim();
     const remainingBody = lines.slice(1).join('\n').replace(/^\s+/, '');
     return {
-      subject: subject || DEFAULT_OUTREACH_SUBJECT,
+      subject: configuredSubject,
       body: remainingBody || body,
     };
   }
 
-  if (senderName?.trim()) {
-    return {
-      subject: `Introduction from ${senderName.trim()}`,
-      body,
-    };
-  }
-
   return {
-    subject: DEFAULT_OUTREACH_SUBJECT,
+    subject: configuredSubject,
     body,
   };
 }

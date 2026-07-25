@@ -3,7 +3,6 @@ export type BusinessConfigState = {
   business_id: string;
   business_name: string;
   sender_name: string;
-  sender_email: string;
   collaboration_intent: string;
   requirements: string[];
   has_distance_requirement: boolean | null;
@@ -19,6 +18,7 @@ export type BusinessConfigState = {
   industry_id: number[];
   contact_titles: string[];
   contact_categories: string[];
+  subject_line: string;
   min_words: number | null;
   max_words: number | null;
   number_of_candidates_per_run: number | null;
@@ -41,6 +41,7 @@ export type BusinessConfigSavePayload = {
   industry_id?: number[] | null;
   contact_titles: string[];
   contact_categories: string[];
+  subject_line: string;
   min_words: number;
   max_words: number;
 };

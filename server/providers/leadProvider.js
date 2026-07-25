@@ -1,4 +1,5 @@
 import { pool } from '../../lib/db/client.ts';
+import { resolveSubjectLine } from '../../lib/constants/config-defaults.ts';
 import {
   joinBusinessConfigOnConfigId,
   resolveConfigScope,
@@ -29,7 +30,7 @@ async function resolveLeadContactScope({ id, business_id, version, email }) {
   const fromClause = buildLeadConfigJoin();
 
   const { rows } = await pool.query(
-    `SELECT ic.place_id, ic.config_id, bc.sender_name
+    `SELECT ic.place_id, ic.config_id, bc.sender_name, bc.subject_line, bc.business_name
      ${fromClause}
      ${leadWhere}`,
     leadParams
@@ -62,6 +63,7 @@ async function resolveLeadContactScope({ id, business_id, version, email }) {
     place_id: rows[0].place_id,
     config_id: rows[0].config_id,
     sender_name: rows[0].sender_name,
+    subject_line: resolveSubjectLine(rows[0].subject_line, rows[0].business_name),
     email: normalizedEmail,
     outreach: outreachRows[0],
   };
@@ -343,6 +345,7 @@ export default {
       to: contactScope.email,
       body,
       sender_name: contactScope.sender_name,
+      subject_line: contactScope.subject_line,
       config_id: contactScope.config_id,
       place_id: contactScope.place_id,
     };

@@ -1,5 +1,24 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { useUser } from "@/components/providers/UserProvider";
+
+export function JoinCompanyRequiredBanner() {
+  return (
+    <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-5 text-sm text-amber-800">
+      You need to join a company first.
+    </div>
+  );
+}
+
+export function useHumanReviewAccess() {
+  const { user, isLoading } = useUser();
+  const isPending = Boolean(user && (!user.role || user.role === "pending"));
+  const isApproved = Boolean(user && user.role && user.role !== "pending");
+
+  return { user, isLoading, isPending, isApproved };
+}
 
 export function HumanReviewBackLink({
   title,

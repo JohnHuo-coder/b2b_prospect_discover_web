@@ -90,6 +90,7 @@ function parseSaveBody(body: Record<string, unknown>) {
   );
   const min_words = parseInteger(body.min_words);
   const max_words = parseInteger(body.max_words);
+  const subject_line = parseString(body.subject_line);
   const has_distance_requirement = parseOptionalBoolean(body.has_distance_requirement);
   const lat = parseOptionalFloat(body.lat, "lat");
   const lon = parseOptionalFloat(body.lon, "lon");
@@ -106,6 +107,7 @@ function parseSaveBody(body: Record<string, unknown>) {
   }
 
   if (!collaboration_intent) return { error: "collaboration_intent is required" };
+  if (!sender_name) return { error: "sender_name is required" };
   if (!requirements) return { error: "requirements must be a non-empty array" };
   if (!search_keyword) return { error: "search_keyword is required" };
   if (!search_location) return { error: "search_location is required" };
@@ -140,6 +142,9 @@ function parseSaveBody(body: Record<string, unknown>) {
   if (min_words >= max_words) {
     return { error: "max_words must be greater than min_words" };
   }
+  if (!subject_line) {
+    return { error: "subject_line is required" };
+  }
 
   return {
     payload: {
@@ -157,6 +162,7 @@ function parseSaveBody(body: Record<string, unknown>) {
       qualified_conf_email_classification,
       email_min_words: min_words,
       email_max_words: max_words,
+      subject_line,
       has_distance_requirement,
       lat,
       lon,
