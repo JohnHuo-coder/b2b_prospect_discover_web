@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { errorResponse } from '@/lib/api/response';
-import { withAuth } from '@/lib/api/middleware/authMiddleware.js';
+import '@/lib/firebase/firebase.js';
+import { getAuth } from 'firebase-admin/auth';
 import { GMAIL_OAUTH_STATE_COOKIE } from '@/lib/constants/gmail';
 import gmailRepository from '@/server/repositories/gmailRepository.js';
+import userRepository from '@/server/repositories/userRepository.js';
 
 type DbUser = {
   id?: number | string | null;
@@ -28,14 +29,35 @@ function buildRedirectUrl(
   return `${url.pathname}${url.search}`;
 }
 
-export const GET = withAuth(async (request: NextRequest, _context: unknown, user: DbUser) => {
+async function resolveGmailCallbackUser(
+  request: NextRequest
+): Promise<DbUser | null> {
+  const token =
+    request.cookies.get('session')?.value ||
+    request.headers.get('authorization')?.split(' ')[1];
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const decodedToken = await getAuth().verifyIdToken(token);
+    return userRepository.findByUid(decodedToken.uid);
+  } catch {
+    return null;
+  }
+}
+
+export async function GET(request: NextRequest) {
   const fallbackRedirect = '/dashboard?gmail=error';
 
   try {
-    if (!user.id) {
-      return NextResponse.redirect(
-        buildRedirectUrl('/dashboard', { gmail: 'error', reason: 'user' })
-      );
+    const user = await resolveGmailCallbackUser(request);
+    if (!user?.id) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('returnTo', '/dashboard');
+      loginUrl.searchParams.set('gmail', 'auth-required');
+      return NextResponse.redirect(loginUrl);
     }
 
     const url = new URL(request.url);
@@ -44,8 +66,6 @@ export const GET = withAuth(async (request: NextRequest, _context: unknown, user
     const oauthError = url.searchParams.get('error');
 
     const storedStateRaw = request.cookies.get(GMAIL_OAUTH_STATE_COOKIE)?.value;
-    const response = NextResponse.redirect(fallbackRedirect);
-    response.cookies.delete(GMAIL_OAUTH_STATE_COOKIE);
 
     if (oauthError) {
       return NextResponse.redirect(
@@ -104,7 +124,7 @@ export const GET = withAuth(async (request: NextRequest, _context: unknown, user
   } catch (error) {
     console.error('[GET /api/gmail/callback]', error);
     return NextResponse.redirect(
-      buildRedirectUrl('/dashboard', { gmail: 'error', reason: 'callback' })
+      buildRedirectUrl(fallbackRedirect, { reason: 'callback' })
     );
   }
-});
+}

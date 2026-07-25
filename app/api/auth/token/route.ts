@@ -14,7 +14,8 @@ type DbError = Error & { code?: string };
 const SESSION_COOKIE = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "strict" as const,
+  // Lax so OAuth redirects from Google still send the session cookie on callback.
+  sameSite: "lax" as const,
   maxAge: 3600,
   path: "/",
 };
