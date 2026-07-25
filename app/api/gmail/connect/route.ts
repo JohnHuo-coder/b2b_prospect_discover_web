@@ -60,7 +60,7 @@ function buildConnectResponse(payload: ConnectPayload) {
   return response;
 }
 
-export const POST = withAuth(async (request, _context, user: DbUser) => {
+export const POST = withAuth(async (request: Request, _context: unknown, user: DbUser) => {
   try {
     if (!user.id) {
       return errorResponse('User not found', 401);

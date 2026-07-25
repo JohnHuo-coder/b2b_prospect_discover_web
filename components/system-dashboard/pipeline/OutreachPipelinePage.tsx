@@ -52,7 +52,7 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
   },
 };
 
-function onFlowInit(instance: ReactFlowInstance) {
+function onFlowInit(instance: ReactFlowInstance<Node<OutreachNodeData>>) {
   void instance.fitView({
     padding: 0.18,
     maxZoom: 1.2,

@@ -101,6 +101,7 @@ export function ContactContent() {
     const summary = candidates.find((candidate) => candidate.id === selectedId);
     if (!summary) return;
 
+    const selectedSummary = summary;
     const candidateId = selectedId;
     let cancelled = false;
 
@@ -108,10 +109,10 @@ export function ContactContent() {
       setDetailLoading(true);
       setDetailError(null);
       setSelectedDetail({
-        id: summary.id,
-        company: summary.company,
-        website: summary.website,
-        status: summary.status,
+        id: selectedSummary.id,
+        company: selectedSummary.company,
+        website: selectedSummary.website,
+        status: selectedSummary.status,
         final_stage: "",
         reason: "",
         fallback_from: null,

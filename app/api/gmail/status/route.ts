@@ -3,7 +3,11 @@ import { errorResponse } from '@/lib/api/response';
 import { withAuth } from '@/lib/api/middleware/authMiddleware.js';
 import gmailRepository from '@/server/repositories/gmailRepository.js';
 
-export const GET = withAuth(async (_request, _context, user) => {
+type DbUser = {
+  id?: number | string | null;
+};
+
+export const GET = withAuth(async (_request: Request, _context: unknown, user: DbUser) => {
   try {
     await gmailRepository.ensureTable();
     const status = await gmailRepository.getStatus(user.id);

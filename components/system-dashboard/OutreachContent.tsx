@@ -116,6 +116,7 @@ export function OutreachContent() {
     const summary = candidates.find((candidate) => candidate.id === selectedId);
     if (!summary) return;
 
+    const selectedSummary = summary;
     const candidateId = selectedId;
     let cancelled = false;
 
@@ -123,11 +124,11 @@ export function OutreachContent() {
       setDetailLoading(true);
       setDetailError(null);
       setSelectedDetail({
-        id: summary.id,
-        company: summary.company,
-        website: summary.website,
-        status: summary.status,
-        human_approved_tag: summary.human_approved_tag,
+        id: selectedSummary.id,
+        company: selectedSummary.company,
+        website: selectedSummary.website,
+        status: selectedSummary.status,
+        human_approved_tag: selectedSummary.human_approved_tag,
         human_review_modified: null,
         human_review_analytic_status: null,
         human_review_edit_severity: null,

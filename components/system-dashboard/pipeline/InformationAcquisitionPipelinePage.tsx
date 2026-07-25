@@ -56,7 +56,7 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
   },
 };
 
-function onFlowInit(instance: ReactFlowInstance) {
+function onFlowInit(instance: ReactFlowInstance<Node<PipelineNodeData>>) {
   void instance.fitView({
     padding: 0.12,
     maxZoom: 1.15,
@@ -155,6 +155,7 @@ export function InformationAcquisitionPipelinePage() {
       return;
     }
 
+    const activeRequirementIndex = requirementIndex;
     let cancelled = false;
 
     async function loadWorkflowCounts() {
@@ -162,7 +163,7 @@ export function InformationAcquisitionPipelinePage() {
       setError(null);
 
       try {
-        const result = await fetchInfoAcquisitionWorkflowByReq(requirementIndex);
+        const result = await fetchInfoAcquisitionWorkflowByReq(activeRequirementIndex);
         if (cancelled) return;
 
         const stageCounts = mapWorkflowStageCounts(result.stages);

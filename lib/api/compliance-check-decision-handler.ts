@@ -39,7 +39,7 @@ export async function handleComplianceCheckDecisionPatch(
   const parsed = parseDecisionBody(body);
 
   if ("error" in parsed) {
-    return errorResponse(parsed.error, 400);
+    return errorResponse(parsed.error ?? "Invalid request", 400);
   }
 
   const result = await submitComplianceCheckDecision({

@@ -26,6 +26,7 @@ type BusinessConfigRow = {
   collaboration_intent?: string | null;
   search_keyword?: string | null;
   search_location?: string | null;
+  location?: string | null;
   industry?: string | string[] | null;
   industry_id?: number | string | Array<number | string> | null;
   number_of_candidates_per_run?: number | null;

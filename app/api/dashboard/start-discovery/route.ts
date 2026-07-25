@@ -96,11 +96,13 @@ export const POST = withAuth(
       });
 
       if (!validation.allowed) {
+        const validationMessage =
+          validation.message ?? "Discovery cannot be started";
         return jsonResponse(
           {
-            error: validation.message,
+            error: validationMessage,
             ...buildDiscoveryResponseBody(
-              validation.message,
+              validationMessage,
               validation.prospectUsage,
               validation.runningJobs
             ),

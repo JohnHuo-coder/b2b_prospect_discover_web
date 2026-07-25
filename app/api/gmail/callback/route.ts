@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { errorResponse } from '@/lib/api/response';
 import { withAuth } from '@/lib/api/middleware/authMiddleware.js';
 import { GMAIL_OAUTH_STATE_COOKIE } from '@/lib/constants/gmail';
@@ -28,7 +28,7 @@ function buildRedirectUrl(
   return `${url.pathname}${url.search}`;
 }
 
-export const GET = withAuth(async (request, _context, user: DbUser) => {
+export const GET = withAuth(async (request: NextRequest, _context: unknown, user: DbUser) => {
   const fallbackRedirect = '/dashboard?gmail=error';
 
   try {

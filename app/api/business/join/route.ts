@@ -1,7 +1,7 @@
 import { errorResponse, jsonResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import userRepository from "@/server/repositories/userRepository.js";
-import { pool } from "@/lib/db/client.ts";
+import { pool } from "@/lib/db/client";
 
 type DbUser = {
   firebaseUid?: string;

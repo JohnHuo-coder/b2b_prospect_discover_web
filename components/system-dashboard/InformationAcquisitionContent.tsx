@@ -106,6 +106,7 @@ export function InformationAcquisitionContent() {
     const summary = candidates.find((candidate) => candidate.id === selectedId);
     if (!summary) return;
 
+    const selectedSummary = summary;
     const candidateId = selectedId;
     let cancelled = false;
 
@@ -113,9 +114,9 @@ export function InformationAcquisitionContent() {
       setDetailLoading(true);
       setDetailError(null);
       setSelectedDetail({
-        id: summary.id,
-        company: summary.company,
-        status: summary.status,
+        id: selectedSummary.id,
+        company: selectedSummary.company,
+        status: selectedSummary.status,
         detailMode: "requirements",
         webAcquisitionStatus: null,
         requirements: [],
