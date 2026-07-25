@@ -9,6 +9,7 @@ import {
   DISCOVERY_RUNNING_QUEUE_FULL_MESSAGE,
   DISCOVERY_SAME_VERSION_RUNNING_MESSAGE,
   MAX_RUNNING_AUTOMATION_JOBS,
+  START_DISCOVERY_ORPHAN_JOB_GRACE_MS,
 } from '../../lib/constants/automation-jobs.ts';
 
 async function queryProspectNumberForRun(client, business_id, version) {
@@ -93,6 +94,20 @@ function evaluateDiscoveryStart(stats, prospectNumber) {
   return { allowed: true };
 }
 
+async function failOrphanedRunningJobs(client, business_id) {
+  const graceMinutes = Math.max(1, Math.ceil(START_DISCOVERY_ORPHAN_JOB_GRACE_MS / 60_000));
+
+  await client.query(
+    `UPDATE prospect_discover.automation_jobs
+     SET status = 'failed'
+     WHERE business_id = $1
+       AND LOWER(status) = 'running'
+       AND prospect_number IS NULL
+       AND created_at < NOW() - ($2 * INTERVAL '1 minute')`,
+    [business_id, graceMinutes]
+  );
+}
+
 async function getProspectNumberForRun(business_id, version) {
   return queryProspectNumberForRun(pool, business_id, version);
 }
@@ -161,6 +176,8 @@ export async function reserveRunningAutomationJob({ business_id, version }) {
     if (businessRows.length === 0) {
       throw new Error('Business not found');
     }
+
+    await failOrphanedRunningJobs(client, business_id);
 
     const prospectNumber = await queryProspectNumberForRun(
       client,

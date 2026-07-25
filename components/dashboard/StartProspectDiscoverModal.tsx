@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AlertCircle, CheckCircle2, Play } from "lucide-react";
 import { fetchBusinessConfig } from "@/lib/api/business-config-client";
@@ -33,9 +33,12 @@ export function StartProspectDiscoverModal({
   const [error, setError] = useState("");
   const [usageLabel, setUsageLabel] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!open) {
+      abortRef.current?.abort();
+      abortRef.current = null;
       setConfig(null);
       setError("");
       setUsageLabel("");
@@ -99,12 +102,23 @@ export function StartProspectDiscoverModal({
     setError("");
     setUsageLabel("");
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
-      const result = await startProspectDiscovery(configVersion);
+      const result = await startProspectDiscovery(configVersion, {
+        signal: controller.signal,
+      });
       setSuccessMessage(result.message);
       setUsageLabel(result.prospectUsageLabel);
       onDiscoveryFinished?.();
     } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        return;
+      }
+      if (controller.signal.aborted) {
+        return;
+      }
       const prospectError = err as Error & { prospectUsageLabel?: string };
       setError(
         err instanceof Error
@@ -116,21 +130,30 @@ export function StartProspectDiscoverModal({
       }
       onDiscoveryFinished?.();
     } finally {
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+      }
       setSubmitting(false);
     }
+  };
+
+  const handleClose = () => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    onClose();
   };
 
   return (
     <Modal
       open={open}
       title="Start Prospect Discover"
-      onClose={onClose}
+      onClose={handleClose}
       footer={
         <div className="flex flex-wrap items-center justify-end gap-2">
           {successMessage ? (
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700"
             >
               OK
@@ -139,7 +162,7 @@ export function StartProspectDiscoverModal({
             <>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 disabled={submitting}
                 className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -149,7 +172,7 @@ export function StartProspectDiscoverModal({
               {!loading && !error && !readiness.ready ? (
                 <Link
                   href="/configuration"
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-100"
                 >
                   Go to Configuration

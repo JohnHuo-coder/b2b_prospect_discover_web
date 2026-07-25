@@ -1,6 +1,8 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import {
   DAILY_PROSPECT_LIMIT,
+  START_DISCOVERY_N8N_ERROR_MESSAGE,
+  START_DISCOVERY_N8N_TIMEOUT_MS,
   formatProspectUsage,
 } from "@/lib/constants/automation-jobs";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
@@ -13,6 +15,8 @@ type DbUser = {
   business_id?: number | string | null;
   config_version?: number | null;
 };
+
+export const maxDuration = 60;
 
 export const START_DISCOVERY_FAILED_MESSAGE =
   "Failed to start discovery. Please try again later or contact your technical team.";
@@ -48,10 +52,16 @@ export function parseStartDiscoveryResponse(data: unknown): {
       ? record.message.trim()
       : "Discovery workflow started.";
 
-  return {
-    accepted: status === "accepted",
-    message,
-  };
+  if (status === "accepted") {
+    return { accepted: true, message };
+  }
+
+  // n8n may return 2xx with an empty or differently shaped body when responding early.
+  if (!record) {
+    return { accepted: true, message };
+  }
+
+  return { accepted: false, message };
 }
 
 function buildDiscoveryResponseBody(
@@ -121,12 +131,26 @@ export const POST = withAuth(
 
       let result: unknown;
       try {
-        result = await triggerN8nWebhook("start-discovery", {
+        console.info("[POST /api/dashboard/start-discovery] triggering n8n", {
+          automationJobId,
           business_id: user.business_id,
           version,
-          automation_job_id: automationJobId,
         });
+
+        result = await triggerN8nWebhook(
+          "start-discovery",
+          {
+            business_id: user.business_id,
+            version,
+            automation_job_id: automationJobId,
+          },
+          { timeoutMs: START_DISCOVERY_N8N_TIMEOUT_MS }
+        );
       } catch (error) {
+        console.error("[POST /api/dashboard/start-discovery] n8n failed", {
+          automationJobId,
+          error,
+        });
         await automationJobRepository.updateAutomationJobStatus(
           automationJobId,
           "failed"
@@ -167,9 +191,13 @@ export const POST = withAuth(
     } catch (error) {
       if (error instanceof N8nError) {
         console.error("[POST /api/dashboard/start-discovery]", error);
+        const message =
+          error.status === 504
+            ? START_DISCOVERY_N8N_ERROR_MESSAGE
+            : error.message || START_DISCOVERY_N8N_ERROR_MESSAGE;
         return jsonResponse(
           {
-            error: error.message,
+            error: message,
             prospectUsage: { used: 0, limit: DAILY_PROSPECT_LIMIT },
             runningJobs: { count: 0, limit: 2 },
           },

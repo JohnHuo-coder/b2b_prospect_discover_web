@@ -1,5 +1,9 @@
 import { ENDPOINTS } from "@/lib/api/endpoints";
 import { authenticatedFetch } from "@/lib/api/authenticatedFetch";
+import {
+  START_DISCOVERY_CLIENT_TIMEOUT_MS,
+  START_DISCOVERY_TIMEOUT_MESSAGE,
+} from "@/lib/constants/automation-jobs";
 import type {
   ProspectUsage,
   RunningJobsUsage,
@@ -124,15 +128,49 @@ export async function fetchDiscoveryQuota(): Promise<DiscoveryQuota> {
 }
 
 export async function startProspectDiscovery(
-  version?: number
+  version?: number,
+  options?: { signal?: AbortSignal }
 ): Promise<StartDiscoveryResult> {
-  const response = await authenticatedFetch(ENDPOINTS.DASHBOARD_START_DISCOVERY, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(
-      version !== undefined ? { version } : {}
-    ),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(
+    () => controller.abort(new DOMException("Timeout", "TimeoutError")),
+    START_DISCOVERY_CLIENT_TIMEOUT_MS
+  );
+
+  if (options?.signal) {
+    if (options.signal.aborted) {
+      clearTimeout(timeoutId);
+      controller.abort();
+    } else {
+      options.signal.addEventListener(
+        "abort",
+        () => controller.abort(),
+        { once: true }
+      );
+    }
+  }
+
+  let response: Response;
+  try {
+    response = await authenticatedFetch(ENDPOINTS.DASHBOARD_START_DISCOVERY, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(
+        version !== undefined ? { version } : {}
+      ),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw new Error(START_DISCOVERY_TIMEOUT_MESSAGE);
+    }
+    if (error instanceof Error && error.name === "AbortError") {
+      throw error;
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const data = (await response.json().catch(() => ({}))) as StartDiscoveryResponse;
   const prospectUsage = parseDiscoveryQuota(data)?.prospectUsage ?? {
