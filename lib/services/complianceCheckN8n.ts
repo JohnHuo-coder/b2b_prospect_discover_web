@@ -9,7 +9,7 @@ export type ComplianceCheckContinuePayload = {
   company_name: string;
   decision: "keep" | "discard";
   compliance_reason: string;
-  modified: boolean;
+  modified?: boolean;
 };
 
 export async function triggerComplianceCheckContinue(

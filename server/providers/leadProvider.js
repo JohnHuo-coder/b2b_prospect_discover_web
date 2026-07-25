@@ -404,6 +404,17 @@ export default {
         throw new Error('Outreach email is no longer ready to send');
       }
 
+      await client.query(
+        `UPDATE prospect_discover.initial_candidates ic
+         SET status = 'sent'
+         FROM prospect_discover.business_configs bc
+         WHERE ic.id = $3
+           AND ic.config_id = bc.id
+           AND ${whereBusinessConfigScope()}
+           AND LOWER(ic.status) = 'ready'`,
+        [...scopeParams(contactScope.scope), id]
+      );
+
       await client.query('COMMIT');
       return {
         affectedRows: rowCount,

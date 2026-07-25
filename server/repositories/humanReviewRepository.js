@@ -5,8 +5,8 @@ const humanReviewRepository = {
   getComplianceCheckDetail: (opts) =>
     humanReviewProvider.getComlianceCheckDetail(opts),
   getFactsByReq: (opts) => humanReviewProvider.getFactsByReq(opts),
-  deleteComplianceCheckRecord: (opts) =>
-    humanReviewProvider.deleteComlianceCheckRecord(opts),
+  updateComplianceCheckDecision: (opts) =>
+    humanReviewProvider.updateComplianceCheckDecision(opts),
   getEmailClassificationAll: (opts) =>
     humanReviewProvider.getEmailClassificationAll(opts),
   getEmailClassificationDetail: (opts) =>

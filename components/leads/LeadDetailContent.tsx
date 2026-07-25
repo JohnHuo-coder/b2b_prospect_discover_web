@@ -439,16 +439,20 @@ export function LeadDetailContent({ leadId }: { leadId: string }) {
     contactEmail: string,
     updates: Partial<LeadContact>
   ) => {
-    setLead((current) =>
-      current
-        ? {
-            ...current,
-            contacts: current.contacts.map((contact) =>
-              contact.email === contactEmail ? { ...contact, ...updates } : contact
-            ),
-          }
-        : current
-    );
+    setLead((current) => {
+      if (!current) return current;
+
+      const shouldMarkLeadSent =
+        updates.outreachStatus === "sent" && current.status === "ready";
+
+      return {
+        ...current,
+        status: shouldMarkLeadSent ? "sent" : current.status,
+        contacts: current.contacts.map((contact) =>
+          contact.email === contactEmail ? { ...contact, ...updates } : contact
+        ),
+      };
+    });
 
     setEmailContact((current) =>
       current?.email === contactEmail ? { ...current, ...updates } : current

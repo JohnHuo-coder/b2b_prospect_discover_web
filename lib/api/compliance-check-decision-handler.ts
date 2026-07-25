@@ -1,5 +1,8 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
-import { submitComplianceCheckDecision } from "@/server/services/complianceCheckDecisionService.js";
+import {
+  COMPLIANCE_DECISION_CONFLICT_MESSAGE,
+  submitComplianceCheckDecision,
+} from "@/server/services/complianceCheckDecisionService.js";
 
 type ComplianceCheckDecisionBody = {
   action?: string;
@@ -48,6 +51,10 @@ export async function handleComplianceCheckDecisionPatch(
     candidate_id: candidateId,
     ...parsed,
   });
+
+  if (result.conflict) {
+    return errorResponse(COMPLIANCE_DECISION_CONFLICT_MESSAGE, 409);
+  }
 
   if (!result.affectedRows) {
     return errorResponse("Compliance check record not found", 404);

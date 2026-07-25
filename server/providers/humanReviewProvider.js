@@ -33,6 +33,7 @@ export default {
           ${joinBc('hr')}
           ${joinIc('hr')}
           WHERE ${whereBc()}
+            AND LOWER(hr.status) = 'pending'
           ORDER BY ic.id ASC`,
         params
       ),
@@ -40,7 +41,8 @@ export default {
         `SELECT COUNT(*) AS total
           FROM prospect_discover.human_review_compliance_check hr
           ${joinBc('hr')}
-          WHERE ${whereBc()}`,
+          WHERE ${whereBc()}
+            AND LOWER(hr.status) = 'pending'`,
         params
       ),
     ]);
@@ -73,7 +75,8 @@ export default {
           ${joinBc('hr')}
           ${joinIc('hr')}
           WHERE ${whereBc()}
-            AND ic.id = $3`,
+            AND ic.id = $3
+            AND LOWER(hr.status) = 'pending'`,
         params
       ),
       pool.query(
@@ -135,25 +138,64 @@ export default {
     };
   },
 
-  async deleteComlianceCheckRecord({ candidate_id, business_id, version }) {
+  async updateComplianceCheckDecision({
+    candidate_id,
+    business_id,
+    version,
+    action,
+    modified,
+    client = pool,
+  }) {
     const scope = requireConfigScope({ business_id, version });
     if (!candidate_id) {
       throw new Error('candidate id is required');
     }
+    if (action !== 'keep' && action !== 'discard') {
+      throw new Error('action must be keep or discard');
+    }
 
-    const { rowCount } = await pool.query(
-      `DELETE FROM prospect_discover.human_review_compliance_check hr
-       USING prospect_discover.initial_candidates ic,
-             prospect_discover.business_configs bc
+    const params = [...scopeParams(scope), candidate_id];
+    const pendingFilter = `AND LOWER(hr.status) = 'pending'`;
+
+    if (action === 'keep') {
+      params.push(Boolean(modified));
+      const modifiedParam = params.length;
+
+      const { rowCount, rows } = await client.query(
+        `UPDATE prospect_discover.human_review_compliance_check hr
+         SET status = 'approved',
+             modified = $${modifiedParam}
+         FROM prospect_discover.initial_candidates ic,
+              prospect_discover.business_configs bc
+         WHERE hr.config_id = bc.id
+           AND ic.config_id = bc.id
+           AND hr.place_id = ic.place_id
+           AND ${whereBc()}
+           AND ic.id = $3
+           ${pendingFilter}
+         RETURNING hr.config_id, hr.place_id`,
+        params
+      );
+
+      return { affectedRows: rowCount, rows };
+    }
+
+    const { rowCount, rows } = await client.query(
+      `UPDATE prospect_discover.human_review_compliance_check hr
+       SET status = 'rejected'
+       FROM prospect_discover.initial_candidates ic,
+            prospect_discover.business_configs bc
        WHERE hr.config_id = bc.id
          AND ic.config_id = bc.id
          AND hr.place_id = ic.place_id
          AND ${whereBc()}
-         AND ic.id = $3`,
-      [...scopeParams(scope), candidate_id]
+         AND ic.id = $3
+         ${pendingFilter}
+       RETURNING hr.config_id, hr.place_id`,
+      params
     );
 
-    return { affectedRows: rowCount };
+    return { affectedRows: rowCount, rows };
   },
 
   async getEmailClassificationAll({ business_id, version }) {
