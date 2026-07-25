@@ -16,7 +16,14 @@ type DbUser = {
   config_version?: number | null;
 };
 
-export const maxDuration = 60;
+export const maxDuration = 30;
+
+function logStep(step: string, startedAt: number, extra: Record<string, unknown> = {}) {
+  console.info(`[POST /api/dashboard/start-discovery] ${step}`, {
+    elapsedMs: Date.now() - startedAt,
+    ...extra,
+  });
+}
 
 export const START_DISCOVERY_FAILED_MESSAGE =
   "Failed to start discovery. Please try again later or contact your technical team.";
@@ -38,7 +45,10 @@ function buildDiscoveryResponseBody(
 
 export const POST = withAuth(
   withApproved(async (request: Request, _context: unknown, user: DbUser) => {
+    const startedAt = Date.now();
     try {
+      logStep("request received", startedAt);
+
       if (!user.business_id) {
         return errorResponse("You need to join a company first", 403);
       }
@@ -60,9 +70,16 @@ export const POST = withAuth(
         return errorResponse("Invalid version", 400);
       }
 
+      logStep("reserving automation job", startedAt, { business_id: user.business_id, version });
+
       const reservation = await automationJobRepository.reserveRunningAutomationJob({
         business_id: user.business_id,
         version,
+      });
+
+      logStep("reservation complete", startedAt, {
+        allowed: reservation.allowed,
+        automationJobId: reservation.automationJobId ?? null,
       });
 
       if (!reservation.allowed) {
@@ -117,6 +134,8 @@ export const POST = withAuth(
         business_id: user.business_id,
         version,
       });
+
+      logStep("returning accepted (n8n scheduled)", startedAt, { automationJobId });
 
       return jsonResponse({
         status: "accepted",

@@ -1,4 +1,4 @@
-import { after } from "next/server";
+import { runAfterResponse } from "@/lib/services/runAfterResponse";
 import { parseStartDiscoveryResponse } from "@/lib/services/startDiscoveryResponse";
 import { START_DISCOVERY_N8N_TIMEOUT_MS } from "@/lib/constants/automation-jobs";
 import { getN8nWebhookTarget, N8nError, triggerN8nWebhook } from "@/lib/services/n8n";
@@ -18,7 +18,7 @@ export function assertStartDiscoveryN8nConfigured() {
 
 /** Fire start-discovery webhook after the HTTP response is sent (avoids Vercel timeouts). */
 export function scheduleStartDiscoveryN8nDispatch(payload: StartDiscoveryN8nPayload) {
-  after(async () => {
+  runAfterResponse(async () => {
     const target = getN8nWebhookTarget("start-discovery");
 
     console.info("[start-discovery] background n8n dispatch started", {

@@ -13,7 +13,9 @@ const isServerless =
 export const pool = new pg.Pool({
   connectionString,
   ssl: { rejectUnauthorized: false },
-  max: isServerless ? 1 : 10,
+  // Allow a few concurrent queries per warm serverless instance (auth + reserve + background).
+  max: isServerless ? 3 : 10,
+  connectionTimeoutMillis: isServerless ? 8_000 : 10_000,
   idleTimeoutMillis: isServerless ? 5_000 : 30_000,
   allowExitOnIdle: isServerless,
 });

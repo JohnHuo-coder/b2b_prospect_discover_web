@@ -164,6 +164,8 @@ export async function reserveRunningAutomationJob({ business_id, version }) {
 
   try {
     await client.query('BEGIN');
+    await client.query(`SET LOCAL lock_timeout = '5s'`);
+    await client.query(`SET LOCAL statement_timeout = '15s'`);
 
     const { rows: businessRows } = await client.query(
       `SELECT id
