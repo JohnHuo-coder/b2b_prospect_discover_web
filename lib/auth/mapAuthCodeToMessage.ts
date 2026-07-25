@@ -9,6 +9,11 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   "auth/popup-closed-by-user": "Sign in was cancelled.",
   "auth/cancelled-popup-request": "Sign in was cancelled.",
   "auth/popup-blocked": "Popup was blocked. Please allow popups and try again.",
+  "auth/unauthorized-domain":
+    "This domain is not authorized for sign-in. Add it in Firebase Authentication settings.",
+  "auth/operation-not-allowed":
+    "Google sign-in is not enabled. Enable it in Firebase Authentication.",
+  "auth/internal-error": "Sign-in failed due to a server configuration issue.",
   "auth/account-exists-with-different-credential":
     "An account already exists with this email using a different sign-in method.",
 };

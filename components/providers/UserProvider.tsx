@@ -43,6 +43,32 @@ function mergeAppUser(
   }) as AppUser;
 }
 
+async function syncBackendSession(firebaseUser: FirebaseUser): Promise<AppUser> {
+  const idToken = await firebaseUser.getIdToken();
+
+  const tokenRes = await fetch(ENDPOINTS.AUTH_TOKEN, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken }),
+  });
+  if (!tokenRes.ok) {
+    console.warn("[UserContext] /auth/token failed — session cookie not set");
+  }
+
+  const response = await fetch(ENDPOINTS.AUTH_ME, {
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+
+  if (response.ok) {
+    const backendUserData = (await response.json()) as BackendUser;
+    return mergeAppUser(firebaseUser, backendUserData);
+  }
+
+  console.warn("[UserContext] /auth/me failed — using Firebase user only");
+  return firebaseUser as AppUser;
+}
+
 type UserContextValue = {
   user: AppUser | null;
   isLoading: boolean;
@@ -63,32 +89,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          const idToken = await firebaseUser.getIdToken();
-
-          const tokenRes = await fetch(ENDPOINTS.AUTH_TOKEN, {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ idToken }),
-          });
-          if (!tokenRes.ok) {
-            console.warn(
-              "[UserContext] /auth/token failed — session cookie not set"
-            );
-          }
-
-          const response = await fetch(ENDPOINTS.AUTH_ME, {
-            headers: { Authorization: `Bearer ${idToken}` },
-          });
-
-          if (response.ok) {
-            const backendUserData = (await response.json()) as BackendUser;
-            setUser(mergeAppUser(firebaseUser, backendUserData));
-          } else {
-            setUser(firebaseUser);
-          }
+          const appUser = await syncBackendSession(firebaseUser);
+          setUser(appUser);
         } catch {
-          setUser(firebaseUser);
+          setUser(firebaseUser as AppUser);
         }
       } else {
         setUser(null);
@@ -101,7 +105,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      const appUser = await syncBackendSession(credential.user);
+      setUser(appUser);
       return true;
     } catch (error) {
       console.error("Login error:", error);
@@ -126,8 +132,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
-      // onAuthStateChanged syncs session via /api/auth/token and loads /api/auth/me
-      await signInWithPopup(auth, googleProvider);
+      const credential = await signInWithPopup(auth, googleProvider);
+      const appUser = await syncBackendSession(credential.user);
+      setUser(appUser);
       return true;
     } catch (error) {
       console.error("Google auth error:", error);
@@ -153,15 +160,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const idToken = await firebaseUser.getIdToken();
-      const response = await fetch(ENDPOINTS.AUTH_ME, {
-        headers: { Authorization: `Bearer ${idToken}` },
-      });
-
-      if (response.ok) {
-        const backendUserData = (await response.json()) as BackendUser;
-        setUser(mergeAppUser(firebaseUser, backendUserData));
-      }
+      const appUser = await syncBackendSession(firebaseUser);
+      setUser(appUser);
     } catch (error) {
       console.error("Failed to refresh user:", error);
     }
