@@ -13,6 +13,8 @@ const automationJobRepository = {
     automationJobProvider.createRunningAutomationJob(opts),
   updateAutomationJobStatus: (jobId, status) =>
     automationJobProvider.updateAutomationJobStatus(jobId, status),
+  listAutomationJobsForBusiness: (business_id, opts) =>
+    automationJobProvider.listAutomationJobsForBusiness(business_id, opts),
 };
 
 export default automationJobRepository;

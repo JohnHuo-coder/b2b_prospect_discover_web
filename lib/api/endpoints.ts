@@ -10,6 +10,7 @@ export const ENDPOINTS = {
     DASHBOARD_SUMMARY: "/api/dashboard/summary",
     DASHBOARD_DISCOVERY_QUOTA: "/api/dashboard/discovery-quota",
     DASHBOARD_START_DISCOVERY: "/api/dashboard/start-discovery",
+    JOBS: "/api/jobs",
     BUSINESS_CONFIG: "/api/business/config",
     BUSINESS_INDUSTRIES: "/api/business/industries",
     BUSINESS_CONFIG_CANDIDATES_PER_RUN: "/api/business/config/candidates-per-run",

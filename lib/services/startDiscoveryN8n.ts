@@ -19,6 +19,10 @@ export function assertStartDiscoveryN8nConfigured() {
 /** Fire start-discovery webhook after the HTTP response is sent (avoids Vercel timeouts). */
 export function scheduleStartDiscoveryN8nDispatch(payload: StartDiscoveryN8nPayload) {
   runAfterResponse(async () => {
+    // This entire block runs in the background (waitUntil), not in the critical path
+    // that the user's browser waits on. n8n "Respond Immediately" only affects n8n's
+    // HTTP reply once this fetch arrives — it does not help if we never reach this line
+    // or if the main handler is blocked on DB pool / sync await.
     const target = getN8nWebhookTarget("start-discovery");
 
     console.info("[start-discovery] background n8n dispatch started", {

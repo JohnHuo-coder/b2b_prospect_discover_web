@@ -6,6 +6,7 @@ import {
   Building2,
   ClipboardList,
   LayoutGrid,
+  ListTodo,
   LogOut,
   Network,
   Settings,
@@ -27,6 +28,7 @@ const allNavItems: Array<{
   adminOnly?: boolean;
 }> = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, ownerOnly: false },
+  { href: "/jobs", label: "Jobs", icon: ListTodo, ownerOnly: false },
   {
     href: "/system-dashboard",
     label: "System Dashboard",

@@ -164,9 +164,15 @@ export async function reserveRunningAutomationJob({ business_id, version }) {
 
   try {
     await client.query('BEGIN');
+
+    // lock_timeout: if another transaction holds FOR UPDATE on businesses (same company),
+    // give up after 5s instead of waiting until Vercel maxDuration (504).
     await client.query(`SET LOCAL lock_timeout = '5s'`);
+
+    // statement_timeout: cap any single SQL in this transaction (safety net for slow queries).
     await client.query(`SET LOCAL statement_timeout = '15s'`);
 
+    // Row lock serializes concurrent "Start Discovery" for the same company.
     const { rows: businessRows } = await client.query(
       `SELECT id
        FROM prospect_discover.businesses
@@ -254,6 +260,39 @@ export async function updateAutomationJobStatus(jobId, status) {
   );
 }
 
+export async function listAutomationJobsForBusiness(
+  business_id,
+  { page = 1, limit = 25 } = {}
+) {
+  const safePage = Math.max(1, Number(page) || 1);
+  const safeLimit = Math.min(100, Math.max(1, Number(limit) || 25));
+  const offset = (safePage - 1) * safeLimit;
+
+  const [rowsResult, countResult] = await Promise.all([
+    pool.query(
+      `SELECT id, created_at, version, status, prospect_number, reason
+       FROM prospect_discover.automation_jobs
+       WHERE business_id = $1
+       ORDER BY created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [business_id, safeLimit, offset]
+    ),
+    pool.query(
+      `SELECT COUNT(*)::int AS total
+       FROM prospect_discover.automation_jobs
+       WHERE business_id = $1`,
+      [business_id]
+    ),
+  ]);
+
+  return {
+    rows: rowsResult.rows,
+    total: Number(countResult.rows[0]?.total) || 0,
+    page: safePage,
+    limit: safeLimit,
+  };
+}
+
 export default {
   getBusinessDiscoveryQuota,
   getDiscoveryJobStats,
@@ -261,4 +300,5 @@ export default {
   reserveRunningAutomationJob,
   createRunningAutomationJob,
   updateAutomationJobStatus,
+  listAutomationJobsForBusiness,
 };

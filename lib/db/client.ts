@@ -13,9 +13,16 @@ const isServerless =
 export const pool = new pg.Pool({
   connectionString,
   ssl: { rejectUnauthorized: false },
-  // Allow a few concurrent queries per warm serverless instance (auth + reserve + background).
+
+  // max: one warm Vercel instance can handle overlapping work (auth middleware query,
+  // reserveRunningAutomationJob transaction, background job status update). With max: 1,
+  // a second pool.connect() in the same instance waited indefinitely → 504 at maxDuration.
   max: isServerless ? 3 : 10,
+
+  // connectionTimeoutMillis: if all pool slots are busy, fail after 8s with an error
+  // instead of waiting silently until Vercel kills the whole function at 60s (504).
   connectionTimeoutMillis: isServerless ? 8_000 : 10_000,
+
   idleTimeoutMillis: isServerless ? 5_000 : 30_000,
   allowExitOnIdle: isServerless,
 });

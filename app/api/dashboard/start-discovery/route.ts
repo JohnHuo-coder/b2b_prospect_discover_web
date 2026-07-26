@@ -134,6 +134,8 @@ export const POST = withAuth(
         business_id: user.business_id,
         version,
       });
+      // ↑ registers n8n POST via waitUntil — do NOT await it here.
+      // Next line returns 200 to the browser; n8n runs after the response is sent.
 
       logStep("returning accepted (n8n scheduled)", startedAt, { automationJobId });
 
