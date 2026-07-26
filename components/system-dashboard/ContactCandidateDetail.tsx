@@ -35,10 +35,10 @@ const contactMissMetrics = [
       "Times a chosen contact page was scraped but contained no usable email.",
   },
   {
-    key: "email_not_confident_miss" as const,
-    label: "Email below confidence threshold",
+    key: "email_not_sufficient_retry" as const,
+    label: "Insufficient email retry",
     description:
-      "Times an email was found but did not meet the confidence cutoff.",
+      "Times contact lookup retried because the email result was not sufficient.",
   },
 ];
 

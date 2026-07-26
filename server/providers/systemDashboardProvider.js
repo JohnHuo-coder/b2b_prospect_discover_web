@@ -632,7 +632,7 @@ export default {
               ic.company_name,
               ic.website,
               COALESCE(fc.selected_page_no_email_miss, 0) AS selected_page_no_email_miss,
-              COALESCE(fc.email_not_confident_miss, 0) AS email_not_confident_miss,
+              COALESCE(fc.email_not_sufficient_retry, 0) AS email_not_sufficient_retry,
               fc.status,
               fc.final_stage,
               fc.reason,

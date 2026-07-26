@@ -85,7 +85,7 @@ export type ContactCandidate = {
   reason: string;
   fallback_from: string | null;
   selected_page_no_email_miss: number;
-  email_not_confident_miss: number;
+  email_not_sufficient_retry: number;
 };
 
 export const contactCandidates: ContactCandidate[] = [
@@ -97,7 +97,7 @@ export const contactCandidates: ContactCandidate[] = [
     reason: "Primary contact email found via Apollo with high confidence.",
     fallback_from: null,
     selected_page_no_email_miss: 0,
-    email_not_confident_miss: 0,
+    email_not_sufficient_retry: 0,
   },
   {
     id: "CT-202",
@@ -107,7 +107,7 @@ export const contactCandidates: ContactCandidate[] = [
     reason: "No email on selected contact page; Apollo fallback also missed.",
     fallback_from: "apollo",
     selected_page_no_email_miss: 2,
-    email_not_confident_miss: 1,
+    email_not_sufficient_retry: 1,
   },
   {
     id: "CT-203",
@@ -117,7 +117,7 @@ export const contactCandidates: ContactCandidate[] = [
     reason: "Email resolved after Apollo miss via Anymail Finder.",
     fallback_from: "anymail_finder",
     selected_page_no_email_miss: 0,
-    email_not_confident_miss: 0,
+    email_not_sufficient_retry: 0,
   },
   {
     id: "CT-204",
@@ -127,7 +127,7 @@ export const contactCandidates: ContactCandidate[] = [
     reason: "Candidate email found but confidence below threshold.",
     fallback_from: "website_scrape",
     selected_page_no_email_miss: 0,
-    email_not_confident_miss: 3,
+    email_not_sufficient_retry: 3,
   },
 ];
 

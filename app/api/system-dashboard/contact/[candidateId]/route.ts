@@ -12,7 +12,7 @@ type ContactStatusInfo = {
   company_name: string;
   website: string | null;
   selected_page_no_email_miss: number;
-  email_not_confident_miss: number;
+  email_not_sufficient_retry: number;
   status: string;
   final_stage: string | null;
   reason: string | null;
@@ -70,7 +70,7 @@ export const GET = withAuth(
         reason: info.reason ?? "",
         fallback_from: info.fallback_from,
         selected_page_no_email_miss: Number(info.selected_page_no_email_miss),
-        email_not_confident_miss: Number(info.email_not_confident_miss),
+        email_not_sufficient_retry: Number(info.email_not_sufficient_retry),
         emails: (result.emails ?? []).map((row) => ({
           email: row.email,
           first_name: row.first_name,

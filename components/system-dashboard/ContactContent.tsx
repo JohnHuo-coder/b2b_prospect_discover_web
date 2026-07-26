@@ -117,7 +117,7 @@ export function ContactContent() {
         reason: "",
         fallback_from: null,
         selected_page_no_email_miss: 0,
-        email_not_confident_miss: 0,
+        email_not_sufficient_retry: 0,
         emails: [],
       });
 

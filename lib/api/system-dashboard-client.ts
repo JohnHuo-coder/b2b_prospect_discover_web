@@ -597,7 +597,7 @@ export type ContactCandidate = {
   reason: string;
   fallback_from: string | null;
   selected_page_no_email_miss: number;
-  email_not_confident_miss: number;
+  email_not_sufficient_retry: number;
   emails: ContactEmail[];
 };
 
@@ -626,7 +626,7 @@ type ContactDetailApiResponse = {
   reason: string;
   fallback_from: string | null;
   selected_page_no_email_miss: number;
-  email_not_confident_miss: number;
+  email_not_sufficient_retry: number;
   emails: ContactEmail[];
 };
 
@@ -650,7 +650,7 @@ function mapContactDetail(data: ContactDetailApiResponse): ContactCandidate {
     reason: data.reason,
     fallback_from: data.fallback_from,
     selected_page_no_email_miss: data.selected_page_no_email_miss,
-    email_not_confident_miss: data.email_not_confident_miss,
+    email_not_sufficient_retry: data.email_not_sufficient_retry,
     emails: data.emails ?? [],
   };
 }
