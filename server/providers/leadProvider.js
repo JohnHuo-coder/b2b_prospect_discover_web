@@ -172,7 +172,8 @@ export default {
       ),
       pool.query(
         `SELECT ec.email, ec.first_name, ec.last_name, ec.job_title, ec.linkedin_url,
-                ec.contact_role, ec."from", oe.outreach_email, oe.status AS outreach_status
+                ec.salutation_target, ec.confidence_level, ec."from",
+                oe.outreach_email, oe.status AS outreach_status
          ${fromClause}
          JOIN prospect_discover.email_contact ec
            ON ic.place_id = ec.place_id

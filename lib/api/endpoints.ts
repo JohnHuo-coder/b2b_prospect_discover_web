@@ -53,7 +53,4 @@ export const ENDPOINTS = {
       `/api/human-review/compliance-check/${id}`,
     humanReviewComplianceCheckFacts: (id: string, requirementIndex: number) =>
       `/api/human-review/compliance-check/${id}/facts?requirement_index=${requirementIndex}`,
-    HUMAN_REVIEW_EMAIL_CLASSIFICATION: "/api/human-review/email-classification",
-    humanReviewEmailClassificationDetail: (id: string) =>
-      `/api/human-review/email-classification/${id}`,
   } as const;

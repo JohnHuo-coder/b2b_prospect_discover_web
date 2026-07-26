@@ -2,16 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import {
-  ChevronRight,
-  MailCheck,
-  ShieldCheck,
-  type LucideIcon,
-} from "lucide-react";
-import {
-  fetchComplianceCheckQueue,
-  fetchEmailClassificationQueue,
-} from "@/lib/api/human-review-client";
+import { ChevronRight, ShieldCheck, type LucideIcon } from "lucide-react";
+import { fetchComplianceCheckQueue } from "@/lib/api/human-review-client";
 import { SkeletonBar } from "@/components/ui/SkeletonBar";
 import {
   JoinCompanyRequiredBanner,
@@ -60,8 +52,6 @@ function ReviewCategoryCard({ category }: { category: ReviewCategory }) {
 export function HumanReviewContent() {
   const { isLoading: authLoading, isPending, isApproved } = useHumanReviewAccess();
   const [compliancePendingCount, setCompliancePendingCount] = useState(0);
-  const [emailClassificationPendingCount, setEmailClassificationPendingCount] =
-    useState(0);
 
   useEffect(() => {
     if (!isApproved) return;
@@ -70,17 +60,12 @@ export function HumanReviewContent() {
 
     const loadCounts = async () => {
       try {
-        const [compliance, emailClassification] = await Promise.all([
-          fetchComplianceCheckQueue(),
-          fetchEmailClassificationQueue(),
-        ]);
+        const compliance = await fetchComplianceCheckQueue();
         if (cancelled) return;
         setCompliancePendingCount(compliance.total);
-        setEmailClassificationPendingCount(emailClassification.total);
       } catch {
         if (!cancelled) {
           setCompliancePendingCount(0);
-          setEmailClassificationPendingCount(0);
         }
       }
     };
@@ -126,16 +111,6 @@ export function HumanReviewContent() {
       iconClassName: "text-amber-600",
       pendingCount: compliancePendingCount,
     },
-    {
-      title: "Email Classification",
-      description:
-        "Review contacts with uncertain email classification — confirm role and inbox type.",
-      href: "/human-review/email-classification",
-      icon: MailCheck,
-      iconBoxClassName: "bg-blue-100",
-      iconClassName: "text-blue-600",
-      pendingCount: emailClassificationPendingCount,
-    },
   ];
 
   return (
@@ -147,7 +122,7 @@ export function HumanReviewContent() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:max-w-xl">
         {reviewCategories.map((category) => (
           <ReviewCategoryCard key={category.title} category={category} />
         ))}

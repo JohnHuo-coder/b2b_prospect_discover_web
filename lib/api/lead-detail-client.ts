@@ -35,7 +35,8 @@ type LeadEmailRow = {
   last_name: string | null;
   job_title: string | null;
   linkedin_url: string | null;
-  contact_role: string | null;
+  salutation_target: string | null;
+  confidence_level: string | null;
   from: string | null;
   outreach_email: string | null;
   outreach_status: string | null;
@@ -64,7 +65,8 @@ export type LeadContact = {
   firstName: string;
   lastName: string;
   jobTitle: string;
-  contactRole: string;
+  salutationTarget: string;
+  confidenceLevel: string;
   linkedinUrl: string;
   outreachEmail: string;
   outreachStatus: OutreachEmailStatus | null;
@@ -252,7 +254,8 @@ function mapLeadDetail(data: LeadDetailResponse): LeadDetail {
       firstName: row.first_name?.trim() || "—",
       lastName: row.last_name?.trim() || "—",
       jobTitle: row.job_title?.trim() || "—",
-      contactRole: row.contact_role?.trim() || "—",
+      salutationTarget: row.salutation_target?.trim() || "—",
+      confidenceLevel: row.confidence_level?.trim() || "—",
       linkedinUrl: row.linkedin_url?.trim() || "",
       outreachEmail: row.outreach_email?.trim() || "",
       outreachStatus: normalizeOutreachStatus(row.outreach_status),

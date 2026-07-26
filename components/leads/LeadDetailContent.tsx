@@ -275,28 +275,36 @@ function ContactCard({
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <Field label="First Name" value={contact.firstName} />
-        <Field label="Last Name" value={contact.lastName} />
-        <Field label="Job Title" value={contact.jobTitle} />
-        <Field label="Contact Role" value={contact.contactRole} />
-        <Field
-          label="LinkedIn"
-          value={
-            contact.linkedinUrl ? (
-              <a
-                href={contact.linkedinUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-violet-600 hover:text-violet-700"
-              >
-                <ExternalLink className="h-4 w-4" />
-                View profile
-              </a>
-            ) : (
-              "—"
-            )
-          }
-        />
+        {contact.emailSource === "website" ? (
+          <>
+            <Field label="Salutation Target" value={contact.salutationTarget} />
+            <Field label="Confidence Level" value={contact.confidenceLevel} />
+          </>
+        ) : (
+          <>
+            <Field label="First Name" value={contact.firstName} />
+            <Field label="Last Name" value={contact.lastName} />
+            <Field label="Job Title" value={contact.jobTitle} />
+            <Field
+              label="LinkedIn"
+              value={
+                contact.linkedinUrl ? (
+                  <a
+                    href={contact.linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-violet-600 hover:text-violet-700"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    View profile
+                  </a>
+                ) : (
+                  "—"
+                )
+              }
+            />
+          </>
+        )}
       </div>
     </article>
   );

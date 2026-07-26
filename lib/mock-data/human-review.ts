@@ -26,27 +26,3 @@ export const mockComplianceCheckQueue: HumanReviewQueueItem[] = [
     reason: "missing opt-out language",
   },
 ];
-
-export const mockEmailClassificationQueue: HumanReviewQueueItem[] = [
-  {
-    id: "621",
-    company: "The Quarter Saladaeng",
-    website: "thequarterhotels.com",
-    email: "reservations@thequarterhotels.com",
-    reason: "confidence score below qualified threshold",
-  },
-  {
-    id: "604",
-    company: "Mövenpick BDMS Wellness Resort",
-    website: "movenpick.com",
-    email: "info@movenpick.com",
-    reason: "role classification uncertain",
-  },
-  {
-    id: "588",
-    company: "Eastin Thana City Golf Resort",
-    website: "eastin.com",
-    email: "sales@eastin.com",
-    reason: "generic inbox detected",
-  },
-];
