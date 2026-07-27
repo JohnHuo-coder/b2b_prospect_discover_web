@@ -12,8 +12,14 @@ export const DISCOVERY_RUNNING_QUEUE_FULL_MESSAGE =
 export const DISCOVERY_GLOBAL_QUEUE_FULL_MESSAGE =
   "Global workflow capacity is full (2/2 running site-wide). Your task has been added to the queue and will start when a slot opens.";
 
+export const DISCOVERY_GLOBAL_QUEUE_BACKLOG_MESSAGE =
+  "Other discovery tasks are already waiting in the queue. Your task has been added to the queue and will start in order.";
+
 export const DISCOVERY_SAME_VERSION_RUNNING_MESSAGE =
   "This configuration is already running. Wait for the current run to finish, or switch configuration.";
+
+export const DISCOVERY_SAME_VERSION_QUEUED_MESSAGE =
+  "This configuration is already waiting in the queue. Wait for it to start before submitting again.";
 
 /** Postgres advisory lock key for site-wide discovery start serialization. */
 export const GLOBAL_DISCOVERY_ADVISORY_LOCK_ID = 847291;

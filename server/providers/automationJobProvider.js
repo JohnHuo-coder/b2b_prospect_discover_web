@@ -6,9 +6,11 @@ import {
 import {
   DAILY_PROSPECT_LIMIT,
   DISCOVERY_GLOBAL_QUEUE_FULL_MESSAGE,
+  DISCOVERY_GLOBAL_QUEUE_BACKLOG_MESSAGE,
   DISCOVERY_QUOTA_EXCEEDED_MESSAGE,
   DISCOVERY_RUNNING_QUEUE_FULL_MESSAGE,
   DISCOVERY_SAME_VERSION_RUNNING_MESSAGE,
+  DISCOVERY_SAME_VERSION_QUEUED_MESSAGE,
   GLOBAL_DISCOVERY_ADVISORY_LOCK_ID,
   MAX_GLOBAL_RUNNING_AUTOMATION_JOBS,
   MAX_RUNNING_AUTOMATION_JOBS,
@@ -46,6 +48,31 @@ async function queryGlobalRunningJobCount(client) {
   return Number(rows[0]?.global_running_count) || 0;
 }
 
+async function queryGlobalQueuedJobCount(client) {
+  const { rows } = await client.query(
+    `SELECT COUNT(*)::int AS global_queued_count
+     FROM prospect_discover.automation_jobs
+     WHERE LOWER(status) = 'queued'`
+  );
+
+  return Number(rows[0]?.global_queued_count) || 0;
+}
+
+function shouldQueueDiscoveryStart(globalRunningCount, globalQueuedCount) {
+  return (
+    globalRunningCount >= MAX_GLOBAL_RUNNING_AUTOMATION_JOBS ||
+    globalQueuedCount > 0
+  );
+}
+
+function resolveDiscoveryQueueMessage(globalRunningCount, globalQueuedCount) {
+  if (globalRunningCount >= MAX_GLOBAL_RUNNING_AUTOMATION_JOBS) {
+    return DISCOVERY_GLOBAL_QUEUE_FULL_MESSAGE;
+  }
+
+  return DISCOVERY_GLOBAL_QUEUE_BACKLOG_MESSAGE;
+}
+
 async function queryDiscoveryJobStats(client, business_id, version) {
   const [usageResult, runningResult] = await Promise.all([
     client.query(
@@ -61,7 +88,10 @@ async function queryDiscoveryJobStats(client, business_id, version) {
          COUNT(*) FILTER (WHERE LOWER(status) = 'running')::int AS running_count,
          COUNT(*) FILTER (
            WHERE LOWER(status) = 'running' AND version = $2
-         )::int AS running_same_version
+         )::int AS running_same_version,
+         COUNT(*) FILTER (
+           WHERE LOWER(status) = 'queued' AND version = $2
+         )::int AS queued_same_version
        FROM prospect_discover.automation_jobs
        WHERE business_id = $1`,
       [business_id, version]
@@ -79,6 +109,8 @@ async function queryDiscoveryJobStats(client, business_id, version) {
     },
     runningSameVersion:
       Number(runningResult.rows[0]?.running_same_version) || 0,
+    queuedSameVersion:
+      Number(runningResult.rows[0]?.queued_same_version) || 0,
   };
 }
 
@@ -87,6 +119,13 @@ function evaluateDiscoveryStart(stats, prospectNumber) {
     return {
       allowed: false,
       message: DISCOVERY_SAME_VERSION_RUNNING_MESSAGE,
+    };
+  }
+
+  if (stats.queuedSameVersion >= 1) {
+    return {
+      allowed: false,
+      message: DISCOVERY_SAME_VERSION_QUEUED_MESSAGE,
     };
   }
 
@@ -139,6 +178,7 @@ export async function getDiscoveryJobStats(business_id, version) {
     prospectUsage: stats.prospectUsage,
     runningJobs: stats.runningJobs,
     runningSameVersion: stats.runningSameVersion,
+    queuedSameVersion: stats.queuedSameVersion,
   };
 }
 
@@ -231,13 +271,16 @@ export async function reserveRunningAutomationJob({ business_id, version }) {
     ]);
 
     const globalRunningCount = await queryGlobalRunningJobCount(client);
+    const globalQueuedCount = await queryGlobalQueuedJobCount(client);
     const globalRunningJobs = {
       count: globalRunningCount,
       limit: MAX_GLOBAL_RUNNING_AUTOMATION_JOBS,
     };
-    const shouldQueue =
-      globalRunningCount >= MAX_GLOBAL_RUNNING_AUTOMATION_JOBS;
-    const nextStatus = shouldQueue ? 'queued' : 'running';
+    const queueJob = shouldQueueDiscoveryStart(
+      globalRunningCount,
+      globalQueuedCount
+    );
+    const nextStatus = queueJob ? 'queued' : 'running';
 
     const { rows: insertRows } = await client.query(
       `INSERT INTO prospect_discover.automation_jobs (business_id, version, status)
@@ -252,8 +295,10 @@ export async function reserveRunningAutomationJob({ business_id, version }) {
 
     return {
       allowed: true,
-      queued: shouldQueue,
-      message: shouldQueue ? DISCOVERY_GLOBAL_QUEUE_FULL_MESSAGE : null,
+      queued: queueJob,
+      message: queueJob
+        ? resolveDiscoveryQueueMessage(globalRunningCount, globalQueuedCount)
+        : null,
       automationJobId: insertRows[0]?.id ?? null,
       prospectUsage: statsAfterInsert.prospectUsage,
       runningJobs: statsAfterInsert.runningJobs,

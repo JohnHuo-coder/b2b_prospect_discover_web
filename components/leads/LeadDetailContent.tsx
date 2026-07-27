@@ -248,14 +248,14 @@ function ContactCard({
     >
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-2">
-          <div className="flex items-start gap-3">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             {isSelectable ? (
               <input
                 type="checkbox"
                 checked={selected}
                 disabled={bulkSending}
                 onChange={() => onToggleSelect?.(contact)}
-                className="mt-1 h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 disabled:cursor-not-allowed"
+                className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 disabled:cursor-not-allowed"
                 aria-label={`Select ${contact.email}`}
               />
             ) : null}
@@ -266,17 +266,17 @@ function ContactCard({
               <Mail className="h-4 w-4 shrink-0" />
               <span className="break-all">{contact.email}</span>
             </a>
+            {contact.emailSource === "verified" ? (
+              <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                Verified
+              </span>
+            ) : null}
           </div>
           {contact.emailSource === "website" ? (
             <p className="flex items-start gap-1.5 text-xs leading-relaxed text-gray-500">
               <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>{WEBSITE_SCRAPED_EMAIL_NOTE}</span>
             </p>
-          ) : null}
-          {contact.emailSource === "verified" ? (
-            <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-              Verified
-            </span>
           ) : null}
           {contact.outreachStatus ? (
             <StatusBadge status={contact.outreachStatus} />
