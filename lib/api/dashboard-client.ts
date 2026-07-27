@@ -31,7 +31,7 @@ export type DiscoveryQuota = {
 };
 
 export type StartDiscoveryResult = {
-  status: "accepted";
+  status: "accepted" | "queued";
   message: string;
   prospectUsage: ProspectUsage;
   runningJobs: RunningJobsUsage;
@@ -199,6 +199,22 @@ export async function startProspectDiscovery(
         ? data.prospectUsageLabel
         : `${prospectUsage.used}/${prospectUsage.limit}`;
     throw error;
+  }
+
+  if (data.status === "queued") {
+    return {
+      status: "queued",
+      message:
+        typeof data.message === "string" && data.message.trim()
+          ? data.message.trim()
+          : "Global workflow capacity is full. Your task has been added to the queue.",
+      prospectUsage,
+      runningJobs,
+      prospectUsageLabel:
+        typeof data.prospectUsageLabel === "string"
+          ? data.prospectUsageLabel
+          : `${prospectUsage.used}/${prospectUsage.limit}`,
+    };
   }
 
   if (data.status !== "accepted") {

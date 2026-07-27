@@ -5,9 +5,12 @@ import {
 } from '../../lib/constants/candidates-per-run.ts';
 import {
   DAILY_PROSPECT_LIMIT,
+  DISCOVERY_GLOBAL_QUEUE_FULL_MESSAGE,
   DISCOVERY_QUOTA_EXCEEDED_MESSAGE,
   DISCOVERY_RUNNING_QUEUE_FULL_MESSAGE,
   DISCOVERY_SAME_VERSION_RUNNING_MESSAGE,
+  GLOBAL_DISCOVERY_ADVISORY_LOCK_ID,
+  MAX_GLOBAL_RUNNING_AUTOMATION_JOBS,
   MAX_RUNNING_AUTOMATION_JOBS,
   START_DISCOVERY_ORPHAN_JOB_GRACE_MS,
 } from '../../lib/constants/automation-jobs.ts';
@@ -31,6 +34,16 @@ async function queryProspectNumberForRun(client, business_id, version) {
   }
 
   return clampCandidatesPerRun(value);
+}
+
+async function queryGlobalRunningJobCount(client) {
+  const { rows } = await client.query(
+    `SELECT COUNT(*)::int AS global_running_count
+     FROM prospect_discover.automation_jobs
+     WHERE LOWER(status) = 'running'`
+  );
+
+  return Number(rows[0]?.global_running_count) || 0;
 }
 
 async function queryDiscoveryJobStats(client, business_id, version) {
@@ -207,15 +220,30 @@ export async function reserveRunningAutomationJob({ business_id, version }) {
         message: decision.message,
         prospectUsage: stats.prospectUsage,
         runningJobs: stats.runningJobs,
+        globalRunningJobs: null,
         automationJobId: null,
+        queued: false,
       };
     }
 
+    await client.query(`SELECT pg_advisory_xact_lock($1)`, [
+      GLOBAL_DISCOVERY_ADVISORY_LOCK_ID,
+    ]);
+
+    const globalRunningCount = await queryGlobalRunningJobCount(client);
+    const globalRunningJobs = {
+      count: globalRunningCount,
+      limit: MAX_GLOBAL_RUNNING_AUTOMATION_JOBS,
+    };
+    const shouldQueue =
+      globalRunningCount >= MAX_GLOBAL_RUNNING_AUTOMATION_JOBS;
+    const nextStatus = shouldQueue ? 'queued' : 'running';
+
     const { rows: insertRows } = await client.query(
       `INSERT INTO prospect_discover.automation_jobs (business_id, version, status)
-       VALUES ($1, $2, 'running')
+       VALUES ($1, $2, $3)
        RETURNING id`,
-      [business_id, version]
+      [business_id, version, nextStatus]
     );
 
     await client.query('COMMIT');
@@ -224,10 +252,12 @@ export async function reserveRunningAutomationJob({ business_id, version }) {
 
     return {
       allowed: true,
-      message: null,
+      queued: shouldQueue,
+      message: shouldQueue ? DISCOVERY_GLOBAL_QUEUE_FULL_MESSAGE : null,
       automationJobId: insertRows[0]?.id ?? null,
       prospectUsage: statsAfterInsert.prospectUsage,
       runningJobs: statsAfterInsert.runningJobs,
+      globalRunningJobs,
     };
   } catch (error) {
     await client.query('ROLLBACK');

@@ -310,7 +310,7 @@ function ContactCard({
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         {contact.emailSource === "website" ? (
           <>
-            <Field label="Salutation Target" value={contact.salutationTarget} />
+            <Field label="Contact Label" value={contact.contactLabel} />
             {contact.confidenceLevel ? (
               <Field
                 label="Confidence Level"

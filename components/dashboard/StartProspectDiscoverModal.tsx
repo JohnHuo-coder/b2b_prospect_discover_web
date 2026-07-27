@@ -33,6 +33,9 @@ export function StartProspectDiscoverModal({
   const [error, setError] = useState("");
   const [usageLabel, setUsageLabel] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [successVariant, setSuccessVariant] = useState<"accepted" | "queued">(
+    "accepted"
+  );
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -43,6 +46,7 @@ export function StartProspectDiscoverModal({
       setError("");
       setUsageLabel("");
       setSuccessMessage("");
+      setSuccessVariant("accepted");
       setSubmitting(false);
       return;
     }
@@ -110,6 +114,7 @@ export function StartProspectDiscoverModal({
         signal: controller.signal,
       });
       setSuccessMessage(result.message);
+      setSuccessVariant(result.status);
       setUsageLabel(result.prospectUsageLabel);
       onDiscoveryFinished?.();
     } catch (err) {
@@ -211,15 +216,41 @@ export function StartProspectDiscoverModal({
       ) : null}
 
       {successMessage ? (
-        <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4">
-          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+        <div
+          className={`flex items-start gap-3 rounded-xl border px-4 py-4 ${
+            successVariant === "queued"
+              ? "border-amber-200 bg-amber-50"
+              : "border-emerald-200 bg-emerald-50"
+          }`}
+        >
+          {successVariant === "queued" ? (
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+          ) : (
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+          )}
           <div>
-            <p className="text-sm font-medium text-emerald-900">
-              Task sent successfully
+            <p
+              className={`text-sm font-medium ${
+                successVariant === "queued" ? "text-amber-900" : "text-emerald-900"
+              }`}
+            >
+              {successVariant === "queued"
+                ? "Added to queue"
+                : "Task sent successfully"}
             </p>
-            <p className="mt-1 text-sm text-emerald-800">{successMessage}</p>
+            <p
+              className={`mt-1 text-sm ${
+                successVariant === "queued" ? "text-amber-800" : "text-emerald-800"
+              }`}
+            >
+              {successMessage}
+            </p>
             {usageLabel ? (
-              <p className="mt-2 text-sm font-medium text-emerald-900">
+              <p
+                className={`mt-2 text-sm font-medium ${
+                  successVariant === "queued" ? "text-amber-900" : "text-emerald-900"
+                }`}
+              >
                 {usageLabel} prospects today
               </p>
             ) : null}

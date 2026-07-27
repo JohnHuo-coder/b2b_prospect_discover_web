@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Info } from "lucide-react";
 import { fetchAutomationJobs, type AutomationJobRow } from "@/lib/api/jobs-client";
 import { Pagination } from "@/components/ui/Pagination";
 import { SkeletonBar } from "@/components/ui/SkeletonBar";
@@ -9,6 +10,7 @@ const JOBS_PAGE_SIZE = 25;
 
 const statusStyles: Record<string, { dot: string; text: string }> = {
   running: { dot: "bg-blue-500", text: "text-blue-700" },
+  queued: { dot: "bg-amber-500", text: "text-amber-700" },
   completed: { dot: "bg-emerald-500", text: "text-emerald-700" },
   failed: { dot: "bg-red-500", text: "text-red-700" },
   cancelled: { dot: "bg-gray-400", text: "text-gray-600" },
@@ -70,6 +72,15 @@ export function JobsContent() {
         <h1 className="text-2xl font-bold text-gray-900">Jobs</h1>
         <p className="mt-1 text-sm text-gray-500">
           Automation jobs for your company&apos;s prospect discovery runs.
+        </p>
+      </div>
+
+      <div className="mb-6 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-4">
+        <Info className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+        <p className="text-sm leading-relaxed text-blue-900">
+          This site is in a testing phase, so only a small number of workflows
+          can run at the same time across all companies. Please limit each
+          company to at most 2 discovery runs per day for the best experience.
         </p>
       </div>
 

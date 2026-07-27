@@ -101,9 +101,29 @@ export const POST = withAuth(
       const automationJobId = reservation.automationJobId;
       const prospectUsage = reservation.prospectUsage;
       const runningJobs = reservation.runningJobs;
+      const globalRunningJobs = reservation.globalRunningJobs;
 
       if (!automationJobId) {
         return errorResponse("Failed to start discovery job", 500);
+      }
+
+      if (reservation.queued) {
+        logStep("returning queued (global capacity full)", startedAt, {
+          automationJobId,
+          globalRunningJobs,
+        });
+
+        return jsonResponse({
+          status: "queued",
+          automationJobId,
+          ...buildDiscoveryResponseBody(
+            reservation.message ??
+              "Global workflow capacity is full. Your task has been added to the queue.",
+            prospectUsage,
+            runningJobs,
+            { globalRunningJobs }
+          ),
+        });
       }
 
       try {

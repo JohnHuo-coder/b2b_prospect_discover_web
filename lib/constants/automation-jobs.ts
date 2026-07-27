@@ -1,5 +1,7 @@
 export const DAILY_PROSPECT_LIMIT = 200;
 export const MAX_RUNNING_AUTOMATION_JOBS = 2;
+/** Max concurrent running discovery workflows across all businesses (site-wide). */
+export const MAX_GLOBAL_RUNNING_AUTOMATION_JOBS = 2;
 
 export const DISCOVERY_QUOTA_EXCEEDED_MESSAGE =
   "Daily prospect quota exceeded. Please try again tomorrow.";
@@ -7,8 +9,14 @@ export const DISCOVERY_QUOTA_EXCEEDED_MESSAGE =
 export const DISCOVERY_RUNNING_QUEUE_FULL_MESSAGE =
   "2/2 jobs are running. The task queue is full — wait for a job to finish before trying again.";
 
+export const DISCOVERY_GLOBAL_QUEUE_FULL_MESSAGE =
+  "Global workflow capacity is full (2/2 running site-wide). Your task has been added to the queue and will start when a slot opens.";
+
 export const DISCOVERY_SAME_VERSION_RUNNING_MESSAGE =
   "This configuration is already running. Wait for the current run to finish, or switch configuration.";
+
+/** Postgres advisory lock key for site-wide discovery start serialization. */
+export const GLOBAL_DISCOVERY_ADVISORY_LOCK_ID = 847291;
 
 /** How long the API waits for n8n to acknowledge the start-discovery webhook. */
 export const START_DISCOVERY_N8N_TIMEOUT_MS = 25_000;
@@ -31,6 +39,11 @@ export type ProspectUsage = {
 };
 
 export type RunningJobsUsage = {
+  count: number;
+  limit: number;
+};
+
+export type GlobalRunningJobsUsage = {
   count: number;
   limit: number;
 };
