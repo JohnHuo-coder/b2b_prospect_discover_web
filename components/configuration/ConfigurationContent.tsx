@@ -49,8 +49,6 @@ const emptyConfig: BusinessConfigState = {
   lon: null,
   max_distance_km: null,
   fit_score_cutoff: null,
-  low_conf_cutoff_email_classification: null,
-  qualified_conf_email_classification: null,
   search_keyword: "",
   search_location: "",
   industry: [],
@@ -460,20 +458,10 @@ export function ConfigurationContent() {
           </ConfigCard>
 
           <ConfigCard icon={BarChart3} title="Scoring Thresholds">
-            <div className="grid gap-6 md:grid-cols-3">
-              <Field
-                label="Fit Score Cutoff"
-                value={displayNumber(config.fit_score_cutoff)}
-              />
-              <Field
-                label="Email Classification — Low Confidence Cutoff"
-                value={displayNumber(config.low_conf_cutoff_email_classification)}
-              />
-              <Field
-                label="Email Classification — Qualified Confidence"
-                value={displayNumber(config.qualified_conf_email_classification)}
-              />
-            </div>
+            <Field
+              label="Fit Score Cutoff"
+              value={displayNumber(config.fit_score_cutoff)}
+            />
           </ConfigCard>
 
           <ConfigCard icon={Target} title="Target Partner">

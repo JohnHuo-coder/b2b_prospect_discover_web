@@ -163,28 +163,6 @@ export function ConfigurationEditForm({
             value={draft.fit_score_cutoff}
             onChange={(value) => onPatch("fit_score_cutoff", value)}
           />
-          <NumberInput
-            label="Email Classification — Low Confidence Cutoff"
-            required
-            min={SCORING_THRESHOLD_MIN}
-            max={SCORING_THRESHOLD_MAX}
-            hint={`Must be between ${SCORING_THRESHOLD_MIN} and ${SCORING_THRESHOLD_MAX}.`}
-            value={draft.low_conf_cutoff_email_classification}
-            onChange={(value) =>
-              onPatch("low_conf_cutoff_email_classification", value)
-            }
-          />
-          <NumberInput
-            label="Email Classification — Qualified Confidence"
-            required
-            min={SCORING_THRESHOLD_MIN}
-            max={SCORING_THRESHOLD_MAX}
-            hint={`Must be between ${SCORING_THRESHOLD_MIN} and ${SCORING_THRESHOLD_MAX}.`}
-            value={draft.qualified_conf_email_classification}
-            onChange={(value) =>
-              onPatch("qualified_conf_email_classification", value)
-            }
-          />
         </div>
       </ConfigCard>
 
@@ -264,22 +242,14 @@ export function validateBusinessConfigDraft(
   if (draft.industry.length !== draft.industry_id.length) {
     return "Industry selections are out of sync.";
   }
-  if (
-    draft.fit_score_cutoff === null ||
-    draft.low_conf_cutoff_email_classification === null ||
-    draft.qualified_conf_email_classification === null
-  ) {
-    return "All scoring threshold fields are required.";
+  if (draft.fit_score_cutoff === null) {
+    return "Fit score cutoff is required.";
   }
   if (
     draft.fit_score_cutoff < SCORING_THRESHOLD_MIN ||
-    draft.fit_score_cutoff > SCORING_THRESHOLD_MAX ||
-    draft.low_conf_cutoff_email_classification < SCORING_THRESHOLD_MIN ||
-    draft.low_conf_cutoff_email_classification > SCORING_THRESHOLD_MAX ||
-    draft.qualified_conf_email_classification < SCORING_THRESHOLD_MIN ||
-    draft.qualified_conf_email_classification > SCORING_THRESHOLD_MAX
+    draft.fit_score_cutoff > SCORING_THRESHOLD_MAX
   ) {
-    return `Scoring thresholds must be between ${SCORING_THRESHOLD_MIN} and ${SCORING_THRESHOLD_MAX}.`;
+    return `Fit score cutoff must be between ${SCORING_THRESHOLD_MIN} and ${SCORING_THRESHOLD_MAX}.`;
   }
   if (
     draft.min_words === null ||

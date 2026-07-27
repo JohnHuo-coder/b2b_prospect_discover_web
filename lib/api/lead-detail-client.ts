@@ -58,6 +58,8 @@ export type LeadRequirement = {
 
 export type LeadContactEmailSource = "website" | "verified" | null;
 
+export type ContactConfidenceLevel = "high" | "medium" | "low";
+
 export type OutreachEmailStatus = "ready" | "sent";
 
 export type LeadContact = {
@@ -66,7 +68,7 @@ export type LeadContact = {
   lastName: string;
   jobTitle: string;
   salutationTarget: string;
-  confidenceLevel: string;
+  confidenceLevel: ContactConfidenceLevel | null;
   linkedinUrl: string;
   outreachEmail: string;
   outreachStatus: OutreachEmailStatus | null;
@@ -211,6 +213,16 @@ function resolveContactEmailSource(from: string | null | undefined): LeadContact
   return null;
 }
 
+function normalizeConfidenceLevel(
+  value: string | null | undefined
+): ContactConfidenceLevel | null {
+  const normalized = value?.trim().toLowerCase() ?? "";
+  if (normalized === "high" || normalized === "medium" || normalized === "low") {
+    return normalized;
+  }
+  return null;
+}
+
 function normalizeOutreachStatus(
   status: string | null | undefined
 ): OutreachEmailStatus | null {
@@ -255,7 +267,7 @@ function mapLeadDetail(data: LeadDetailResponse): LeadDetail {
       lastName: row.last_name?.trim() || "—",
       jobTitle: row.job_title?.trim() || "—",
       salutationTarget: row.salutation_target?.trim() || "—",
-      confidenceLevel: row.confidence_level?.trim() || "—",
+      confidenceLevel: normalizeConfidenceLevel(row.confidence_level),
       linkedinUrl: row.linkedin_url?.trim() || "",
       outreachEmail: row.outreach_email?.trim() || "",
       outreachStatus: normalizeOutreachStatus(row.outreach_status),

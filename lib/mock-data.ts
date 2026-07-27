@@ -116,8 +116,6 @@ export const businessConfig = {
   lon: 100.557,
   max_distance_km: 10,
   fit_score_cutoff: 75,
-  low_conf_cutoff_email_classification: 30,
-  qualified_conf_email_classification: 70,
   search_keyword: "luxury hotel",
   search_location: "Bangkok Thailand",
   industry: ["Hospitality"],

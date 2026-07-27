@@ -34,8 +34,6 @@ type BusinessConfigRow = {
   min_words?: number | null;
   max_words?: number | null;
   subject_line?: string | null;
-  low_conf_cutoff_email_classification?: number | null;
-  qualified_conf_email_classification?: number | null;
   fit_score_cutoff?: number | null;
   contact_titles?: string[] | null;
   contact_categories?: string[] | null;
@@ -135,10 +133,6 @@ export function mapBusinessConfigResponse(
     lon: toNumber(cfg.lon),
     max_distance_km: toNumber(cfg.max_distance_km),
     fit_score_cutoff: toNumber(cfg.fit_score_cutoff),
-    low_conf_cutoff_email_classification:
-      toNumber(cfg.low_conf_cutoff_email_classification),
-    qualified_conf_email_classification:
-      toNumber(cfg.qualified_conf_email_classification),
     search_keyword: toStringValue(cfg.search_keyword),
     search_location: toStringValue(cfg.search_location ?? cfg.location),
     industry,
@@ -266,10 +260,6 @@ export function buildBusinessConfigSavePayload(
     lon: draft.lon,
     max_distance_km: draft.max_distance_km,
     fit_score_cutoff: draft.fit_score_cutoff as number,
-    low_conf_cutoff_email_classification:
-      draft.low_conf_cutoff_email_classification as number,
-    qualified_conf_email_classification:
-      draft.qualified_conf_email_classification as number,
     search_keyword: draft.search_keyword.trim(),
     search_location: draft.search_location.trim(),
     industry: draft.industry,
@@ -292,10 +282,6 @@ function snapshotSavableConfig(draft: BusinessConfigState): string {
     lon: draft.lon,
     max_distance_km: draft.max_distance_km,
     fit_score_cutoff: draft.fit_score_cutoff,
-    low_conf_cutoff_email_classification:
-      draft.low_conf_cutoff_email_classification,
-    qualified_conf_email_classification:
-      draft.qualified_conf_email_classification,
     search_keyword: draft.search_keyword.trim(),
     search_location: draft.search_location.trim(),
     industry: draft.industry,

@@ -67,20 +67,6 @@ export function validateBusinessConfigForRun(
     });
   }
 
-  if (!isValidScoringThreshold(config.low_conf_cutoff_email_classification)) {
-    issues.push({
-      section: "Scoring Thresholds",
-      message: "Low confidence cutoff is required (0–100)",
-    });
-  }
-
-  if (!isValidScoringThreshold(config.qualified_conf_email_classification)) {
-    issues.push({
-      section: "Scoring Thresholds",
-      message: "Qualified confidence cutoff is required (0–100)",
-    });
-  }
-
   if (!config.search_keyword.trim()) {
     issues.push({
       section: "Target Partner",

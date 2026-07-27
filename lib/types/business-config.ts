@@ -10,8 +10,6 @@ export type BusinessConfigState = {
   lon: number | null;
   max_distance_km: number | null;
   fit_score_cutoff: number | null;
-  low_conf_cutoff_email_classification: number | null;
-  qualified_conf_email_classification: number | null;
   search_keyword: string;
   search_location: string;
   industry: string[];
@@ -33,8 +31,6 @@ export type BusinessConfigSavePayload = {
   lon?: number | null;
   max_distance_km?: number | null;
   fit_score_cutoff: number;
-  low_conf_cutoff_email_classification: number;
-  qualified_conf_email_classification: number;
   search_keyword: string;
   search_location: string;
   industry?: string[] | null;

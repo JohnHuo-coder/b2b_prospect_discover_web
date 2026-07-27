@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   AlertCircle,
+  AlertTriangle,
   ArrowLeft,
   CheckCircle2,
   ExternalLink,
@@ -26,6 +27,7 @@ import {
   deleteLeadContact,
   sendAllOutreachEmails,
   WEBSITE_SCRAPED_EMAIL_NOTE,
+  type ContactConfidenceLevel,
   type LeadContact,
   type LeadDetail,
 } from "@/lib/api/lead-detail-client";
@@ -141,6 +143,37 @@ function buildOverviewFields(lead: LeadDetail, websiteHref: string): OverviewFie
   }
 
   return fields;
+}
+
+const CONFIDENCE_LEVEL_STYLES: Record<
+  ContactConfidenceLevel,
+  { badge: string; dot: string }
+> = {
+  high: {
+    badge: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    dot: "bg-emerald-500",
+  },
+  medium: {
+    badge: "border-amber-200 bg-amber-50 text-amber-800",
+    dot: "bg-amber-500",
+  },
+  low: {
+    badge: "border-red-200 bg-red-50 text-red-800",
+    dot: "bg-red-500",
+  },
+};
+
+function ConfidenceLevelBadge({ level }: { level: ContactConfidenceLevel }) {
+  const style = CONFIDENCE_LEVEL_STYLES[level];
+
+  return (
+    <span
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold capitalize ${style.badge}`}
+    >
+      <span className={`h-2 w-2 rounded-full ${style.dot}`} />
+      {level}
+    </span>
+  );
 }
 
 function RequirementCard({
@@ -278,7 +311,12 @@ function ContactCard({
         {contact.emailSource === "website" ? (
           <>
             <Field label="Salutation Target" value={contact.salutationTarget} />
-            <Field label="Confidence Level" value={contact.confidenceLevel} />
+            {contact.confidenceLevel ? (
+              <Field
+                label="Confidence Level"
+                value={<ConfidenceLevelBadge level={contact.confidenceLevel} />}
+              />
+            ) : null}
           </>
         ) : (
           <>
@@ -802,20 +840,32 @@ export function LeadDetailContent({ leadId }: { leadId: string }) {
                 disabled={Boolean(deletingContactEmail)}
                 className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {deletingContactEmail ? "Deleting..." : "Delete"}
+                {deletingContactEmail ? "Deleting..." : "Delete permanently"}
               </button>
             </div>
           ) : null
         }
       >
         {contactToDelete ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-red-900">
+                  This action is permanent and cannot be undone.
+                </p>
+                <p className="text-sm leading-6 text-red-800">
+                  The contact and any associated outreach data will be removed
+                  immediately.
+                </p>
+              </div>
+            </div>
             <p className="text-sm leading-6 text-gray-700">
               Are you sure you want to delete{" "}
               <span className="font-medium text-gray-900">
                 {contactToDelete.email}
               </span>
-              ? This action cannot be undone.
+              ?
             </p>
             {deleteError ? (
               <p className="text-sm text-red-600">{deleteError}</p>

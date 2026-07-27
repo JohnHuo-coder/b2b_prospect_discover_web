@@ -82,12 +82,6 @@ function parseSaveBody(body: Record<string, unknown>) {
   const contact_titles = parseStringArray(body.contact_titles);
   const contact_categories = parseStringArray(body.contact_categories);
   const fit_score_cutoff = parseScoringThreshold(body.fit_score_cutoff);
-  const low_conf_cutoff_email_classification = parseScoringThreshold(
-    body.low_conf_cutoff_email_classification
-  );
-  const qualified_conf_email_classification = parseScoringThreshold(
-    body.qualified_conf_email_classification
-  );
   const min_words = parseInteger(body.min_words);
   const max_words = parseInteger(body.max_words);
   const subject_line = parseString(body.subject_line);
@@ -121,18 +115,6 @@ function parseSaveBody(body: Record<string, unknown>) {
   if (fit_score_cutoff === null) {
     return { error: "fit_score_cutoff must be an integer between 0 and 100" };
   }
-  if (low_conf_cutoff_email_classification === null) {
-    return {
-      error:
-        "low_conf_cutoff_email_classification must be an integer between 0 and 100",
-    };
-  }
-  if (qualified_conf_email_classification === null) {
-    return {
-      error:
-        "qualified_conf_email_classification must be an integer between 0 and 100",
-    };
-  }
   if (min_words === null || min_words < 1) {
     return { error: "min_words must be a positive integer" };
   }
@@ -158,8 +140,6 @@ function parseSaveBody(body: Record<string, unknown>) {
       contact_titles,
       contact_categories,
       fit_score_cutoff,
-      low_conf_cutoff_email_classification,
-      qualified_conf_email_classification,
       email_min_words: min_words,
       email_max_words: max_words,
       subject_line,
