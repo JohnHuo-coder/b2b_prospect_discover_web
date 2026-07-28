@@ -15,8 +15,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lead Generation",
-  description: "Lead generation pipeline dashboard",
+  title: {
+    default: "Prospect Discover",
+    template: "%s | Prospect Discover",
+  },
+  description:
+    "Automated B2B prospect discovery, fit scoring, contact enrichment, and outreach pipeline management.",
 };
 
 export default function RootLayout({
