@@ -14,11 +14,51 @@ type StatusDetailRow = {
   failed_candidates: number | string;
 };
 
+type InsufficientReasonRow = {
+  reason: string;
+  count: number | string;
+};
+
+type SufficiencySummaryRow = {
+  total_candidates: number | string;
+  sufficient_candidates: number | string;
+  insufficient_candidates: number | string;
+  insufficient_reasons?: InsufficientReasonRow[];
+};
+
 function mapStatusDetailRows(rows: StatusDetailRow[], labelKey: "status" | "final_stage") {
   return rows.map((row) => ({
     label: String(row[labelKey] ?? "unknown"),
     count: Number(row.failed_candidates),
   }));
+}
+
+function mapInsufficientReasonRows(rows: InsufficientReasonRow[]) {
+  const insufficientTotal = rows.reduce((sum, row) => sum + Number(row.count), 0);
+
+  return rows.map((row) => {
+    const count = Number(row.count);
+    return {
+      label: row.reason,
+      count,
+      percentage:
+        insufficientTotal > 0 ? Math.round((count / insufficientTotal) * 100) : 0,
+    };
+  });
+}
+
+function mapSufficiencyDetail(summary: SufficiencySummaryRow) {
+  const total = Number(summary.total_candidates);
+  const sufficient = Number(summary.sufficient_candidates);
+  const insufficient = Number(summary.insufficient_candidates);
+
+  return {
+    total,
+    sufficient,
+    insufficient,
+    sufficiencyRate: total > 0 ? Math.round((sufficient / total) * 100) : 0,
+    insufficientReasons: mapInsufficientReasonRows(summary.insufficient_reasons ?? []),
+  };
 }
 
 export const GET = withAuth(
@@ -62,16 +102,28 @@ export const GET = withAuth(
 
       if (source === "website") {
         if (!scope) {
-          return jsonResponse({ items: [] });
+          return jsonResponse({
+            items: [],
+            sufficiency: mapSufficiencyDetail({
+              total_candidates: 0,
+              sufficient_candidates: 0,
+              insufficient_candidates: 0,
+              insufficient_reasons: [],
+            }),
+          });
         }
 
         const result = await systemDashboardRepository.getFindContactStatusWebDetail({
           ...scope,
         });
+
         return jsonResponse({
           items: mapStatusDetailRows(
             (result as { stages: StatusDetailRow[] }).stages ?? [],
             "final_stage"
+          ),
+          sufficiency: mapSufficiencyDetail(
+            (result as { sufficiency: SufficiencySummaryRow }).sufficiency
           ),
         });
       }

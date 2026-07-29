@@ -2,8 +2,43 @@
 
 import { useEffect } from "react";
 import { ExternalLink, X } from "lucide-react";
-import type { ContactCandidate } from "@/lib/api/system-dashboard-client";
+import type {
+  ContactCandidate,
+  ContactConfidenceLevel,
+  ContactEmail,
+} from "@/lib/api/system-dashboard-client";
 import { AcquisitionStatusBadge } from "./SystemDashboardShared";
+
+const CONFIDENCE_LEVEL_STYLES: Record<
+  ContactConfidenceLevel,
+  { badge: string; dot: string }
+> = {
+  high: {
+    badge: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    dot: "bg-emerald-500",
+  },
+  medium: {
+    badge: "border-amber-200 bg-amber-50 text-amber-800",
+    dot: "bg-amber-500",
+  },
+  low: {
+    badge: "border-red-200 bg-red-50 text-red-800",
+    dot: "bg-red-500",
+  },
+};
+
+function ConfidenceLevelBadge({ level }: { level: ContactConfidenceLevel }) {
+  const style = CONFIDENCE_LEVEL_STYLES[level];
+
+  return (
+    <span
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold capitalize ${style.badge}`}
+    >
+      <span className={`h-2 w-2 rounded-full ${style.dot}`} />
+      {level}
+    </span>
+  );
+}
 
 function DetailField({
   label,
@@ -22,9 +57,52 @@ function DetailField({
   );
 }
 
-function formatContactName(email: ContactCandidate["emails"][number]) {
-  const name = [email.first_name, email.last_name].filter(Boolean).join(" ");
-  return name || "—";
+function ContactEmailFields({ email }: { email: ContactEmail }) {
+  if (email.email_source === "website") {
+    return (
+      <>
+        <DetailField label="Contact Label">
+          {email.contact_label?.trim() || "—"}
+        </DetailField>
+        {email.confidenceLevel ? (
+          <DetailField label="Confidence Level">
+            <ConfidenceLevelBadge level={email.confidenceLevel} />
+          </DetailField>
+        ) : null}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <DetailField label="First Name">
+        {email.first_name?.trim() || "—"}
+      </DetailField>
+      <DetailField label="Last Name">
+        {email.last_name?.trim() || "—"}
+      </DetailField>
+      <DetailField label="Job Title">
+        {email.job_title?.trim() || "—"}
+      </DetailField>
+      <div className="sm:col-span-2">
+        <DetailField label="LinkedIn">
+          {email.linkedin_url ? (
+            <a
+              href={email.linkedin_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-violet-600 hover:text-violet-700"
+            >
+              View profile
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          ) : (
+            "—"
+          )}
+        </DetailField>
+      </div>
+    </>
+  );
 }
 
 const contactMissMetrics = [
@@ -209,35 +287,10 @@ export function ContactCandidateDetail({
                           {email.email}
                         </p>
                         <dl className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                          <DetailField label="Name">
-                            {formatContactName(email)}
-                          </DetailField>
-                          <DetailField label="Job title">
-                            {email.job_title || "—"}
-                          </DetailField>
-                          <DetailField label="Contact role">
-                            {email.contact_role || "—"}
-                          </DetailField>
+                          <ContactEmailFields email={email} />
                           <DetailField label="Source">
                             {email.from || "—"}
                           </DetailField>
-                          <div className="sm:col-span-2">
-                            <DetailField label="LinkedIn">
-                              {email.linkedin_url ? (
-                                <a
-                                  href={email.linkedin_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-violet-600 hover:text-violet-700"
-                                >
-                                  {email.linkedin_url}
-                                  <ExternalLink className="h-3.5 w-3.5" />
-                                </a>
-                              ) : (
-                                "—"
-                              )}
-                            </DetailField>
-                          </div>
                         </dl>
                       </div>
                     ))}

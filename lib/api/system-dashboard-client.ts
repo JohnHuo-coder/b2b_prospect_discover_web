@@ -1,7 +1,7 @@
 import { ENDPOINTS } from "@/lib/api/endpoints";
 import { authenticatedFetch } from "@/lib/api/authenticatedFetch";
 import type {
-  ContactEmailSource,
+  ContactEmailSource as ContactCandidateEmailSource,
   ContactEmailSourceBreakdown,
 } from "@/lib/system-dashboard/contact-status";
 
@@ -589,11 +589,25 @@ export async function fetchContactSummary(): Promise<ContactSummaryStats> {
 export type ContactEmailSourceDetailItem = {
   label: string;
   count: number;
+  percentage?: number;
+};
+
+export type ContactEmailSourceSufficiencyDetail = {
+  total: number;
+  sufficient: number;
+  insufficient: number;
+  sufficiencyRate: number;
+  insufficientReasons: ContactEmailSourceDetailItem[];
+};
+
+export type ContactEmailSourceDetailResult = {
+  items: ContactEmailSourceDetailItem[];
+  sufficiency?: ContactEmailSourceSufficiencyDetail;
 };
 
 export async function fetchContactEmailSourceDetail(
   source: "apollo" | "anymail" | "website"
-): Promise<ContactEmailSourceDetailItem[]> {
+): Promise<ContactEmailSourceDetailResult> {
   const response = await authenticatedFetch(
     ENDPOINTS.contactEmailSourceDetail(source)
   );
@@ -607,12 +621,17 @@ export async function fetchContactEmailSourceDetail(
     );
   }
 
-  const data = (await response.json()) as {
-    items: ContactEmailSourceDetailItem[];
-  };
+  const data = (await response.json()) as ContactEmailSourceDetailResult;
 
-  return data.items ?? [];
+  return {
+    items: data.items ?? [],
+    sufficiency: data.sufficiency,
+  };
 }
+
+export type ContactConfidenceLevel = "high" | "medium" | "low";
+
+export type ContactDetailEmailSource = "website" | "verified" | null;
 
 export type ContactEmail = {
   email: string;
@@ -620,9 +639,37 @@ export type ContactEmail = {
   last_name: string | null;
   job_title: string | null;
   linkedin_url: string | null;
-  contact_role: string | null;
+  contact_label: string | null;
+  confidence_level: string | null;
   from: string | null;
+  email_source: ContactDetailEmailSource;
+  confidenceLevel: ContactConfidenceLevel | null;
 };
+
+function resolveContactEmailSource(from: string | null | undefined): ContactDetailEmailSource {
+  const normalized = from?.trim().toLowerCase() ?? "";
+  if (normalized === "email_classification") return "website";
+  if (normalized === "anymail_finder" || normalized === "apollo") return "verified";
+  return null;
+}
+
+function normalizeContactConfidenceLevel(
+  value: string | null | undefined
+): ContactConfidenceLevel | null {
+  const normalized = value?.trim().toLowerCase() ?? "";
+  if (normalized === "high" || normalized === "medium" || normalized === "low") {
+    return normalized;
+  }
+  return null;
+}
+
+function mapContactEmail(row: Omit<ContactEmail, "email_source" | "confidenceLevel">): ContactEmail {
+  return {
+    ...row,
+    email_source: resolveContactEmailSource(row.from),
+    confidenceLevel: normalizeContactConfidenceLevel(row.confidence_level),
+  };
+}
 
 export type ContactCandidate = {
   id: string;
@@ -642,7 +689,7 @@ export type ContactTableCandidate = {
   company: string;
   website: string | null;
   status: ContactStatus;
-  email_source: ContactEmailSource | null;
+  email_source: ContactCandidateEmailSource | null;
 };
 
 type ContactApiRow = {
@@ -650,7 +697,7 @@ type ContactApiRow = {
   company_name: string;
   website: string | null;
   status: ContactStatus;
-  email_source?: ContactEmailSource | null;
+  email_source?: ContactCandidateEmailSource | null;
 };
 
 type ContactDetailApiResponse = {
@@ -663,7 +710,9 @@ type ContactDetailApiResponse = {
   fallback_from: string | null;
   selected_page_no_email_miss: number;
   email_not_sufficient_retry: number;
-  emails: ContactEmail[];
+  emails: Array<
+    Omit<ContactEmail, "email_source" | "confidenceLevel">
+  >;
 };
 
 function mapContactRow(row: ContactApiRow): ContactTableCandidate {
@@ -687,7 +736,7 @@ function mapContactDetail(data: ContactDetailApiResponse): ContactCandidate {
     fallback_from: data.fallback_from,
     selected_page_no_email_miss: data.selected_page_no_email_miss,
     email_not_sufficient_retry: data.email_not_sufficient_retry,
-    emails: data.emails ?? [],
+    emails: (data.emails ?? []).map(mapContactEmail),
   };
 }
 

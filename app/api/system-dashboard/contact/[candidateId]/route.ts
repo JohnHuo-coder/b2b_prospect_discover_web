@@ -25,7 +25,8 @@ type ContactEmailRow = {
   last_name: string | null;
   job_title: string | null;
   linkedin_url: string | null;
-  contact_role: string | null;
+  contact_label: string | null;
+  confidence_level: string | null;
   from: string | null;
 };
 
@@ -77,7 +78,8 @@ export const GET = withAuth(
           last_name: row.last_name,
           job_title: row.job_title,
           linkedin_url: row.linkedin_url,
-          contact_role: row.contact_role,
+          contact_label: row.contact_label,
+          confidence_level: row.confidence_level,
           from: row.from,
         })),
       });

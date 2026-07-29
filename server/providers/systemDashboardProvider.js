@@ -678,7 +678,7 @@ export default {
       ),
       pool.query(
         `SELECT ec.email, ec.first_name, ec.last_name, ec.job_title, ec.linkedin_url,
-                ec.contact_role, ec.from
+                ec.contact_label, ec.confidence_level, ec."from"
          FROM prospect_discover.initial_candidates ic
          ${joinBc('ic')}
          JOIN prospect_discover.email_contact ec
@@ -786,29 +786,74 @@ export default {
   async getFindContactStatusWebDetail({ business_id, version }) {
     const scope = resolveConfigScope({ business_id, version });
     if (!scope) {
-      return { stages: [] };
+      return {
+        stages: [],
+        sufficiency: {
+          total_candidates: 0,
+          sufficient_candidates: 0,
+          insufficient_candidates: 0,
+          insufficient_reasons: [],
+        },
+      };
     }
 
-    const { rows } = await pool.query(
-      `SELECT
-         COUNT(*)::int AS failed_candidates,
-         fc.final_stage
-       FROM prospect_discover.find_contact_status fc
-       ${joinBc('fc')}
-       WHERE ${whereBc()}
-         AND COALESCE(fc.apollo_status, '') NOT IN ('success', 'succeed')
-         AND COALESCE(fc.anymail_finder_status, '') NOT IN ('success', 'succeed')
-         AND COALESCE(fc.status, '') NOT IN ('success', 'succeed')
-       GROUP BY fc.final_stage
-       ORDER BY failed_candidates DESC`,
-      scopeParams(scope)
-    );
+    const params = scopeParams(scope);
+    const websiteSuccessWhere = `
+      COALESCE(fc.apollo_status, '') NOT IN ('success', 'succeed')
+      AND COALESCE(fc.anymail_finder_status, '') NOT IN ('success', 'succeed')
+      AND COALESCE(fc.status, '') IN ('success', 'succeed')`;
+
+    const [failureResult, sufficiencySummaryResult, insufficientReasonsResult] =
+      await Promise.all([
+        pool.query(
+          `SELECT
+             COUNT(*)::int AS failed_candidates,
+             fc.final_stage
+           FROM prospect_discover.find_contact_status fc
+           ${joinBc('fc')}
+           WHERE ${whereBc()}
+             AND COALESCE(fc.apollo_status, '') NOT IN ('success', 'succeed')
+             AND COALESCE(fc.anymail_finder_status, '') NOT IN ('success', 'succeed')
+             AND COALESCE(fc.status, '') NOT IN ('success', 'succeed')
+           GROUP BY fc.final_stage
+           ORDER BY failed_candidates DESC`,
+          params
+        ),
+        pool.query(
+          `SELECT
+             COUNT(*)::int AS total_candidates,
+             COUNT(*) FILTER (WHERE fc.email_sufficient IS TRUE)::int AS sufficient_candidates,
+             COUNT(*) FILTER (WHERE fc.email_sufficient IS FALSE)::int AS insufficient_candidates
+           FROM prospect_discover.find_contact_status fc
+           ${joinBc('fc')}
+           WHERE ${whereBc()}
+             AND ${websiteSuccessWhere}`,
+          params
+        ),
+        pool.query(
+          `SELECT
+             COALESCE(NULLIF(TRIM(fc.email_sufficiency_reason), ''), 'unknown') AS reason,
+             COUNT(*)::int AS count
+           FROM prospect_discover.find_contact_status fc
+           ${joinBc('fc')}
+           WHERE ${whereBc()}
+             AND ${websiteSuccessWhere}
+             AND fc.email_sufficient IS FALSE
+           GROUP BY fc.email_sufficiency_reason
+           ORDER BY count DESC`,
+          params
+        ),
+      ]);
 
     return {
-      stages: rows.map((row) => ({
+      stages: failureResult.rows.map((row) => ({
         final_stage: row.final_stage,
         failed_candidates: Number(row.failed_candidates),
       })),
+      sufficiency: {
+        ...sufficiencySummaryResult.rows[0],
+        insufficient_reasons: insufficientReasonsResult.rows,
+      },
     };
   },
 

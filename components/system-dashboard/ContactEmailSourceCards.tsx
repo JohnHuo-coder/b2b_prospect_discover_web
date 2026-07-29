@@ -8,6 +8,7 @@ import {
   fetchContactEmailSourceDetail,
   fetchContactSummary,
   type ContactEmailSourceDetailItem,
+  type ContactEmailSourceSufficiencyDetail,
   type ContactSummaryStats,
 } from "@/lib/api/system-dashboard-client";
 import type { ContactEmailSourceBreakdown } from "@/lib/system-dashboard/contact-status";
@@ -133,16 +134,21 @@ function SourceDetailBreakdown({
   items,
   labelColumn,
   description,
+  shareDenominator,
+  emptyMessage = "No breakdown available.",
 }: {
   items: ContactEmailSourceDetailItem[];
   labelColumn: string;
   description: string;
+  shareDenominator?: number;
+  emptyMessage?: string;
 }) {
-  const total = items.reduce((sum, row) => sum + row.count, 0);
+  const total =
+    shareDenominator ?? items.reduce((sum, row) => sum + row.count, 0);
 
   if (items.length === 0) {
     return (
-      <p className="text-sm text-gray-500">No failure breakdown available.</p>
+      <p className="text-sm text-gray-500">{emptyMessage}</p>
     );
   }
 
@@ -167,7 +173,8 @@ function SourceDetailBreakdown({
           <tbody className="divide-y divide-gray-100 bg-white">
             {items.map((row) => {
               const share =
-                total > 0 ? Math.round((row.count / total) * 100) : 0;
+                row.percentage ??
+                (total > 0 ? Math.round((row.count / total) * 100) : 0);
 
               return (
                 <tr key={row.label}>
@@ -190,10 +197,64 @@ function SourceDetailBreakdown({
   );
 }
 
+function WebsiteEmailSourceDetail({
+  failureItems,
+  sufficiency,
+}: {
+  failureItems: ContactEmailSourceDetailItem[];
+  sufficiency: ContactEmailSourceSufficiencyDetail | null;
+}) {
+  return (
+    <div className="space-y-8">
+      <section>
+        <h3 className="mb-4 text-sm font-semibold text-gray-900">Failures</h3>
+        <SourceDetailBreakdown
+          items={failureItems}
+          labelColumn="Stage"
+          description="Candidates that failed after Apollo and Anymail Finder, grouped by final_stage."
+          emptyMessage="No failure breakdown available."
+        />
+      </section>
+
+      <section>
+        <h3 className="mb-4 text-sm font-semibold text-gray-900">
+          Email sufficiency
+        </h3>
+        {sufficiency && sufficiency.total > 0 ? (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-gray-200 bg-gray-50/60 px-5 py-4">
+              <p className="text-sm font-medium text-gray-600">Sufficiency rate</p>
+              <p className="mt-2 text-3xl font-bold text-teal-600">
+                {sufficiency.sufficiencyRate}%
+              </p>
+              <p className="mt-2 text-xs text-gray-500">
+                {sufficiency.sufficient} of {sufficiency.total} website emails
+                marked sufficient
+              </p>
+            </div>
+
+            <SourceDetailBreakdown
+              items={sufficiency.insufficientReasons}
+              labelColumn="Reason"
+              description="Insufficient website emails grouped by email_sufficiency_reason."
+              shareDenominator={sufficiency.insufficient}
+              emptyMessage="No insufficient email reasons recorded."
+            />
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">
+            No website email sufficiency data available.
+          </p>
+        )}
+      </section>
+    </div>
+  );
+}
+
 function getDetailModalTitle(view: DetailView): string {
   if (view === "apollo") return "Apollo API — failure breakdown";
   if (view === "anymailFinder") return "Anymail Finder — failure breakdown";
-  if (view === "emailFromWebsite") return "Email from website — failure breakdown";
+  if (view === "emailFromWebsite") return "Email from website — details";
   return "";
 }
 
@@ -206,6 +267,8 @@ export function ContactEmailSourceCards() {
   const [detailItems, setDetailItems] = useState<ContactEmailSourceDetailItem[]>(
     []
   );
+  const [websiteSufficiency, setWebsiteSufficiency] =
+    useState<ContactEmailSourceSufficiencyDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
 
@@ -245,6 +308,7 @@ export function ContactEmailSourceCards() {
   useEffect(() => {
     if (!detailView) {
       setDetailItems([]);
+      setWebsiteSufficiency(null);
       setDetailError(null);
       setDetailLoading(false);
       return;
@@ -258,9 +322,10 @@ export function ContactEmailSourceCards() {
       setDetailError(null);
 
       try {
-        const items = await fetchContactEmailSourceDetail(apiSource);
+        const result = await fetchContactEmailSourceDetail(apiSource);
         if (!cancelled) {
-          setDetailItems(items);
+          setDetailItems(result.items);
+          setWebsiteSufficiency(result.sufficiency ?? null);
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -270,6 +335,7 @@ export function ContactEmailSourceCards() {
               : "Failed to load email source details"
           );
           setDetailItems([]);
+          setWebsiteSufficiency(null);
         }
       } finally {
         if (!cancelled) setDetailLoading(false);
@@ -387,10 +453,9 @@ export function ContactEmailSourceCards() {
         ) : null}
 
         {!detailLoading && !detailError && detailView === "emailFromWebsite" ? (
-          <SourceDetailBreakdown
-            items={detailItems}
-            labelColumn="Stage"
-            description="Candidates that failed after Apollo and Anymail Finder, grouped by final_stage."
+          <WebsiteEmailSourceDetail
+            failureItems={detailItems}
+            sufficiency={websiteSufficiency}
           />
         ) : null}
       </Modal>
