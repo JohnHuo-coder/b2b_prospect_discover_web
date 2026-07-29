@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/components/providers/UserProvider";
+import { requiresEmailVerification } from "@/lib/auth/emailVerification";
 import { Sidebar } from "./Sidebar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -13,6 +14,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (isLoading) return;
     if (!user) {
       router.replace("/login");
+      return;
+    }
+    if (requiresEmailVerification(user)) {
+      router.replace("/verify-email");
     }
   }, [isLoading, user, router]);
 
@@ -24,7 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
+  if (!user || requiresEmailVerification(user)) {
     return null;
   }
 

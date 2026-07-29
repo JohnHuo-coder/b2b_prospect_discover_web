@@ -2,7 +2,8 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { auth } from "@/lib/firebase/client";
 import {
   AuthButton,
   AuthDivider,
@@ -11,6 +12,7 @@ import {
   GoogleButton,
 } from "@/components/auth/AuthShell";
 import { useUser } from "@/components/providers/UserProvider";
+import { requiresEmailVerification } from "@/lib/auth/emailVerification";
 import {
   isAuthCancellation,
   mapAuthCodeToMessage,
@@ -22,10 +24,14 @@ type FirebaseAuthError = {
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, googleAuth } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState(
+    () => searchParams.get("message")?.trim() ?? ""
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
@@ -36,6 +42,10 @@ export function LoginForm() {
 
     try {
       await login(email, password);
+      if (auth.currentUser && requiresEmailVerification(auth.currentUser)) {
+        router.replace("/verify-email");
+        return;
+      }
       router.replace("/dashboard");
     } catch (err) {
       const code = (err as FirebaseAuthError).code ?? "";
@@ -88,6 +98,12 @@ export function LoginForm() {
           placeholder="Enter your password"
           autoComplete="current-password"
         />
+
+        {notice ? (
+          <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {notice}
+          </p>
+        ) : null}
 
         {error ? (
           <p className="text-sm text-red-600" role="alert">

@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signInWithCustomToken } from "firebase/auth";
+import { signInWithCustomToken, sendEmailVerification } from "firebase/auth";
 import {
   AuthButton,
   AuthDivider,
@@ -27,7 +27,7 @@ type FirebaseAuthError = {
 };
 
 const ACCOUNT_CREATED_MESSAGE =
-  "Account created successfully! Please check your email to verify your account.";
+  "Account created! Check your email to verify your account before signing in.";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -79,7 +79,10 @@ export function RegisterForm() {
       if (response?.customToken) {
         try {
           await signInWithCustomToken(auth, response.customToken);
-          router.push("/dashboard");
+          if (auth.currentUser) {
+            await sendEmailVerification(auth.currentUser);
+          }
+          router.push("/verify-email");
         } catch (loginError) {
           console.warn("Auto-login failed after account creation:", loginError);
           router.push(
@@ -160,7 +163,6 @@ export function RegisterForm() {
               label="Business Name"
               value={businessName}
               onChange={setBusinessName}
-              placeholder="Suvarnaveda Wellness"
               autoComplete="organization"
               required
               hint={BUSINESS_NAME_IMMUTABLE_HINT}
@@ -190,14 +192,12 @@ export function RegisterForm() {
             label="First Name (optional)"
             value={firstName}
             onChange={setFirstName}
-            placeholder="Clarence"
             autoComplete="given-name"
           />
           <AuthField
             label="Last Name (optional)"
             value={lastName}
             onChange={setLastName}
-            placeholder="Weaver"
             autoComplete="family-name"
           />
         </div>

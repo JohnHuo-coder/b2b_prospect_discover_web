@@ -10,6 +10,8 @@ import {
 } from "react";
 import {
   onAuthStateChanged,
+  reload,
+  sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -77,6 +79,8 @@ type UserContextValue = {
   logout: () => Promise<boolean>;
   googleAuth: () => Promise<boolean>;
   requestPasswordReset: (email: string) => Promise<boolean>;
+  resendVerificationEmail: () => Promise<void>;
+  confirmEmailVerified: () => Promise<boolean>;
 };
 
 const UserContext = createContext<UserContextValue | null>(null);
@@ -152,6 +156,33 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const resendVerificationEmail = async () => {
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser) {
+      throw new Error("You must be signed in to resend the verification email.");
+    }
+
+    await sendEmailVerification(firebaseUser);
+  };
+
+  const confirmEmailVerified = async () => {
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser) {
+      return false;
+    }
+
+    await reload(firebaseUser);
+    await firebaseUser.getIdToken(true);
+
+    if (!firebaseUser.emailVerified) {
+      return false;
+    }
+
+    const appUser = await syncBackendSession(firebaseUser);
+    setUser(appUser);
+    return true;
+  };
+
   const refreshUser = useCallback(async () => {
     const firebaseUser = auth.currentUser;
     if (!firebaseUser) {
@@ -175,6 +206,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     logout,
     googleAuth,
     requestPasswordReset,
+    resendVerificationEmail,
+    confirmEmailVerified,
   };
 
   return (
