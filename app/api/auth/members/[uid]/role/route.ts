@@ -2,6 +2,7 @@ import { errorResponse, jsonResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
 import { withOwner } from "@/lib/api/middleware/withOwnerMiddleware.js";
+import { mapMembershipError } from "@/lib/api/mapMembershipError";
 import userRepository from "@/server/repositories/userRepository.js";
 
 type DbUser = {
@@ -51,7 +52,11 @@ export const PATCH = withAuth(
           return errorResponse("User is not in your company", 403);
         }
 
-        const updatedUser = await userRepository.setRole(uid, role);
+        const updatedUser = await userRepository.updateMemberRoleByOwner({
+          targetUid: uid,
+          ownerBusinessId: user.business_id,
+          role,
+        });
 
         return jsonResponse({
           message: "User role updated",
@@ -59,6 +64,12 @@ export const PATCH = withAuth(
         });
       } catch (error) {
         console.error("[PATCH /api/auth/members/[uid]/role]", error);
+
+        const mapped = mapMembershipError(error);
+        if (mapped) {
+          return errorResponse(mapped.message, mapped.status);
+        }
+
         return errorResponse("Internal server error", 500);
       }
     })

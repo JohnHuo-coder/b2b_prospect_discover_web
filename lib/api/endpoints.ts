@@ -16,6 +16,8 @@ export const ENDPOINTS = {
     BUSINESS_CONFIG_CANDIDATES_PER_RUN: "/api/business/config/candidates-per-run",
     BUSINESS_SEARCH: "/api/business/search",
     BUSINESS_JOIN: "/api/business/join",
+    BUSINESS_LEAVE: "/api/business/leave",
+    BUSINESS_CREATE: "/api/business/create",
     BUSINESS_CONFIG_REPHRASE: "/api/business/config/requirements/rephrase",
     SYSTEM_DASHBOARD_INFO_ACQUISITION:
       "/api/system-dashboard/information-acquisition",

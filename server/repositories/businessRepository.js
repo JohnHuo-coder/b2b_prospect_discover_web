@@ -3,6 +3,8 @@ import userProvider from '../providers/userProvider.js';
 
 const businessRepository = {
   createBusiness: (businessData) => businessProvider.createBusiness(businessData),
+  createBusinessForPendingUser: (businessData) =>
+    businessProvider.createBusinessForPendingUser(businessData),
   deleteByUid: (uid) => businessProvider.deleteBusinessByUid(uid),
   getAllBusinessMember: (bid) => userProvider.getAllBusinessMember(bid),
   getBusinesses: (query) => userProvider.getBusinesses(query),

@@ -103,6 +103,91 @@ export default {
     };
   },
 
+  async createBusinessForPendingUser({ uid, business_name }) {
+    const normalizedName =
+      typeof business_name === "string" ? business_name.trim() : "";
+    if (!normalizedName) {
+      throw new Error("business_name is required");
+    }
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+      await client.query(`SET LOCAL lock_timeout = '5s'`);
+
+      const { rows: userRows } = await client.query(
+        `SELECT role, business_id
+         FROM prospect_discover.users
+         WHERE firebase_uid = $1
+         FOR UPDATE`,
+        [uid]
+      );
+
+      const user = userRows[0];
+      if (!user) {
+        const error = new Error("USER_NOT_FOUND");
+        error.code = "USER_NOT_FOUND";
+        throw error;
+      }
+
+      if (user.role !== "pending") {
+        const error = new Error("ONLY_PENDING");
+        error.code = "ONLY_PENDING";
+        throw error;
+      }
+
+      if (user.business_id != null && user.business_id !== "") {
+        const error = new Error("PENDING_JOIN_EXISTS");
+        error.code = "PENDING_JOIN_EXISTS";
+        throw error;
+      }
+
+      const { rows: existingBusinessRows } = await client.query(
+        `SELECT id
+         FROM prospect_discover.businesses
+         WHERE firebase_uid = $1`,
+        [uid]
+      );
+
+      if (existingBusinessRows.length > 0) {
+        const error = new Error("BUSINESS_ALREADY_EXISTS");
+        error.code = "BUSINESS_ALREADY_EXISTS";
+        throw error;
+      }
+
+      const { rows: businessRows } = await client.query(
+        `INSERT INTO prospect_discover.businesses (firebase_uid, business_name, version)
+         VALUES ($1, $2, 0)
+         RETURNING id, version`,
+        [uid, normalizedName]
+      );
+
+      const businessId = businessRows[0].id;
+
+      await client.query(
+        `UPDATE prospect_discover.users
+         SET role = 'owner', business_id = $1
+         WHERE firebase_uid = $2`,
+        [businessId, uid]
+      );
+
+      await client.query("COMMIT");
+
+      return {
+        business_id: businessId,
+        version: Number(businessRows[0].version) || 0,
+        uid,
+        business_name: normalizedName,
+      };
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  },
+
   async deleteBusinessByUid(uid) {
     await pool.query(`DELETE FROM prospect_discover.businesses WHERE firebase_uid = $1`, [uid]);
   },

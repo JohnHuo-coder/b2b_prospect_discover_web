@@ -20,10 +20,12 @@ import { fetchLeads, updateLeadStatus } from "@/lib/api/leads-client";
 import {
   searchBusinesses,
   updateBusinessJoin,
+  createBusiness,
   type BusinessSearchResult,
 } from "@/lib/api/business-search-client";
 import { useUser } from "@/components/providers/UserProvider";
 import { getUserDisplayName, hasUserName } from "@/lib/auth/userDisplay";
+import { BUSINESS_NAME_IMMUTABLE_HINT } from "@/lib/constants/business-identity";
 import { statusLabels, type Lead, type LeadStatus } from "@/lib/mock-data";
 
 const summaryCardMeta = [
@@ -167,12 +169,15 @@ function PendingDashboard() {
   const { user, refreshUser } = useUser();
   const userBusinessId = normalizeBusinessId(user?.business_id);
   const [search, setSearch] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [results, setResults] = useState<BusinessSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
   const [acting, setActing] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const canCreateCompany = userBusinessId === null;
 
   useEffect(() => {
     const trimmed = search.trim();
@@ -249,6 +254,28 @@ function PendingDashboard() {
     }
   };
 
+  const handleCreateCompany = async () => {
+    const trimmedName = businessName.trim();
+    if (!trimmedName) {
+      setActionError("Business name is required");
+      return;
+    }
+
+    setCreating(true);
+    setActionError("");
+
+    try {
+      await createBusiness(trimmedName);
+      await refreshUser();
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : "Failed to create company"
+      );
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <div className="px-8 py-8">
       <div className="mb-8">
@@ -256,10 +283,59 @@ function PendingDashboard() {
       </div>
 
       <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-6 py-5 text-sm text-amber-800">
-        You need to join a company first.
+        You need to join a company or create your own before you can use the
+        dashboard.
       </div>
 
-      <div className="relative max-w-xl">
+      {userBusinessId ? (
+        <div className="mb-6 max-w-xl rounded-xl border border-violet-200 bg-violet-50 px-5 py-4 text-sm text-violet-900">
+          You have a pending join request. Cancel it from the search results
+          below before creating your own company.
+        </div>
+      ) : null}
+
+      <section className="max-w-xl">
+        <h2 className="text-lg font-semibold text-gray-900">Create a company</h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Start your own workspace and become the company owner.
+        </p>
+
+        <div className="mt-4 space-y-3">
+          <input
+            type="text"
+            value={businessName}
+            onChange={(event) => setBusinessName(event.target.value)}
+            placeholder="Company name"
+            disabled={!canCreateCompany || creating}
+            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100 disabled:cursor-not-allowed disabled:bg-gray-50"
+          />
+          <p className="text-xs text-gray-500">{BUSINESS_NAME_IMMUTABLE_HINT}</p>
+          <button
+            type="button"
+            disabled={!canCreateCompany || creating || !businessName.trim()}
+            onClick={() => void handleCreateCompany()}
+            className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500"
+          >
+            {creating ? "Creating..." : "Create company"}
+          </button>
+        </div>
+      </section>
+
+      <div className="my-8 flex max-w-xl items-center gap-3">
+        <div className="h-px flex-1 bg-gray-200" />
+        <span className="text-xs font-medium uppercase tracking-wide text-gray-400">
+          Or join an existing company
+        </span>
+        <div className="h-px flex-1 bg-gray-200" />
+      </div>
+
+      <section className="max-w-xl">
+        <h2 className="text-lg font-semibold text-gray-900">Join a company</h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Search for a company and request to join as a team member.
+        </p>
+
+      <div className="relative mt-4 max-w-xl">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
@@ -339,6 +415,7 @@ function PendingDashboard() {
           ) : null}
         </div>
       ) : null}
+      </section>
     </div>
   );
 }

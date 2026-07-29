@@ -57,3 +57,43 @@ export async function updateBusinessJoin(
   const data = (await response.json()) as { user: Record<string, unknown> };
   return data.user;
 }
+
+export async function leaveCompany(): Promise<Record<string, unknown>> {
+  const response = await authenticatedFetch(ENDPOINTS.BUSINESS_LEAVE, {
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      typeof error.error === "string"
+        ? error.error
+        : "Failed to leave company"
+    );
+  }
+
+  const data = (await response.json()) as { user: Record<string, unknown> };
+  return data.user;
+}
+
+export async function createBusiness(
+  business_name: string
+): Promise<Record<string, unknown>> {
+  const response = await authenticatedFetch(ENDPOINTS.BUSINESS_CREATE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ business_name }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      typeof error.error === "string"
+        ? error.error
+        : "Failed to create company"
+    );
+  }
+
+  const data = (await response.json()) as { user: Record<string, unknown> };
+  return data.user;
+}

@@ -1,5 +1,6 @@
 import { errorResponse, jsonResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
+import { mapMembershipError } from "@/lib/api/mapMembershipError";
 import userRepository from "@/server/repositories/userRepository.js";
 import { pool } from "@/lib/db/client";
 
@@ -76,6 +77,12 @@ export const PATCH = withAuth(
       return jsonResponse({ user: updatedUser });
     } catch (error) {
       console.error("[PATCH /api/business/join]", error);
+
+      const mapped = mapMembershipError(error);
+      if (mapped) {
+        return errorResponse(mapped.message, mapped.status);
+      }
+
       return errorResponse("Internal server error", 500);
     }
   }

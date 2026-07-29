@@ -35,6 +35,53 @@ async function findByUid(uid) {
   return user;
 }
 
+const MEMBERSHIP_ERRORS = {
+  ONLY_PENDING: 'ONLY_PENDING',
+  PENDING_JOIN_EXISTS: 'PENDING_JOIN_EXISTS',
+  NO_JOIN_REQUEST: 'NO_JOIN_REQUEST',
+  JOIN_REQUEST_CHANGED: 'JOIN_REQUEST_CHANGED',
+  NOT_COMPANY_MEMBER: 'NOT_COMPANY_MEMBER',
+  CANNOT_APPROVE: 'CANNOT_APPROVE',
+  CANNOT_LEAVE_AS_OWNER: 'CANNOT_LEAVE_AS_OWNER',
+  NOT_AFFILIATED: 'NOT_AFFILIATED',
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+};
+
+function isLockTimeoutError(error) {
+  return error?.code === '55P03';
+}
+
+async function lockUserRow(client, uid) {
+  const { rows } = await client.query(
+    `SELECT role, business_id
+     FROM prospect_discover.users
+     WHERE firebase_uid = $1
+     FOR UPDATE`,
+    [uid]
+  );
+
+  return rows[0] ?? null;
+}
+
+async function runMembershipTransaction(callback) {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+    await client.query(`SET LOCAL lock_timeout = '5s'`);
+
+    const result = await callback(client);
+
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 export default {
   async createUser({ uid, email, role, business_id, first_name = null, last_name = null }) {
     const { rows } = await pool.query(
@@ -108,16 +155,45 @@ export default {
   },
 
   async updateUserBusinessId({ uid, business_id }) {
-    const { rowCount } = await pool.query(
-      `UPDATE prospect_discover.users
-       SET business_id = $1
-       WHERE firebase_uid = $2`,
-      [business_id ?? null, uid]
-    );
+    const newBusinessId = business_id ?? null;
 
-    if (rowCount === 0) {
-      return null;
-    }
+    await runMembershipTransaction(async (client) => {
+      const user = await lockUserRow(client, uid);
+      if (!user) {
+        const error = new Error(MEMBERSHIP_ERRORS.USER_NOT_FOUND);
+        error.code = MEMBERSHIP_ERRORS.USER_NOT_FOUND;
+        throw error;
+      }
+
+      if (user.role !== 'pending') {
+        const error = new Error(MEMBERSHIP_ERRORS.ONLY_PENDING);
+        error.code = MEMBERSHIP_ERRORS.ONLY_PENDING;
+        throw error;
+      }
+
+      if (newBusinessId === null) {
+        if (user.business_id == null || user.business_id === '') {
+          const error = new Error(MEMBERSHIP_ERRORS.NO_JOIN_REQUEST);
+          error.code = MEMBERSHIP_ERRORS.NO_JOIN_REQUEST;
+          throw error;
+        }
+      } else if (
+        user.business_id != null &&
+        user.business_id !== '' &&
+        String(user.business_id) !== String(newBusinessId)
+      ) {
+        const error = new Error(MEMBERSHIP_ERRORS.JOIN_REQUEST_CHANGED);
+        error.code = MEMBERSHIP_ERRORS.JOIN_REQUEST_CHANGED;
+        throw error;
+      }
+
+      await client.query(
+        `UPDATE prospect_discover.users
+         SET business_id = $1
+         WHERE firebase_uid = $2`,
+        [newBusinessId, uid]
+      );
+    });
 
     return findByUid(uid);
   },
@@ -142,4 +218,71 @@ export default {
     );
     return findByUid(uid);
   },
+
+  async leaveCompany({ uid }) {
+    await runMembershipTransaction(async (client) => {
+      const user = await lockUserRow(client, uid);
+      if (!user) {
+        const error = new Error(MEMBERSHIP_ERRORS.USER_NOT_FOUND);
+        error.code = MEMBERSHIP_ERRORS.USER_NOT_FOUND;
+        throw error;
+      }
+
+      if (user.role === 'owner') {
+        const error = new Error(MEMBERSHIP_ERRORS.CANNOT_LEAVE_AS_OWNER);
+        error.code = MEMBERSHIP_ERRORS.CANNOT_LEAVE_AS_OWNER;
+        throw error;
+      }
+
+      if (user.business_id == null || user.business_id === '') {
+        const error = new Error(MEMBERSHIP_ERRORS.NOT_AFFILIATED);
+        error.code = MEMBERSHIP_ERRORS.NOT_AFFILIATED;
+        throw error;
+      }
+
+      await client.query(
+        `UPDATE prospect_discover.users
+         SET business_id = NULL, role = 'pending'
+         WHERE firebase_uid = $1`,
+        [uid]
+      );
+    });
+
+    return findByUid(uid);
+  },
+
+  async updateMemberRoleByOwner({ targetUid, ownerBusinessId, role }) {
+    await runMembershipTransaction(async (client) => {
+      const targetUser = await lockUserRow(client, targetUid);
+      if (!targetUser) {
+        const error = new Error(MEMBERSHIP_ERRORS.USER_NOT_FOUND);
+        error.code = MEMBERSHIP_ERRORS.USER_NOT_FOUND;
+        throw error;
+      }
+
+      if (String(targetUser.business_id) !== String(ownerBusinessId)) {
+        const error = new Error(MEMBERSHIP_ERRORS.NOT_COMPANY_MEMBER);
+        error.code = MEMBERSHIP_ERRORS.NOT_COMPANY_MEMBER;
+        throw error;
+      }
+
+      if (role === 'member' && targetUser.role !== 'pending') {
+        const error = new Error(MEMBERSHIP_ERRORS.CANNOT_APPROVE);
+        error.code = MEMBERSHIP_ERRORS.CANNOT_APPROVE;
+        throw error;
+      }
+
+      await client.query(
+        `UPDATE prospect_discover.users
+         SET role = $1
+         WHERE firebase_uid = $2`,
+        [role, targetUid]
+      );
+    });
+
+    return findByUid(targetUid);
+  },
+
+  MEMBERSHIP_ERRORS,
+  isLockTimeoutError,
 };

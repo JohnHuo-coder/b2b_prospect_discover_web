@@ -7,6 +7,8 @@ const userRepository = {
   findOrCreate: (userData) => userProvider.findOrCreate(userData),
   setRole: (uid, role) => userProvider.setRole(uid, role),
   updateUserBusinessId: (body) => userProvider.updateUserBusinessId(body),
+  leaveCompany: (body) => userProvider.leaveCompany(body),
+  updateMemberRoleByOwner: (body) => userProvider.updateMemberRoleByOwner(body),
 };
 
 export default userRepository;
