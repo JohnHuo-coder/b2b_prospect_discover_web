@@ -4,6 +4,7 @@ export const ENDPOINTS = {
     AUTH_LOGOUT: "/api/auth/logout",
     AUTH_BUSINESS_SIGNUP: "/api/auth/signup/business",
     AUTH_MEMBER_SIGNUP: "/api/auth/signup/member",
+    AUTH_ACCESS_REQUEST: "/api/auth/access-request",
     memberRole: (uid: string) => `/api/auth/members/${uid}/role`,
     ADMIN_MEMBERS: "/api/admin/members",
     LEADS: "/api/leads",

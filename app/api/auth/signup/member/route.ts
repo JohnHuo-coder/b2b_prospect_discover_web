@@ -1,8 +1,10 @@
 import { errorResponse, jsonResponse } from "@/lib/api/response";
 import "@/lib/firebase/firebase.js";
+import requestRepository from "@/server/repositories/requestRepository.js";
 import userRepository from "@/server/repositories/userRepository.js";
 import { getAuth } from "firebase-admin/auth";
 import { mapSignupError } from "@/lib/auth/mapSignupError";
+import { normalizeAccessReason } from "@/lib/auth/normalizeAccessReason";
 import { normalizeOptionalName } from "@/lib/auth/parseDisplayName";
 
 export async function POST(request: Request) {
@@ -15,6 +17,11 @@ export async function POST(request: Request) {
     const password = body.password;
     const first_name = normalizeOptionalName(body.first_name);
     const last_name = normalizeOptionalName(body.last_name);
+    const reason = normalizeAccessReason(body.reason);
+
+    if (!reason) {
+      return errorResponse("Note for website developer is required", 400);
+    }
 
     if (!email || !password) {
       return errorResponse("Email and password are required");
@@ -33,8 +40,14 @@ export async function POST(request: Request) {
       role: "pending",
       first_name,
       last_name,
+      approved: false,
     });
     dbUserCreated = true;
+
+    await requestRepository.createAccessRequest({
+      user_id: Number(user.id),
+      reason,
+    });
 
     const customToken = await getAuth().createCustomToken(uid);
 

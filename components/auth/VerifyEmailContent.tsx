@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { MailCheck } from "lucide-react";
 import { AuthButton, AuthShell } from "@/components/auth/AuthShell";
 import { EMAIL_VERIFICATION_SENT_MESSAGE } from "@/lib/auth/emailVerification";
+import { getPostAuthDestination } from "@/lib/auth/accessRouting";
 import { mapAuthCodeToMessage } from "@/lib/auth/mapAuthCodeToMessage";
 import { useUser } from "@/components/providers/UserProvider";
 
@@ -27,7 +28,7 @@ export function VerifyEmailContent() {
     }
 
     if (user.emailVerified) {
-      router.replace("/dashboard");
+      router.replace(getPostAuthDestination(user));
     }
   }, [isLoading, user, router]);
 
@@ -59,9 +60,9 @@ export function VerifyEmailContent() {
     setIsChecking(true);
 
     try {
-      const verified = await confirmEmailVerified();
-      if (verified) {
-        router.replace("/dashboard");
+      const appUser = await confirmEmailVerified();
+      if (appUser) {
+        router.replace(getPostAuthDestination(appUser));
         return;
       }
       setError(

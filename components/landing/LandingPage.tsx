@@ -15,6 +15,8 @@ import {
   Workflow,
 } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
+import { getPostAuthDestination } from "@/lib/auth/accessRouting";
+import { isUserApproved } from "@/lib/auth/isUserApproved";
 
 const features = [
   {
@@ -97,6 +99,13 @@ const steps = [
 export function LandingPage() {
   const { user, isLoading } = useUser();
   const isSignedIn = Boolean(user);
+  const signedInHref = user
+    ? getPostAuthDestination({
+        emailVerified: user.emailVerified,
+        approved: user.approved,
+        providerData: user.providerData,
+      })
+    : "/login";
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
@@ -114,10 +123,10 @@ export function LandingPage() {
           <div className="flex items-center gap-3">
             {!isLoading && isSignedIn ? (
               <Link
-                href="/dashboard"
+                href={signedInHref}
                 className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700"
               >
-                Go to Dashboard
+                {isUserApproved(user) ? "Go to Dashboard" : "View application status"}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             ) : (
@@ -132,7 +141,7 @@ export function LandingPage() {
                   href="/register"
                   className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700"
                 >
-                  Get started
+                  Apply for access
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </>
@@ -165,10 +174,10 @@ export function LandingPage() {
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 {isSignedIn ? (
                   <Link
-                    href="/dashboard"
+                    href={signedInHref}
                     className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-violet-700"
                   >
-                    Open Dashboard
+                    {isUserApproved(user) ? "Open Dashboard" : "View application status"}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 ) : (
@@ -177,7 +186,7 @@ export function LandingPage() {
                       href="/register"
                       className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-violet-700"
                     >
-                      Create account
+                      Apply for access
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                     <Link
@@ -291,10 +300,10 @@ export function LandingPage() {
             <div className="mt-8">
               {isSignedIn ? (
                 <Link
-                  href="/dashboard"
+                  href={signedInHref}
                   className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-medium text-violet-700 transition hover:bg-violet-50"
                 >
-                  Go to Dashboard
+                  {isUserApproved(user) ? "Go to Dashboard" : "View application status"}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               ) : (
@@ -302,7 +311,7 @@ export function LandingPage() {
                   href="/register"
                   className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-medium text-violet-700 transition hover:bg-violet-50"
                 >
-                  Get started free
+                  Apply for access
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               )}
@@ -319,7 +328,7 @@ export function LandingPage() {
               Log in
             </Link>
             <Link href="/register" className="transition hover:text-violet-600">
-              Register
+              Apply for access
             </Link>
           </div>
         </div>

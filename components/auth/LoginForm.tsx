@@ -3,7 +3,6 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { auth } from "@/lib/firebase/client";
 import {
   AuthButton,
   AuthDivider,
@@ -12,7 +11,7 @@ import {
   GoogleButton,
 } from "@/components/auth/AuthShell";
 import { useUser } from "@/components/providers/UserProvider";
-import { requiresEmailVerification } from "@/lib/auth/emailVerification";
+import { getPostAuthDestination } from "@/lib/auth/accessRouting";
 import {
   isAuthCancellation,
   mapAuthCodeToMessage,
@@ -41,12 +40,8 @@ export function LoginForm() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      if (auth.currentUser && requiresEmailVerification(auth.currentUser)) {
-        router.replace("/verify-email");
-        return;
-      }
-      router.replace("/dashboard");
+      const appUser = await login(email, password);
+      router.replace(getPostAuthDestination(appUser));
     } catch (err) {
       const code = (err as FirebaseAuthError).code ?? "";
       setError(mapAuthCodeToMessage(code));
@@ -60,9 +55,9 @@ export function LoginForm() {
     setIsGoogleLoading(true);
 
     try {
-      const shouldNavigate = await googleAuth();
-      if (shouldNavigate) {
-        router.replace("/dashboard");
+      const appUser = await googleAuth();
+      if (appUser) {
+        router.replace(getPostAuthDestination(appUser));
       }
     } catch (err) {
       const code = (err as FirebaseAuthError).code ?? "";
@@ -129,7 +124,7 @@ export function LoginForm() {
       <p className="mt-6 text-center text-sm text-gray-500">
         Don&apos;t have an account?{" "}
         <Link href="/register" className="font-medium text-violet-600 hover:text-violet-700">
-          Create one
+          Apply for access
         </Link>
       </p>
     </AuthShell>

@@ -26,6 +26,11 @@ import {
 import { useUser } from "@/components/providers/UserProvider";
 import { getUserDisplayName, hasUserName } from "@/lib/auth/userDisplay";
 import { BUSINESS_NAME_IMMUTABLE_HINT } from "@/lib/constants/business-identity";
+import {
+  ACCESS_REQUEST_NOTE_HELP,
+  ACCESS_REQUEST_NOTE_LABEL,
+  ACCESS_REQUEST_NOTE_PLACEHOLDER,
+} from "@/lib/constants/access-request";
 import { statusLabels, type Lead, type LeadStatus } from "@/lib/mock-data";
 
 const summaryCardMeta = [
@@ -170,6 +175,7 @@ function PendingDashboard() {
   const userBusinessId = normalizeBusinessId(user?.business_id);
   const [search, setSearch] = useState("");
   const [businessName, setBusinessName] = useState("");
+  const [developerNote, setDeveloperNote] = useState("");
   const [results, setResults] = useState<BusinessSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -256,8 +262,13 @@ function PendingDashboard() {
 
   const handleCreateCompany = async () => {
     const trimmedName = businessName.trim();
+    const trimmedNote = developerNote.trim();
     if (!trimmedName) {
       setActionError("Business name is required");
+      return;
+    }
+    if (!trimmedNote) {
+      setActionError("Note for website developer is required");
       return;
     }
 
@@ -265,7 +276,7 @@ function PendingDashboard() {
     setActionError("");
 
     try {
-      await createBusiness(trimmedName);
+      await createBusiness(trimmedName, trimmedNote);
       await refreshUser();
     } catch (err) {
       setActionError(
@@ -310,9 +321,29 @@ function PendingDashboard() {
             className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100 disabled:cursor-not-allowed disabled:bg-gray-50"
           />
           <p className="text-xs text-gray-500">{BUSINESS_NAME_IMMUTABLE_HINT}</p>
+          <label className="block">
+            <span className="mb-1.5 block text-sm font-medium text-gray-700">
+              {ACCESS_REQUEST_NOTE_LABEL}
+              <span className="text-red-500"> *</span>
+            </span>
+            <textarea
+              value={developerNote}
+              onChange={(event) => setDeveloperNote(event.target.value)}
+              placeholder={ACCESS_REQUEST_NOTE_PLACEHOLDER}
+              rows={4}
+              disabled={!canCreateCompany || creating}
+              className="w-full resize-y rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100 disabled:cursor-not-allowed disabled:bg-gray-50"
+            />
+            <p className="mt-1.5 text-xs text-gray-500">{ACCESS_REQUEST_NOTE_HELP}</p>
+          </label>
           <button
             type="button"
-            disabled={!canCreateCompany || creating || !businessName.trim()}
+            disabled={
+              !canCreateCompany ||
+              creating ||
+              !businessName.trim() ||
+              !developerNote.trim()
+            }
             onClick={() => void handleCreateCompany()}
             className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500"
           >

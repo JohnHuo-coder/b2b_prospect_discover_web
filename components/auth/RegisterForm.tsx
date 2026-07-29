@@ -9,10 +9,22 @@ import {
   AuthDivider,
   AuthField,
   AuthShell,
+  AuthTextArea,
   GoogleButton,
 } from "@/components/auth/AuthShell";
-import { businessSignup, memberSignup } from "@/lib/api/auth-client";
+import {
+  businessSignup,
+  memberSignup,
+  submitAccessRequestWithToken,
+} from "@/lib/api/auth-client";
+import { getPostAuthDestination } from "@/lib/auth/accessRouting";
 import { BUSINESS_NAME_IMMUTABLE_HINT } from "@/lib/constants/business-identity";
+import {
+  ACCESS_REQUEST_NOTE_HELP,
+  ACCESS_REQUEST_NOTE_LABEL,
+  ACCESS_REQUEST_NOTE_PLACEHOLDER,
+  PENDING_ACCESS_NOTE_STORAGE_KEY,
+} from "@/lib/constants/access-request";
 import { auth } from "@/lib/firebase/client";
 import { useUser } from "@/components/providers/UserProvider";
 import {
@@ -26,8 +38,8 @@ type FirebaseAuthError = {
   code?: string;
 };
 
-const ACCOUNT_CREATED_MESSAGE =
-  "Account created! Check your email to verify your account before signing in.";
+const APPLICATION_SUBMITTED_MESSAGE =
+  "Application submitted! Check your email to verify your account before signing in.";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -39,6 +51,7 @@ export function RegisterForm() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [developerNote, setDeveloperNote] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -48,8 +61,16 @@ export function RegisterForm() {
     setError("");
     setIsSubmitting(true);
 
+    const trimmedNote = developerNote.trim();
+
     if (mode === "business" && !businessName.trim()) {
       setError("Business name is required");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!trimmedNote) {
+      setError("Note for website developer is required");
       setIsSubmitting(false);
       return;
     }
@@ -72,9 +93,15 @@ export function RegisterForm() {
               business_name: businessName.trim(),
               email,
               password,
+              reason: trimmedNote,
               ...optionalNames,
             })
-          : await memberSignup({ email, password, ...optionalNames });
+          : await memberSignup({
+              email,
+              password,
+              reason: trimmedNote,
+              ...optionalNames,
+            });
 
       if (response?.customToken) {
         try {
@@ -86,16 +113,16 @@ export function RegisterForm() {
         } catch (loginError) {
           console.warn("Auto-login failed after account creation:", loginError);
           router.push(
-            `/login?message=${encodeURIComponent(ACCOUNT_CREATED_MESSAGE)}`
+            `/login?message=${encodeURIComponent(APPLICATION_SUBMITTED_MESSAGE)}`
           );
         }
       } else {
         router.push(
-          `/login?message=${encodeURIComponent(ACCOUNT_CREATED_MESSAGE)}`
+          `/login?message=${encodeURIComponent(APPLICATION_SUBMITTED_MESSAGE)}`
         );
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Signup failed");
+      setError(err instanceof Error ? err.message : "Application failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -103,14 +130,31 @@ export function RegisterForm() {
 
   const handleGoogleSignUp = async () => {
     setError("");
+
+    const trimmedNote = developerNote.trim();
+    if (!trimmedNote) {
+      setError("Note for website developer is required");
+      return;
+    }
+
     setIsGoogleLoading(true);
 
     try {
-      const shouldNavigate = await googleAuth();
-      if (shouldNavigate) {
-        router.replace("/dashboard");
+      sessionStorage.setItem(PENDING_ACCESS_NOTE_STORAGE_KEY, trimmedNote);
+      const appUser = await googleAuth();
+      if (!appUser) {
+        return;
       }
+
+      const idToken = await auth.currentUser?.getIdToken();
+      if (idToken) {
+        await submitAccessRequestWithToken(idToken, trimmedNote);
+      }
+
+      sessionStorage.removeItem(PENDING_ACCESS_NOTE_STORAGE_KEY);
+      router.replace(getPostAuthDestination(appUser));
     } catch (err) {
+      sessionStorage.removeItem(PENDING_ACCESS_NOTE_STORAGE_KEY);
       const code = (err as FirebaseAuthError).code ?? "";
       if (!isAuthCancellation(code)) {
         setError(mapAuthCodeToMessage(code));
@@ -124,11 +168,11 @@ export function RegisterForm() {
 
   return (
     <AuthShell
-      title="Create an account"
+      title="Apply for access"
       subtitle={
         mode === "business"
-          ? "Register your business and owner account"
-          : "Join as a team member"
+          ? "Apply with your business and owner account"
+          : "Apply as a team member"
       }
     >
       <div className="mb-6 grid grid-cols-2 gap-2 rounded-lg bg-gray-100 p-1">
@@ -211,6 +255,15 @@ export function RegisterForm() {
           autoComplete="new-password"
         />
 
+        <AuthTextArea
+          label={ACCESS_REQUEST_NOTE_LABEL}
+          value={developerNote}
+          onChange={setDeveloperNote}
+          placeholder={ACCESS_REQUEST_NOTE_PLACEHOLDER}
+          hint={ACCESS_REQUEST_NOTE_HELP}
+          required
+        />
+
         {error ? (
           <p className="text-sm text-red-600" role="alert">
             {error}
@@ -220,10 +273,10 @@ export function RegisterForm() {
         <div className="pt-2">
           <AuthButton type="submit" disabled={isBusy}>
             {isSubmitting
-              ? "Creating account..."
+              ? "Submitting application..."
               : mode === "business"
-                ? "Create business account"
-                : "Create member account"}
+                ? "Apply as business"
+                : "Apply as member"}
           </AuthButton>
         </div>
       </form>
@@ -236,8 +289,8 @@ export function RegisterForm() {
             disabled={isBusy}
             label={
               isGoogleLoading
-                ? "Signing up with Google..."
-                : "Continue with Google"
+                ? "Applying with Google..."
+                : "Apply with Google"
             }
           />
         </>

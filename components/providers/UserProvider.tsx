@@ -30,6 +30,7 @@ type BackendUser = {
   first_name?: string | null;
   last_name?: string | null;
   is_admin?: boolean;
+  approved?: boolean;
 };
 
 export type AppUser = FirebaseUser & BackendUser;
@@ -75,12 +76,12 @@ type UserContextValue = {
   user: AppUser | null;
   isLoading: boolean;
   refreshUser: () => Promise<void>;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<AppUser>;
   logout: () => Promise<boolean>;
-  googleAuth: () => Promise<boolean>;
+  googleAuth: () => Promise<AppUser | false>;
   requestPasswordReset: (email: string) => Promise<boolean>;
   resendVerificationEmail: () => Promise<void>;
-  confirmEmailVerified: () => Promise<boolean>;
+  confirmEmailVerified: () => Promise<AppUser | null>;
 };
 
 const UserContext = createContext<UserContextValue | null>(null);
@@ -112,7 +113,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const credential = await signInWithEmailAndPassword(auth, email, password);
       const appUser = await syncBackendSession(credential.user);
       setUser(appUser);
-      return true;
+      return appUser;
     } catch (error) {
       console.error("Login error:", error);
       throw error;
@@ -139,7 +140,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const credential = await signInWithPopup(auth, googleProvider);
       const appUser = await syncBackendSession(credential.user);
       setUser(appUser);
-      return true;
+      return appUser;
     } catch (error) {
       console.error("Google auth error:", error);
       throw error;
@@ -168,19 +169,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const confirmEmailVerified = async () => {
     const firebaseUser = auth.currentUser;
     if (!firebaseUser) {
-      return false;
+      return null;
     }
 
     await reload(firebaseUser);
     await firebaseUser.getIdToken(true);
 
     if (!firebaseUser.emailVerified) {
-      return false;
+      return null;
     }
 
     const appUser = await syncBackendSession(firebaseUser);
     setUser(appUser);
-    return true;
+    return appUser;
   };
 
   const refreshUser = useCallback(async () => {

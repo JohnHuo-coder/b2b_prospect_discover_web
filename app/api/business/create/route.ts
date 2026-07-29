@@ -1,7 +1,9 @@
 import { errorResponse, jsonResponse } from "@/lib/api/response";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { mapMembershipError } from "@/lib/api/mapMembershipError";
+import { normalizeAccessReason } from "@/lib/auth/normalizeAccessReason";
 import businessRepository from "@/server/repositories/businessRepository.js";
+import requestRepository from "@/server/repositories/requestRepository.js";
 import userRepository from "@/server/repositories/userRepository.js";
 
 type DbUser = {
@@ -28,12 +30,20 @@ export const POST = withAuth(
         );
       }
 
-      const body = (await request.json()) as { business_name?: unknown };
+      const body = (await request.json()) as {
+        business_name?: unknown;
+        reason?: unknown;
+      };
       const business_name =
         typeof body.business_name === "string" ? body.business_name.trim() : "";
+      const reason = normalizeAccessReason(body.reason);
 
       if (!business_name) {
         return errorResponse("Business name is required", 400);
+      }
+
+      if (!reason) {
+        return errorResponse("Note for website developer is required", 400);
       }
 
       await businessRepository.createBusinessForPendingUser({
@@ -43,9 +53,14 @@ export const POST = withAuth(
 
       const updatedUser = await userRepository.findByUid(user.firebaseUid);
 
-      if (!updatedUser) {
+      if (!updatedUser?.id) {
         return errorResponse("User not found", 404);
       }
+
+      await requestRepository.createAccessRequest({
+        user_id: Number(updatedUser.id),
+        reason,
+      });
 
       return jsonResponse(
         {

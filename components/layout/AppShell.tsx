@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/components/providers/UserProvider";
 import { requiresEmailVerification } from "@/lib/auth/emailVerification";
+import { isUserApproved } from "@/lib/auth/isUserApproved";
 import { Sidebar } from "./Sidebar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -18,6 +19,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
     if (requiresEmailVerification(user)) {
       router.replace("/verify-email");
+      return;
+    }
+    if (!isUserApproved(user)) {
+      router.replace("/no-access");
     }
   }, [isLoading, user, router]);
 
@@ -29,7 +34,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user || requiresEmailVerification(user)) {
+  if (!user || requiresEmailVerification(user) || !isUserApproved(user)) {
     return null;
   }
 

@@ -77,12 +77,13 @@ export async function leaveCompany(): Promise<Record<string, unknown>> {
 }
 
 export async function createBusiness(
-  business_name: string
+  business_name: string,
+  reason: string
 ): Promise<Record<string, unknown>> {
   const response = await authenticatedFetch(ENDPOINTS.BUSINESS_CREATE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ business_name }),
+    body: JSON.stringify({ business_name, reason }),
   });
 
   if (!response.ok) {

@@ -11,6 +11,7 @@ async function findByUid(uid) {
        u.first_name,
        u.last_name,
        u.is_admin,
+       u.approved,
        b.business_name,
        GREATEST(
          COALESCE(b.version, 0),
@@ -83,12 +84,20 @@ async function runMembershipTransaction(callback) {
 }
 
 export default {
-  async createUser({ uid, email, role, business_id, first_name = null, last_name = null }) {
+  async createUser({
+    uid,
+    email,
+    role,
+    business_id,
+    first_name = null,
+    last_name = null,
+    approved = false,
+  }) {
     const { rows } = await pool.query(
-      `INSERT INTO prospect_discover.users (firebase_uid, email, role, business_id, first_name, last_name)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, firebase_uid AS "firebaseUid", email, role, business_id, first_name, last_name`,
-      [uid, email, role, business_id ?? null, first_name, last_name]
+      `INSERT INTO prospect_discover.users (firebase_uid, email, role, business_id, first_name, last_name, approved)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, firebase_uid AS "firebaseUid", email, role, business_id, first_name, last_name, approved`,
+      [uid, email, role, business_id ?? null, first_name, last_name, approved]
     );
     return rows[0];
   },

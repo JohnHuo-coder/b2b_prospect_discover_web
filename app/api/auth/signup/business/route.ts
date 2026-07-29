@@ -1,15 +1,18 @@
 import { errorResponse, jsonResponse } from "@/lib/api/response";
 import "@/lib/firebase/firebase.js";
 import businessRepository from "@/server/repositories/businessRepository.js";
+import requestRepository from "@/server/repositories/requestRepository.js";
 import userRepository from "@/server/repositories/userRepository.js";
 import { getAuth } from "firebase-admin/auth";
 import { mapSignupError } from "@/lib/auth/mapSignupError";
+import { normalizeAccessReason } from "@/lib/auth/normalizeAccessReason";
 import { normalizeOptionalName } from "@/lib/auth/parseDisplayName";
 
 export async function POST(request: Request) {
   let uid: string | undefined;
   let dbBusinessCreated = false;
   let dbUserCreated = false;
+  let createdUserId: number | undefined;
 
   try {
     const body = await request.json();
@@ -19,9 +22,14 @@ export async function POST(request: Request) {
     const password = body.password;
     const first_name = normalizeOptionalName(body.first_name);
     const last_name = normalizeOptionalName(body.last_name);
+    const reason = normalizeAccessReason(body.reason);
 
     if (!business_name) {
       return errorResponse("Business name is required", 400);
+    }
+
+    if (!reason) {
+      return errorResponse("Note for website developer is required", 400);
     }
 
     if (!email || !password) {
@@ -48,8 +56,15 @@ export async function POST(request: Request) {
       business_id: business.business_id,
       first_name,
       last_name,
+      approved: false,
     });
     dbUserCreated = true;
+    createdUserId = Number(user.id);
+
+    await requestRepository.createAccessRequest({
+      user_id: createdUserId,
+      reason,
+    });
 
     const customToken = await getAuth().createCustomToken(uid);
 
