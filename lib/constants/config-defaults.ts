@@ -1,4 +1,8 @@
 import { clampCandidatesPerRun } from "@/lib/constants/candidates-per-run";
+import {
+  normalizeContactCategories,
+  type ContactCategory,
+} from "@/lib/constants/contact-categories";
 
 export const DEFAULT_CONTACT_TITLES = [
   "Director of Sales",
@@ -7,6 +11,8 @@ export const DEFAULT_CONTACT_TITLES = [
   "Director of Marketing",
   "Marketing Manager",
 ] as const;
+
+export const DEFAULT_CONTACT_CATEGORIES = ["sales", "marketing"] as const;
 
 export const DEFAULT_RUN_SETTINGS = {
   min_words: 90,
@@ -45,6 +51,19 @@ export function resolveContactTitles(saved: string[]): string[] {
   return saved;
 }
 
+export function getDefaultContactCategories(): ContactCategory[] {
+  return normalizeContactCategories([...DEFAULT_CONTACT_CATEGORIES]);
+}
+
+export function resolveContactCategories(saved: string[]): ContactCategory[] {
+  const normalized = normalizeContactCategories(saved);
+  if (normalized.length === 0) {
+    return getDefaultContactCategories();
+  }
+
+  return normalized;
+}
+
 export function resolveRunSettings(settings: {
   min_words: number | null;
   max_words: number | null;
@@ -62,6 +81,10 @@ export function resolveRunSettings(settings: {
 
 export function formatDefaultContactTitlesHelp(): string {
   return `Default titles:\n${DEFAULT_CONTACT_TITLES.join("\n")}`;
+}
+
+export function formatDefaultContactCategoriesHelp(): string {
+  return `Default categories:\n${getDefaultContactCategories().join("\n")}`;
 }
 
 export function formatDefaultRunSettingsHelp(): string {

@@ -27,15 +27,28 @@ import {
   ConfigurationEditForm,
   validateBusinessConfigDraft,
 } from "@/components/configuration/ConfigurationEditForm";
-import { DISTANCE_REQUIREMENT_VIEW_FOOTER } from "@/lib/constants/distance-requirement";
+import { DISTANCE_REQUIREMENT_VIEW_FOOTER, COMPANY_LATITUDE_HELP, COMPANY_LONGITUDE_HELP } from "@/lib/constants/distance-requirement";
+import {
+  DEFAULT_FIT_SCORE_CUTOFF,
+  FIT_SCORE_CUTOFF_HELP,
+} from "@/lib/constants/scoring-thresholds";
 import { ConfigCard, Field, TagList } from "@/components/ui/ConfigCard";
 import { SkeletonBar } from "@/components/ui/SkeletonBar";
 import { useUser } from "@/components/providers/UserProvider";
 import {
   DEFAULT_CONTACT_TITLES,
   DEFAULT_RUN_SETTINGS,
+  getDefaultContactCategories,
 } from "@/lib/constants/config-defaults";
-import { BUSINESS_NAME_IMMUTABLE_HINT } from "@/lib/constants/business-identity";
+import {
+  BUSINESS_NAME_IMMUTABLE_HINT,
+  COLLABORATION_INTENT_HELP,
+} from "@/lib/constants/business-identity";
+import { REQUIREMENTS_HELP, REQUIREMENTS_TESTING_NOTICE } from "@/lib/constants/requirements";
+import {
+  TARGET_PARTNER_SEARCH_KEYWORD_HELP,
+  TARGET_PARTNER_SEARCH_LOCATION_HELP,
+} from "@/lib/constants/target-partner";
 
 const emptyConfig: BusinessConfigState = {
   version: 0,
@@ -48,13 +61,13 @@ const emptyConfig: BusinessConfigState = {
   lat: null,
   lon: null,
   max_distance_km: null,
-  fit_score_cutoff: null,
+  fit_score_cutoff: DEFAULT_FIT_SCORE_CUTOFF,
   search_keyword: "",
   search_location: "",
   industry: [],
   industry_id: [],
   contact_titles: [...DEFAULT_CONTACT_TITLES],
-  contact_categories: [],
+  contact_categories: getDefaultContactCategories(),
   subject_line: "",
   min_words: DEFAULT_RUN_SETTINGS.min_words,
   max_words: DEFAULT_RUN_SETTINGS.max_words,
@@ -419,6 +432,7 @@ export function ConfigurationContent() {
             <div className="mt-6">
               <Field
                 label="Collaboration Intent"
+                helpContent={COLLABORATION_INTENT_HELP}
                 value={
                   hasText(config.collaboration_intent) ? (
                     <p className="rounded-lg bg-gray-50 p-4 leading-relaxed text-gray-700">
@@ -432,7 +446,10 @@ export function ConfigurationContent() {
             </div>
           </ConfigCard>
 
-          <ConfigCard icon={List} title="Requirements">
+          <ConfigCard icon={List} title="Requirements" titleHelpContent={REQUIREMENTS_HELP}>
+            <p className="mb-4 text-xs leading-relaxed text-gray-500">
+              {REQUIREMENTS_TESTING_NOTICE}
+            </p>
             {displayRequirements(config.requirements)}
           </ConfigCard>
 
@@ -451,8 +468,12 @@ export function ConfigurationContent() {
                 label="Distance Requirement"
                 value={displayBoolean(config.has_distance_requirement)}
               />
-              <Field label="Latitude" value={displayNumber(config.lat)} />
-              <Field label="Longitude" value={displayNumber(config.lon)} />
+              <Field
+                label="Latitude"
+                helpContent={COMPANY_LATITUDE_HELP}
+                value={displayNumber(config.lat)}
+              />
+              <Field label="Longitude" helpContent={COMPANY_LONGITUDE_HELP} value={displayNumber(config.lon)} />
               <Field label="Max Distance (km)" value={displayNumber(config.max_distance_km)} />
             </div>
           </ConfigCard>
@@ -460,6 +481,7 @@ export function ConfigurationContent() {
           <ConfigCard icon={BarChart3} title="Scoring Thresholds">
             <Field
               label="Fit Score Cutoff"
+              helpContent={FIT_SCORE_CUTOFF_HELP}
               value={displayNumber(config.fit_score_cutoff)}
             />
           </ConfigCard>
@@ -470,8 +492,16 @@ export function ConfigurationContent() {
                 label="Industry"
                 value={<TagList items={config.industry} variant="purple" />}
               />
-              <Field label="Search Keyword" value={displayText(config.search_keyword)} />
-              <Field label="Search Location" value={displayText(config.search_location)} />
+              <Field
+                label="Search Keyword"
+                helpContent={TARGET_PARTNER_SEARCH_KEYWORD_HELP}
+                value={displayText(config.search_keyword)}
+              />
+              <Field
+                label="Search Location"
+                helpContent={TARGET_PARTNER_SEARCH_LOCATION_HELP}
+                value={displayText(config.search_location)}
+              />
             </div>
           </ConfigCard>
 

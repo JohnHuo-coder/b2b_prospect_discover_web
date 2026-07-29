@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { Sparkles, X } from "lucide-react";
 import type { RephraseSuggestion } from "@/lib/api/business-config-client";
+import {
+  MAX_REQUIREMENTS,
+  REQUIREMENT_INPUT_PLACEHOLDER,
+  REQUIREMENTS_TESTING_NOTICE,
+} from "@/lib/constants/requirements";
 
 export function RequirementsEditForm({
   requirements,
@@ -21,6 +26,7 @@ export function RequirementsEditForm({
 }) {
   const [newRequirement, setNewRequirement] = useState("");
   const hasPendingSuggestions = rephraseSuggestions.some(Boolean);
+  const atRequirementLimit = requirements.length >= MAX_REQUIREMENTS;
 
   const updateRequirement = (index: number, value: string) => {
     onChange(requirements.map((item, i) => (i === index ? value : item)));
@@ -33,13 +39,17 @@ export function RequirementsEditForm({
 
   const addRequirement = () => {
     const trimmed = newRequirement.trim();
-    if (!trimmed) return;
+    if (!trimmed || atRequirementLimit) return;
     onChange([...requirements, trimmed]);
     setNewRequirement("");
   };
 
   return (
     <div>
+      <p className="mb-4 text-xs leading-relaxed text-gray-500">
+        {REQUIREMENTS_TESTING_NOTICE}
+      </p>
+
       <div className="space-y-3">
         {requirements.map((requirement, index) => (
           <div key={`${index}-${requirement.slice(0, 20)}`} className="flex items-start gap-3">
@@ -70,7 +80,12 @@ export function RequirementsEditForm({
         <input
           type="text"
           value={newRequirement}
-          placeholder="Add a requirement..."
+          placeholder={
+            atRequirementLimit
+              ? `Maximum of ${MAX_REQUIREMENTS} requirements reached`
+              : REQUIREMENT_INPUT_PLACEHOLDER
+          }
+          disabled={atRequirementLimit}
           onChange={(event) => setNewRequirement(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
@@ -78,12 +93,13 @@ export function RequirementsEditForm({
               addRequirement();
             }
           }}
-          className="flex-1 rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+          className="flex-1 rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-violet-300 focus:ring-2 focus:ring-violet-100 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
         />
         <button
           type="button"
           onClick={addRequirement}
-          className="shrink-0 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+          disabled={atRequirementLimit}
+          className="shrink-0 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-transparent"
         >
           + Add
         </button>

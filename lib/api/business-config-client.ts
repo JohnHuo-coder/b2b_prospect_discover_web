@@ -7,11 +7,17 @@ import { ENDPOINTS } from "@/lib/api/endpoints";
 import { formatRephraseErrorMessage } from "@/lib/constants/rephrase-requirements";
 import { authenticatedFetch } from "@/lib/api/authenticatedFetch";
 import {
+  getDefaultContactCategories,
+  resolveContactCategories,
   resolveContactTitles,
   resolveRunSettings,
   resolveSubjectLine,
 } from "@/lib/constants/config-defaults";
-import { normalizeContactCategories, toStoredContactCategories } from "@/lib/constants/contact-categories";
+import { DEFAULT_FIT_SCORE_CUTOFF } from "@/lib/constants/scoring-thresholds";
+import {
+  normalizeContactCategories,
+  toStoredContactCategories,
+} from "@/lib/constants/contact-categories";
 import {
   industriesFromState,
   splitIndustrySelection,
@@ -132,13 +138,13 @@ export function mapBusinessConfigResponse(
     lat: toNumber(cfg.lat),
     lon: toNumber(cfg.lon),
     max_distance_km: toNumber(cfg.max_distance_km),
-    fit_score_cutoff: toNumber(cfg.fit_score_cutoff),
+    fit_score_cutoff: toNumber(cfg.fit_score_cutoff) ?? DEFAULT_FIT_SCORE_CUTOFF,
     search_keyword: toStringValue(cfg.search_keyword),
     search_location: toStringValue(cfg.search_location ?? cfg.location),
     industry,
     industry_id,
     contact_titles,
-    contact_categories: normalizeContactCategories(toStringArray(cfg.contact_categories)),
+    contact_categories: resolveContactCategories(toStringArray(cfg.contact_categories)),
     subject_line: resolveSubjectLine(toStringValue(cfg.subject_line), business_name),
     min_words: runSettings.min_words,
     max_words: runSettings.max_words,

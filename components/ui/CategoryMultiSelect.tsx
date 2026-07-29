@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronDown, X } from "lucide-react";
+import { FormLabelRow } from "@/components/ui/HelpTooltip";
 import {
   CONTACT_CATEGORY_OPTIONS,
   type ContactCategory,
@@ -12,11 +13,17 @@ export function CategoryMultiSelect({
   hint,
   value,
   onChange,
+  required = false,
+  helpContent,
+  onRestoreDefaults,
 }: {
   label: string;
   hint?: string;
   value: ContactCategory[];
   onChange: (value: ContactCategory[]) => void;
+  required?: boolean;
+  helpContent?: ReactNode;
+  onRestoreDefaults?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -49,9 +56,12 @@ export function CategoryMultiSelect({
 
   return (
     <div ref={containerRef} className="relative block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
-        {label}
-      </span>
+      <FormLabelRow
+        label={label}
+        required={required}
+        helpContent={helpContent}
+        onRestoreDefaults={onRestoreDefaults}
+      />
       <div
         role="combobox"
         aria-expanded={open}

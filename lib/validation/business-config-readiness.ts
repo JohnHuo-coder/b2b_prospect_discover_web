@@ -3,6 +3,7 @@ import {
   isValidCandidatesPerRun,
 } from "@/lib/constants/candidates-per-run";
 import type { BusinessConfigState } from "@/lib/types/business-config";
+import { MAX_REQUIREMENTS } from "@/lib/constants/requirements";
 
 const SCORING_THRESHOLD_MIN = 0;
 const SCORING_THRESHOLD_MAX = 100;
@@ -60,6 +61,13 @@ export function validateBusinessConfigForRun(
     });
   }
 
+  if (config.requirements.length > MAX_REQUIREMENTS) {
+    issues.push({
+      section: "Requirements",
+      message: `At most ${MAX_REQUIREMENTS} requirements are allowed`,
+    });
+  }
+
   if (!isValidScoringThreshold(config.fit_score_cutoff)) {
     issues.push({
       section: "Scoring Thresholds",
@@ -92,6 +100,13 @@ export function validateBusinessConfigForRun(
     issues.push({
       section: "Contact Preferences",
       message: "At least one contact title is required",
+    });
+  }
+
+  if (config.contact_categories.length === 0) {
+    issues.push({
+      section: "Contact Preferences",
+      message: "At least one contact category is required",
     });
   }
 

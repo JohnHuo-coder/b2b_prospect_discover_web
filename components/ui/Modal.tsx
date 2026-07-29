@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { X } from "lucide-react";
+import { FormLabelRow } from "@/components/ui/HelpTooltip";
 
 export function Modal({
   open,
@@ -114,6 +115,8 @@ export function TextInput({
   min,
   max,
   hint,
+  helpContent,
+  onRestoreDefaults,
   disabled = false,
   readOnly = false,
 }: {
@@ -126,6 +129,8 @@ export function TextInput({
   min?: number;
   max?: number;
   hint?: string;
+  helpContent?: ReactNode;
+  onRestoreDefaults?: () => void;
   disabled?: boolean;
   readOnly?: boolean;
 }) {
@@ -133,10 +138,12 @@ export function TextInput({
 
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
-        {label}
-        {required ? <span className="text-red-500"> *</span> : null}
-      </span>
+      <FormLabelRow
+        label={label}
+        required={required}
+        helpContent={helpContent}
+        onRestoreDefaults={onRestoreDefaults}
+      />
       <input
         type={type}
         value={value}
@@ -162,6 +169,7 @@ export function TextArea({
   rows = 4,
   placeholder,
   hint,
+  helpContent,
   required = false,
 }: {
   label: string;
@@ -170,14 +178,16 @@ export function TextArea({
   rows?: number;
   placeholder?: string;
   hint?: string;
+  helpContent?: ReactNode;
   required?: boolean;
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
-        {label}
-        {required ? <span className="text-red-500"> *</span> : null}
-      </span>
+      <FormLabelRow
+        label={label}
+        required={required}
+        helpContent={helpContent}
+      />
       <textarea
         value={value}
         rows={rows}
@@ -198,6 +208,8 @@ export function NumberInput({
   min,
   max,
   hint,
+  helpContent,
+  onRestoreDefaults,
   disabled = false,
 }: {
   label: string;
@@ -207,6 +219,8 @@ export function NumberInput({
   min?: number;
   max?: number;
   hint?: string;
+  helpContent?: ReactNode;
+  onRestoreDefaults?: () => void;
   disabled?: boolean;
 }) {
   return (
@@ -217,6 +231,8 @@ export function NumberInput({
       min={min}
       max={max}
       hint={hint}
+      helpContent={helpContent}
+      onRestoreDefaults={onRestoreDefaults}
       disabled={disabled}
       value={value === null || value === undefined ? "" : String(value)}
       onChange={(next) => {

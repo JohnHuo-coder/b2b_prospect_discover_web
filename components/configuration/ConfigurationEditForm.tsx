@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import type { BusinessConfigState } from "@/lib/types/business-config";
 import type { RephraseSuggestion } from "@/lib/api/business-config-client";
-import { BUSINESS_NAME_IMMUTABLE_HINT } from "@/lib/constants/business-identity";
+import { BUSINESS_NAME_IMMUTABLE_HINT, COLLABORATION_INTENT_HELP, COLLABORATION_INTENT_PLACEHOLDER } from "@/lib/constants/business-identity";
 import { ConfigCard } from "@/components/ui/ConfigCard";
 import {
   RequirementsEditForm,
@@ -30,8 +30,28 @@ import {
   TextArea,
   TextInput,
 } from "@/components/ui/Modal";
-import { IndustryMultiSelect } from "@/components/configuration/IndustryMultiSelect";
-import { DISTANCE_REQUIREMENT_HINT } from "@/lib/constants/distance-requirement";
+import {
+  MAX_REQUIREMENTS,
+  REQUIREMENT_INPUT_PLACEHOLDER,
+  REQUIREMENTS_HELP,
+} from "@/lib/constants/requirements";
+import {
+  TARGET_PARTNER_INDUSTRY_HINT,
+  TARGET_PARTNER_SEARCH_KEYWORD_HELP,
+  TARGET_PARTNER_SEARCH_KEYWORD_PLACEHOLDER,
+  TARGET_PARTNER_SEARCH_LOCATION_HELP,
+  TARGET_PARTNER_SEARCH_LOCATION_PLACEHOLDER,
+} from "@/lib/constants/target-partner";
+import {
+  DISTANCE_REQUIREMENT_HINT,
+  COMPANY_LATITUDE_HELP,
+  COMPANY_LONGITUDE_HELP,
+} from "@/lib/constants/distance-requirement";
+import {
+  DEFAULT_FIT_SCORE_CUTOFF,
+  FIT_SCORE_CUTOFF_HELP,
+  formatDefaultFitScoreCutoffHelp,
+} from "@/lib/constants/scoring-thresholds";
 import {
   industriesFromState,
   splitIndustrySelection,
@@ -94,11 +114,13 @@ export function ConfigurationEditForm({
             rows={6}
             value={draft.collaboration_intent}
             onChange={(value) => onPatch("collaboration_intent", value)}
+            placeholder={COLLABORATION_INTENT_PLACEHOLDER}
+            helpContent={COLLABORATION_INTENT_HELP}
           />
         </div>
       </ConfigCard>
 
-      <ConfigCard icon={List} title="Requirements">
+      <ConfigCard icon={List} title="Requirements" titleHelpContent={REQUIREMENTS_HELP}>
         <RequirementsEditForm
           requirements={draft.requirements}
           onChange={onRequirementsChange}
@@ -135,11 +157,13 @@ export function ConfigurationEditForm({
                 label="Latitude"
                 value={draft.lat}
                 onChange={(value) => onPatch("lat", value)}
+                helpContent={COMPANY_LATITUDE_HELP}
               />
               <NumberInput
                 label="Longitude"
                 value={draft.lon}
                 onChange={(value) => onPatch("lon", value)}
+                helpContent={COMPANY_LONGITUDE_HELP}
               />
               <NumberInput
                 label="Max Distance (km)"
@@ -160,6 +184,8 @@ export function ConfigurationEditForm({
             min={SCORING_THRESHOLD_MIN}
             max={SCORING_THRESHOLD_MAX}
             hint={`Must be between ${SCORING_THRESHOLD_MIN} and ${SCORING_THRESHOLD_MAX}.`}
+            helpContent={`${FIT_SCORE_CUTOFF_HELP}\n${formatDefaultFitScoreCutoffHelp()}`}
+            onRestoreDefaults={() => onPatch("fit_score_cutoff", DEFAULT_FIT_SCORE_CUTOFF)}
             value={draft.fit_score_cutoff}
             onChange={(value) => onPatch("fit_score_cutoff", value)}
           />
@@ -170,6 +196,7 @@ export function ConfigurationEditForm({
         <div className="space-y-4">
           <IndustryMultiSelect
             label="Industry"
+            hint={TARGET_PARTNER_INDUSTRY_HINT}
             value={industriesFromState(draft.industry, draft.industry_id)}
             onChange={(selection) => {
               const next = splitIndustrySelection(selection);
@@ -182,13 +209,16 @@ export function ConfigurationEditForm({
             required
             value={draft.search_keyword}
             onChange={(value) => onPatch("search_keyword", value)}
+            placeholder={TARGET_PARTNER_SEARCH_KEYWORD_PLACEHOLDER}
+            helpContent={TARGET_PARTNER_SEARCH_KEYWORD_HELP}
           />
           <TextInput
             label="Search Location"
             required
             value={draft.search_location}
             onChange={(value) => onPatch("search_location", value)}
-            placeholder="e.g. Bangkok, Thailand"
+            placeholder={TARGET_PARTNER_SEARCH_LOCATION_PLACEHOLDER}
+            helpContent={TARGET_PARTNER_SEARCH_LOCATION_HELP}
           />
         </div>
       </ConfigCard>
@@ -237,10 +267,19 @@ export function validateBusinessConfigDraft(
   if (draft.requirements.map((item) => item.trim()).filter(Boolean).length === 0) {
     return "Add at least one requirement.";
   }
+  if (draft.requirements.map((item) => item.trim()).filter(Boolean).length > MAX_REQUIREMENTS) {
+    return `You can add up to ${MAX_REQUIREMENTS} requirements.`;
+  }
   if (!draft.search_keyword.trim()) return "Search keyword is required.";
   if (!draft.search_location.trim()) return "Search location is required.";
   if (draft.industry.length !== draft.industry_id.length) {
     return "Industry selections are out of sync.";
+  }
+  if (draft.contact_titles.map((title) => title.trim()).filter(Boolean).length === 0) {
+    return "Add at least one contact title.";
+  }
+  if (draft.contact_categories.length === 0) {
+    return "Select at least one contact category.";
   }
   if (draft.fit_score_cutoff === null) {
     return "Fit score cutoff is required.";

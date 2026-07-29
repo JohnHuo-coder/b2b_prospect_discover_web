@@ -4,7 +4,9 @@ import { CategoryMultiSelect } from "@/components/ui/CategoryMultiSelect";
 import { TagInput } from "@/components/ui/TagInput";
 import {
   DEFAULT_CONTACT_TITLES,
+  formatDefaultContactCategoriesHelp,
   formatDefaultContactTitlesHelp,
+  getDefaultContactCategories,
 } from "@/lib/constants/config-defaults";
 import {
   normalizeContactCategories,
@@ -28,6 +30,7 @@ export function ContactPreferencesEditForm({
     <div className="space-y-4">
       <TagInput
         label="Contact Titles (for Apollo API)"
+        required
         hint="Type a title and press Enter to add it."
         tags={contactTitles}
         onChange={onContactTitlesChange}
@@ -37,9 +40,14 @@ export function ContactPreferencesEditForm({
       />
       <CategoryMultiSelect
         label="Contact Categories (for Anymail Finder)"
-        hint="Optional. Select one or more categories from the list."
+        required
+        hint="Select one or more categories from the list."
         value={normalizedCategories}
         onChange={onContactCategoriesChange}
+        helpContent={formatDefaultContactCategoriesHelp()}
+        onRestoreDefaults={() =>
+          onContactCategoriesChange(getDefaultContactCategories())
+        }
       />
     </div>
   );

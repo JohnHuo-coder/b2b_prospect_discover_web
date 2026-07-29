@@ -5,3 +5,9 @@ export const DISTANCE_REQUIREMENT_HINT =
 
 export const DISTANCE_REQUIREMENT_VIEW_FOOTER =
   "When distance requirement is enabled, candidates are searched via Google Maps using your coordinates and max distance.";
+
+export const COMPANY_LATITUDE_HELP =
+  "Your company's latitude coordinate.";
+
+export const COMPANY_LONGITUDE_HELP =
+  "Your company's longitude coordinate.";

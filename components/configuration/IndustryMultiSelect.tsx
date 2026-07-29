@@ -7,6 +7,7 @@ import {
   type IndustryOption,
 } from "@/lib/api/industry-client";
 import type { SelectedIndustry } from "@/lib/constants/industries";
+import { TARGET_PARTNER_INDUSTRY_HINT } from "@/lib/constants/target-partner";
 
 type IndustryMultiSelectProps = {
   label: string;
@@ -17,7 +18,7 @@ type IndustryMultiSelectProps = {
 
 export function IndustryMultiSelect({
   label,
-  hint = "Optional. Select one or more industries from the list.",
+  hint = TARGET_PARTNER_INDUSTRY_HINT,
   value,
   onChange,
 }: IndustryMultiSelectProps) {

@@ -1,5 +1,6 @@
 import { jsonResponse, errorResponse } from "@/lib/api/response";
 import { CONFIG_SAVE_TOO_FREQUENT_MESSAGE } from "@/lib/constants/config-save-limit";
+import { MAX_REQUIREMENTS } from "@/lib/constants/requirements";
 import { withAuth } from "@/lib/api/middleware/authMiddleware.js";
 import { withApproved } from "@/lib/api/middleware/requireApprovalMiddleware.js";
 import { withOwner } from "@/lib/api/middleware/withOwnerMiddleware.js";
@@ -103,6 +104,9 @@ function parseSaveBody(body: Record<string, unknown>) {
   if (!collaboration_intent) return { error: "collaboration_intent is required" };
   if (!sender_name) return { error: "sender_name is required" };
   if (!requirements) return { error: "requirements must be a non-empty array" };
+  if (requirements.length > MAX_REQUIREMENTS) {
+    return { error: `requirements must contain at most ${MAX_REQUIREMENTS} items` };
+  }
   if (!search_keyword) return { error: "search_keyword is required" };
   if (!search_location) return { error: "search_location is required" };
   if (industry === null) return { error: "industry must be an array" };
@@ -112,6 +116,12 @@ function parseSaveBody(body: Record<string, unknown>) {
   }
   if (!contact_titles) return { error: "contact_titles must be an array" };
   if (!contact_categories) return { error: "contact_categories must be an array" };
+  if (contact_titles.length === 0) {
+    return { error: "contact_titles must be a non-empty array" };
+  }
+  if (contact_categories.length === 0) {
+    return { error: "contact_categories must be a non-empty array" };
+  }
   if (fit_score_cutoff === null) {
     return { error: "fit_score_cutoff must be an integer between 0 and 100" };
   }

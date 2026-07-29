@@ -1,15 +1,19 @@
+import type { ReactNode } from "react";
 import { Pencil } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { HelpTooltip } from "@/components/ui/HelpTooltip";
 
 export function ConfigCard({
   icon: Icon,
   title,
+  titleHelpContent,
   children,
   footer,
   onEdit,
 }: {
   icon: LucideIcon;
   title: string;
+  titleHelpContent?: ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
   onEdit?: () => void;
@@ -20,6 +24,7 @@ export function ConfigCard({
         <div className="flex items-center gap-2.5">
           <Icon className="h-4 w-4 text-gray-500" />
           <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
+          {titleHelpContent ? <HelpTooltip content={titleHelpContent} /> : null}
         </div>
         {onEdit ? (
           <button
@@ -45,17 +50,22 @@ export function Field({
   value,
   className = "",
   hint,
+  helpContent,
 }: {
   label: string;
   value: React.ReactNode;
   className?: string;
   hint?: string;
+  helpContent?: ReactNode;
 }) {
   return (
     <div className={className}>
-      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-        {label}
-      </p>
+      <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+          {label}
+        </p>
+        {helpContent ? <HelpTooltip content={helpContent} /> : null}
+      </div>
       <div className="text-sm text-gray-900">{value}</div>
       {hint ? <p className="mt-1.5 text-xs text-gray-500">{hint}</p> : null}
     </div>
