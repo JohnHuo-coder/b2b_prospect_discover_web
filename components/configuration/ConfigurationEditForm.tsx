@@ -18,6 +18,7 @@ import {
   RequirementsModalFooter,
 } from "@/components/configuration/RequirementsEditForm";
 import { ContactPreferencesEditForm } from "@/components/configuration/ContactPreferencesEditForm";
+import { IndustryMultiSelect } from "@/components/configuration/IndustryMultiSelect";
 import {
   getDefaultOutreachSettingsDraft,
   OutreachSettingsEditForm,
