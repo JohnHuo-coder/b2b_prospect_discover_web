@@ -103,6 +103,8 @@ export const leads: Lead[] = [
 export const businessConfig = {
   business_name: "Suvarnaveda Wellness",
   sender_name: "Parvina Kuludomphongse",
+  description:
+    "Suvarnaveda is a wellness and medspa program in Bangkok. We provide restorative treatments at our wellness center for guests who need a calm, restful environment during multi-day treatment programs.",
   collaboration_intent:
     "We run Suvarnaveda, a wellness/medspa program in Bangkok. Our guests receive treatments at our wellness center and need a quiet, restful hotel nearby to stay during treatment days. We are reaching out to explore whether your property would be interested in a B2B accommodation partnership — combined wellness packages where your hotel is the guest stay partner.",
   requirements: [

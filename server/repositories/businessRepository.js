@@ -5,6 +5,7 @@ const businessRepository = {
   createBusiness: (businessData) => businessProvider.createBusiness(businessData),
   createBusinessForPendingUser: (businessData) =>
     businessProvider.createBusinessForPendingUser(businessData),
+  listAllBusinesses: () => businessProvider.listAllBusinesses(),
   deleteByUid: (uid) => businessProvider.deleteBusinessByUid(uid),
   getAllBusinessMember: (bid) => userProvider.getAllBusinessMember(bid),
   getBusinesses: (query) => userProvider.getBusinesses(query),

@@ -20,6 +20,7 @@ import {
   hasUserName,
 } from "@/lib/auth/userDisplay";
 import { isUserAdmin } from "@/lib/auth/isUserAdmin";
+import { isSuperAdmin } from "@/lib/auth/isSuperAdmin";
 import { leaveCompany } from "@/lib/api/business-search-client";
 import { Modal } from "@/components/ui/Modal";
 
@@ -29,9 +30,16 @@ const allNavItems: Array<{
   icon: typeof LayoutGrid;
   ownerOnly?: boolean;
   adminOnly?: boolean;
+  superAdminOnly?: boolean;
 }> = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid, ownerOnly: false },
   { href: "/jobs", label: "Jobs", icon: ListTodo, ownerOnly: false },
+  {
+    href: "/companies",
+    label: "Companies",
+    icon: Building2,
+    superAdminOnly: true,
+  },
   {
     href: "/system-dashboard",
     label: "System Dashboard",
@@ -105,9 +113,11 @@ export function Sidebar() {
   const profileInitials = user ? getUserInitials(user) : "";
   const isOwner = user?.role === "owner";
   const isAdmin = isUserAdmin(user);
+  const isSuperAdminUser = isSuperAdmin(user);
   const canLeaveCompany =
-    Boolean(user?.business_id) && user?.role !== "owner";
+    Boolean(user?.business_id) && user?.role !== "owner" && !isSuperAdminUser;
   const navItems = allNavItems.filter((item) => {
+    if (item.superAdminOnly && !isSuperAdminUser) return false;
     if (item.adminOnly && !isAdmin) return false;
     if (item.ownerOnly && !isOwner) return false;
     return true;

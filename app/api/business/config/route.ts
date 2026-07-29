@@ -73,6 +73,7 @@ function parseIntegerArray(value: unknown): number[] | null {
 }
 
 function parseSaveBody(body: Record<string, unknown>) {
+  const description = parseString(body.description);
   const collaboration_intent = parseString(body.collaboration_intent);
   const sender_name = parseString(body.sender_name);
   const search_keyword = parseString(body.search_keyword);
@@ -101,6 +102,7 @@ function parseSaveBody(body: Record<string, unknown>) {
     return max_distance_km;
   }
 
+  if (!description) return { error: "description is required" };
   if (!collaboration_intent) return { error: "collaboration_intent is required" };
   if (!sender_name) return { error: "sender_name is required" };
   if (!requirements) return { error: "requirements must be a non-empty array" };
@@ -141,6 +143,7 @@ function parseSaveBody(body: Record<string, unknown>) {
   return {
     payload: {
       sender_name,
+      description,
       collaboration_intent,
       search_keyword,
       search_location,

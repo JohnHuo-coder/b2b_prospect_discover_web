@@ -7,6 +7,8 @@ export const ENDPOINTS = {
     AUTH_ACCESS_REQUEST: "/api/auth/access-request",
     memberRole: (uid: string) => `/api/auth/members/${uid}/role`,
     ADMIN_MEMBERS: "/api/admin/members",
+    SUPERADMIN_COMPANIES: "/api/superadmin/companies",
+    SUPERADMIN_COMPANIES_MONITOR: "/api/superadmin/companies/monitor",
     LEADS: "/api/leads",
     DASHBOARD_SUMMARY: "/api/dashboard/summary",
     DASHBOARD_DISCOVERY_QUOTA: "/api/dashboard/discovery-quota",

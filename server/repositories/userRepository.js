@@ -9,6 +9,8 @@ const userRepository = {
   updateUserBusinessId: (body) => userProvider.updateUserBusinessId(body),
   leaveCompany: (body) => userProvider.leaveCompany(body),
   updateMemberRoleByOwner: (body) => userProvider.updateMemberRoleByOwner(body),
+  switchSuperadminCompanyContext: (body) =>
+    userProvider.switchSuperadminCompanyContext(body),
 };
 
 export default userRepository;

@@ -43,6 +43,7 @@ import {
 import {
   BUSINESS_NAME_IMMUTABLE_HINT,
   COLLABORATION_INTENT_HELP,
+  COMPANY_DESCRIPTION_HELP,
 } from "@/lib/constants/business-identity";
 import { REQUIREMENTS_HELP, REQUIREMENTS_TESTING_NOTICE } from "@/lib/constants/requirements";
 import {
@@ -55,6 +56,7 @@ const emptyConfig: BusinessConfigState = {
   business_id: "",
   business_name: "",
   sender_name: "",
+  description: "",
   collaboration_intent: "",
   requirements: [],
   has_distance_requirement: null,
@@ -429,7 +431,20 @@ export function ConfigurationContent() {
               />
               <Field label="Sender / Team" value={displayText(config.sender_name)} />
             </div>
-            <div className="mt-6">
+            <div className="mt-6 space-y-6">
+              <Field
+                label="Description"
+                helpContent={COMPANY_DESCRIPTION_HELP}
+                value={
+                  hasText(config.description) ? (
+                    <p className="rounded-lg bg-gray-50 p-4 leading-relaxed text-gray-700">
+                      {config.description}
+                    </p>
+                  ) : (
+                    "—"
+                  )
+                }
+              />
               <Field
                 label="Collaboration Intent"
                 helpContent={COLLABORATION_INTENT_HELP}

@@ -30,6 +30,7 @@ type BusinessConfigRow = {
   business_id?: number | string | null;
   business_name?: string | null;
   sender_name?: string | null;
+  description?: string | null;
   collaboration_intent?: string | null;
   search_keyword?: string | null;
   search_location?: string | null;
@@ -132,6 +133,7 @@ export function mapBusinessConfigResponse(
     business_id: toStringValue(cfg.business_id),
     business_name,
     sender_name: toStringValue(cfg.sender_name),
+    description: toStringValue(cfg.description),
     collaboration_intent: toStringValue(cfg.collaboration_intent),
     requirements,
     has_distance_requirement: toBoolean(cfg.has_distance_requirement),
@@ -259,6 +261,7 @@ export function buildBusinessConfigSavePayload(
 ): BusinessConfigSavePayload {
   return {
     sender_name: draft.sender_name.trim(),
+    description: draft.description.trim(),
     collaboration_intent: draft.collaboration_intent.trim(),
     requirements: normalizeRequirements(draft.requirements),
     has_distance_requirement: draft.has_distance_requirement,
@@ -281,6 +284,7 @@ export function buildBusinessConfigSavePayload(
 function snapshotSavableConfig(draft: BusinessConfigState): string {
   return JSON.stringify({
     sender_name: draft.sender_name.trim(),
+    description: draft.description.trim(),
     collaboration_intent: draft.collaboration_intent.trim(),
     requirements: normalizeRequirements(draft.requirements),
     has_distance_requirement: draft.has_distance_requirement ?? null,

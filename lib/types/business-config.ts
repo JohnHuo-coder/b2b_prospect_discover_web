@@ -3,6 +3,7 @@ export type BusinessConfigState = {
   business_id: string;
   business_name: string;
   sender_name: string;
+  description: string;
   collaboration_intent: string;
   requirements: string[];
   has_distance_requirement: boolean | null;
@@ -24,6 +25,7 @@ export type BusinessConfigState = {
 
 export type BusinessConfigSavePayload = {
   sender_name: string;
+  description: string;
   collaboration_intent: string;
   requirements: string[];
   has_distance_requirement?: boolean | null;

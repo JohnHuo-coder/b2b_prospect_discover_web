@@ -174,6 +174,7 @@ export function RegisterForm() {
           ? "Apply with your business and owner account"
           : "Apply as a team member"
       }
+      showBackToLanding
     >
       <div className="mb-6 grid grid-cols-2 gap-2 rounded-lg bg-gray-100 p-1">
         <button

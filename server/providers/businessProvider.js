@@ -192,6 +192,24 @@ export default {
     await pool.query(`DELETE FROM prospect_discover.businesses WHERE firebase_uid = $1`, [uid]);
   },
 
+  async listAllBusinesses() {
+    const { rows } = await pool.query(
+      `SELECT
+         b.id,
+         b.business_name,
+         b.version,
+         b.firebase_uid AS "ownerFirebaseUid",
+         u.email AS owner_email,
+         u.first_name AS owner_first_name,
+         u.last_name AS owner_last_name
+       FROM prospect_discover.businesses b
+       LEFT JOIN prospect_discover.users u ON u.firebase_uid = b.firebase_uid
+       ORDER BY b.business_name ASC NULLS LAST, b.id ASC`
+    );
+
+    return rows;
+  },
+
   async getBusinessConfig(business_id, requestedVersion = null) {
     if (!business_id) {
       throw new Error('business_id is required');
@@ -241,6 +259,7 @@ export default {
   async insertBusinessConfig({
     business_id,
     sender_name,
+    description,
     collaboration_intent,
     search_keyword,
     search_location,
@@ -346,6 +365,7 @@ export default {
       const insertValues = configInsert.valuesFromPayload(business_id, nextVersion, {
         business_name: canonicalBusinessName,
         sender_name: sender_name?.trim() ? sender_name.trim() : null,
+        description,
         collaboration_intent,
         number_of_candidates_per_run,
         email_min_words,

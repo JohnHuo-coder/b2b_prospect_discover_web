@@ -47,6 +47,13 @@ export function validateBusinessConfigForRun(
     });
   }
 
+  if (!config.description.trim()) {
+    issues.push({
+      section: "Business Identity",
+      message: "Description is required",
+    });
+  }
+
   if (!config.collaboration_intent.trim()) {
     issues.push({
       section: "Business Identity",

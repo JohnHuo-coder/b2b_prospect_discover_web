@@ -75,6 +75,7 @@ export function LoginForm() {
     <AuthShell
       title="Welcome back"
       subtitle="Sign in to your Lead Generation account"
+      showBackToLanding
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <AuthField

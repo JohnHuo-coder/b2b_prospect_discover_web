@@ -1,13 +1,16 @@
-import { Megaphone } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Megaphone } from "lucide-react";
 
 export function AuthShell({
   title,
   subtitle,
   children,
+  showBackToLanding = false,
 }: {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
+  showBackToLanding?: boolean;
 }) {
   return (
     <div className="flex min-h-screen items-center justify-center overflow-y-auto bg-gray-50 px-4 py-10">
@@ -24,6 +27,17 @@ export function AuthShell({
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           {children}
         </div>
+        {showBackToLanding ? (
+          <div className="mt-4 text-center">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to home
+            </Link>
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import type { BusinessConfigState } from "@/lib/types/business-config";
 import type { RephraseSuggestion } from "@/lib/api/business-config-client";
-import { BUSINESS_NAME_IMMUTABLE_HINT, COLLABORATION_INTENT_HELP, COLLABORATION_INTENT_PLACEHOLDER } from "@/lib/constants/business-identity";
+import { BUSINESS_NAME_IMMUTABLE_HINT, COLLABORATION_INTENT_HELP, COLLABORATION_INTENT_PLACEHOLDER, COMPANY_DESCRIPTION_HELP, COMPANY_DESCRIPTION_PLACEHOLDER } from "@/lib/constants/business-identity";
 import { ConfigCard } from "@/components/ui/ConfigCard";
 import {
   RequirementsEditForm,
@@ -108,6 +108,15 @@ export function ConfigurationEditForm({
             required
             value={draft.sender_name}
             onChange={(value) => onPatch("sender_name", value)}
+          />
+          <TextArea
+            label="Description"
+            required
+            rows={5}
+            value={draft.description}
+            onChange={(value) => onPatch("description", value)}
+            placeholder={COMPANY_DESCRIPTION_PLACEHOLDER}
+            helpContent={COMPANY_DESCRIPTION_HELP}
           />
           <TextArea
             label="Collaboration Intent"
@@ -263,6 +272,7 @@ export function validateBusinessConfigDraft(
 ): string | null {
   if (!draft.business_name.trim()) return "Business name is required.";
   if (!draft.sender_name.trim()) return "Sender / team is required.";
+  if (!draft.description.trim()) return "Description is required.";
   if (!draft.subject_line.trim()) return "Email subject line is required.";
   if (!draft.collaboration_intent.trim()) return "Collaboration intent is required.";
   if (draft.requirements.map((item) => item.trim()).filter(Boolean).length === 0) {

@@ -12,6 +12,7 @@ async function findByUid(uid) {
        u.last_name,
        u.is_admin,
        u.approved,
+       u.original_business_id,
        b.business_name,
        GREATEST(
          COALESCE(b.version, 0),
@@ -290,6 +291,77 @@ export default {
     });
 
     return findByUid(targetUid);
+  },
+
+  async switchSuperadminCompanyContext({ uid, business_id }) {
+    const targetBusinessId = Number(business_id);
+    if (!Number.isInteger(targetBusinessId) || targetBusinessId < 1) {
+      const error = new Error('INVALID_BUSINESS_ID');
+      error.code = 'INVALID_BUSINESS_ID';
+      throw error;
+    }
+
+    await runMembershipTransaction(async (client) => {
+      const { rows } = await client.query(
+        `SELECT role, business_id, is_admin, original_business_id
+         FROM prospect_discover.users
+         WHERE firebase_uid = $1
+         FOR UPDATE`,
+        [uid]
+      );
+
+      const user = rows[0];
+      if (!user) {
+        const error = new Error(MEMBERSHIP_ERRORS.USER_NOT_FOUND);
+        error.code = MEMBERSHIP_ERRORS.USER_NOT_FOUND;
+        throw error;
+      }
+
+      if (user.is_admin !== true) {
+        const error = new Error('NOT_SUPERADMIN');
+        error.code = 'NOT_SUPERADMIN';
+        throw error;
+      }
+
+      const { rows: businessRows } = await client.query(
+        `SELECT id FROM prospect_discover.businesses WHERE id = $1`,
+        [targetBusinessId]
+      );
+
+      if (businessRows.length === 0) {
+        const error = new Error('BUSINESS_NOT_FOUND');
+        error.code = 'BUSINESS_NOT_FOUND';
+        throw error;
+      }
+
+      let originalBusinessId = user.original_business_id;
+
+      if (
+        originalBusinessId == null &&
+        user.business_id != null &&
+        user.business_id !== ''
+      ) {
+        originalBusinessId = user.business_id;
+      }
+
+      const isReturningHome =
+        originalBusinessId != null &&
+        String(targetBusinessId) === String(originalBusinessId);
+
+      const nextRole = isReturningHome ? 'owner' : 'member';
+
+      await client.query(
+        `UPDATE prospect_discover.users
+         SET business_id = $1,
+             role = $2,
+             original_business_id = $3,
+             is_admin = TRUE
+         WHERE firebase_uid = $4`,
+        [targetBusinessId, nextRole, originalBusinessId, uid]
+      );
+    });
+
+    return findByUid(uid);
   },
 
   MEMBERSHIP_ERRORS,

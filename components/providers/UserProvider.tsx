@@ -31,6 +31,7 @@ type BackendUser = {
   last_name?: string | null;
   is_admin?: boolean;
   approved?: boolean;
+  original_business_id?: number | string | null;
 };
 
 export type AppUser = FirebaseUser & BackendUser;
