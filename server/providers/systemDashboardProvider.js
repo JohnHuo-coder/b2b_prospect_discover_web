@@ -224,6 +224,28 @@ export default {
     };
   },
 
+  async getCollectUrlStatusFailureBreakdown({ business_id, version }) {
+    const scope = resolveConfigScope({ business_id, version });
+    if (!scope) {
+      return { rows: [] };
+    }
+
+    const { rows } = await pool.query(
+      `SELECT
+         COALESCE(NULLIF(TRIM(st.final_stage), ''), 'unknown') AS final_stage,
+         COALESCE(NULLIF(TRIM(st.reason), ''), 'unknown') AS reason,
+         COUNT(*)::int AS count
+       FROM prospect_discover.collect_url_status st
+       ${joinBc('st')}
+       WHERE ${whereBc()}
+       GROUP BY st.final_stage, st.reason
+       ORDER BY final_stage ASC, count DESC`,
+      scopeParams(scope)
+    );
+
+    return { rows };
+  },
+
   async getInfoAcquisitionStatusSummaryByReq({
     business_id,
     version,
@@ -349,10 +371,15 @@ export default {
     limit = 25,
     search,
     status,
+    requirement_index,
   }) {
     const scope = resolveConfigScope({ business_id, version });
     if (!scope) {
       return { rows: [], total: 0 };
+    }
+
+    if (requirement_index == null) {
+      throw new Error('requirement_index is required');
     }
 
     const MAX_LIMIT = 100;
@@ -360,55 +387,51 @@ export default {
     const safePage = Math.max(parseInt(page, 10) || 1, 1);
     const offset = (safePage - 1) * pageSize;
 
-    const params = scopeParams(scope);
+    const params = [...scopeParams(scope), requirement_index];
     const addParam = (value) => {
       params.push(value);
       return `$${params.length}`;
     };
 
-    const groupedQuery = `
-      SELECT
-            ic.id,
-            ic.company_name,
-            ic.website,
-            ${fitScoreOverallStatusCase}
-        FROM prospect_discover.fit_score fs
-        ${joinBc('fs')}
-        ${joinIc('fs', 'ic')}
-        WHERE ${whereBc()}
-        GROUP BY
-            fs.config_id,
-            fs.place_id,
-            ic.id,
-            ic.company_name,
-            ic.website`;
-
     let filterWhere = 'WHERE 1=1';
 
     if (search) {
       const pattern = addParam(`%${search}%`);
-      filterWhere += ` AND (grouped.company_name ILIKE ${pattern} OR grouped.website ILIKE ${pattern})`;
+      filterWhere += ` AND (ic.company_name ILIKE ${pattern} OR ic.website ILIKE ${pattern})`;
     }
 
     if (status) {
-      filterWhere += ` AND grouped.overall_status = ${addParam(status)}`;
+      filterWhere += ` AND fs.status = ${addParam(status)}`;
     }
+
+    const baseQuery = `
+      SELECT
+        ic.id,
+        ic.company_name,
+        ic.website,
+        fs.status AS overall_status
+      FROM prospect_discover.fit_score fs
+      ${joinBc('fs')}
+      ${joinIc('fs', 'ic')}
+      WHERE ${whereBc()}
+        AND fs.requirement_index = $3`;
 
     const limitParam = addParam(pageSize);
     const offsetParam = addParam(offset);
+    const countParams = params.slice(0, params.length - 2);
 
     const [countResult, rowsResult] = await Promise.all([
       pool.query(
         `SELECT COUNT(*) AS total
-         FROM (${groupedQuery}) grouped
+         FROM (${baseQuery}) scoped
          ${filterWhere}`,
-        params.slice(0, params.length - 2)
+        countParams
       ),
       pool.query(
-        `SELECT grouped.*
-         FROM (${groupedQuery}) grouped
+        `SELECT scoped.*
+         FROM (${baseQuery}) scoped
          ${filterWhere}
-         ORDER BY grouped.id ASC
+         ORDER BY scoped.id ASC
          LIMIT ${limitParam} OFFSET ${offsetParam}`,
         params
       ),
@@ -420,13 +443,21 @@ export default {
     };
   },
 
-  async getFitScoreStatusDetail({ candidate_id, business_id, version }) {
+  async getFitScoreStatusDetail({
+    candidate_id,
+    business_id,
+    version,
+    requirement_index,
+  }) {
     const scope = requireConfigScope({ business_id, version });
     if (!candidate_id) {
       throw new Error('candidate id is required');
     }
+    if (requirement_index == null) {
+      throw new Error('requirement_index is required');
+    }
 
-    const params = [...scopeParams(scope), candidate_id];
+    const params = [...scopeParams(scope), candidate_id, requirement_index];
 
     const { rows } = await pool.query(
       `SELECT
@@ -446,6 +477,7 @@ export default {
          AND req.req_index = fs.requirement_index
         WHERE ${whereBc()}
           AND ic.id = $3
+          AND fs.requirement_index = $4
         ORDER BY req.req_index ASC NULLS LAST`,
       params
     );

@@ -188,6 +188,41 @@ export async function fetchInfoAcquisitionRequirementSummary(
   return (await response.json()) as InfoAcquisitionRequirementSummaryApiResponse;
 }
 
+export type InfoAcquisitionWebsiteUrlFailureReason = {
+  reason: string;
+  count: number;
+  percentage: number;
+};
+
+export type InfoAcquisitionWebsiteUrlFailureStage = {
+  final_stage: string;
+  count: number;
+  percentage: number;
+  reasons: InfoAcquisitionWebsiteUrlFailureReason[];
+};
+
+export type InfoAcquisitionWebsiteUrlFailureBreakdown = {
+  totalFailed: number;
+  stages: InfoAcquisitionWebsiteUrlFailureStage[];
+};
+
+export async function fetchInfoAcquisitionWebsiteUrlFailureBreakdown(): Promise<InfoAcquisitionWebsiteUrlFailureBreakdown> {
+  const response = await authenticatedFetch(
+    ENDPOINTS.SYSTEM_DASHBOARD_INFO_ACQUISITION_WEBSITE_URL_FAILURES
+  );
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(
+      typeof data.error === "string"
+        ? data.error
+        : "Failed to load website URL failure breakdown"
+    );
+  }
+
+  return (await response.json()) as InfoAcquisitionWebsiteUrlFailureBreakdown;
+}
+
 export type InfoAcquisitionWorkflowStageCount = {
   final_stage: string;
   failed_candidates: number;
@@ -328,13 +363,12 @@ export type FitscoreSummaryStats = {
 };
 
 export type FitscoreSummaryScope = {
-  id: "all" | number;
+  id: number;
   label: string;
   stats: FitscoreSummaryStats;
 };
 
 type FitscoreSummaryApiResponse = {
-  overall: FitscoreSummaryStats;
   requirements: Array<{
     requirement_index: number;
     requirement_text: string;
@@ -347,7 +381,6 @@ type FitscoreRequirementSummaryApiResponse = FitscoreSummaryStats & {
 };
 
 export async function fetchFitscoreSummary(): Promise<{
-  overall: FitscoreSummaryStats;
   requirements: Array<{
     requirement_index: number;
     requirement_text: string;
@@ -461,24 +494,24 @@ function mapFitscoreDetail(data: FitscoreDetailApiResponse): FitscoreCandidate {
   };
 }
 
-export async function fetchFitscoreCandidates(params?: {
+export async function fetchFitscoreCandidates(params: {
+  requirement_index: number;
   search?: string;
   status?: FitscoreStatusFilter;
   page?: number;
   limit?: number;
 }): Promise<{ candidates: FitscoreTableCandidate[]; total: number }> {
   const query = new URLSearchParams();
+  query.set("requirement_index", String(params.requirement_index));
 
-  if (params?.search) query.set("search", params.search);
-  if (params?.status && params.status !== "all") {
+  if (params.search) query.set("search", params.search);
+  if (params.status && params.status !== "all") {
     query.set("status", params.status);
   }
-  if (params?.page) query.set("page", String(params.page));
-  if (params?.limit) query.set("limit", String(params.limit));
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
 
-  const url = query.size
-    ? `${ENDPOINTS.SYSTEM_DASHBOARD_FITSCORE}?${query.toString()}`
-    : ENDPOINTS.SYSTEM_DASHBOARD_FITSCORE;
+  const url = `${ENDPOINTS.SYSTEM_DASHBOARD_FITSCORE}?${query.toString()}`;
 
   const response = await authenticatedFetch(url);
 
@@ -503,9 +536,12 @@ export async function fetchFitscoreCandidates(params?: {
 }
 
 export async function fetchFitscoreCandidateDetail(
-  candidateId: string
+  candidateId: string,
+  requirementIndex: number
 ): Promise<FitscoreCandidate> {
-  const response = await authenticatedFetch(ENDPOINTS.fitscoreDetail(candidateId));
+  const response = await authenticatedFetch(
+    `${ENDPOINTS.fitscoreDetail(candidateId)}?requirement_index=${requirementIndex}`
+  );
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));

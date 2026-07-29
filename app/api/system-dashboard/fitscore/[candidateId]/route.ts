@@ -19,14 +19,8 @@ type FitScoreDetailRow = {
   status: string;
 };
 
-function computeOverallStatus(rows: FitScoreDetailRow[]) {
-  if (rows.some((row) => row.status === "failed")) return "failed";
-  if (rows.some((row) => row.status === "rejected")) return "rejected";
-  return "accepted";
-}
-
 export const GET = withAuth(
-  withApproved(async (_request: Request, context: RouteContext, user: DbUserWithConfig) => {
+  withApproved(async (request: Request, context: RouteContext, user: DbUserWithConfig) => {
     try {
       const scope = getConfigScope(user);
       if (!scope) {
@@ -39,27 +33,42 @@ export const GET = withAuth(
         return errorResponse("Candidate id is required", 400);
       }
 
+      const { searchParams } = new URL(request.url);
+      const requirementIndexParam = searchParams.get("requirement_index");
+
+      if (!requirementIndexParam) {
+        return errorResponse("requirement_index is required", 400);
+      }
+
+      const requirement_index = Number(requirementIndexParam);
+      if (!Number.isFinite(requirement_index)) {
+        return errorResponse("Invalid requirement_index", 400);
+      }
+
       const rows = (await systemDashboardRepository.getFitScoreStatusDetail({
         ...scope,
         candidate_id: candidateId,
+        requirement_index,
       })) as FitScoreDetailRow[];
 
       if (rows.length === 0) {
         return errorResponse("Candidate not found", 404);
       }
 
+      const row = rows[0];
+
       return jsonResponse({
         id: candidateId,
-        company_name: rows[0].company_name,
-        website: rows[0].website,
-        overall_status: computeOverallStatus(rows),
-        requirements: rows.map((row) => ({
-          requirement_index: row.requirement_index,
-          requirement_text: row.requirement_text ?? "",
-          score: row.score != null ? Number(row.score) : null,
-          reason: row.reason ?? "",
-          supporting_facts: row.supporting_facts,
-          status: row.status,
+        company_name: row.company_name,
+        website: row.website,
+        overall_status: row.status,
+        requirements: rows.map((detailRow) => ({
+          requirement_index: detailRow.requirement_index,
+          requirement_text: detailRow.requirement_text ?? "",
+          score: detailRow.score != null ? Number(detailRow.score) : null,
+          reason: detailRow.reason ?? "",
+          supporting_facts: detailRow.supporting_facts,
+          status: detailRow.status,
         })),
       });
     } catch (error) {

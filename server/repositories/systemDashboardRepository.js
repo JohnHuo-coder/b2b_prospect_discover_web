@@ -13,6 +13,8 @@ const systemDashboardRepository = {
     systemDashboardProvider.getInfoAcquisitionStatusWorkflowByReq(opts),
   getInfoAcquisitionStageDetail: (opts) =>
     systemDashboardProvider.getInfoAcquisitionStageDetail(opts),
+  getCollectUrlStatusFailureBreakdown: (opts) =>
+    systemDashboardProvider.getCollectUrlStatusFailureBreakdown(opts),
   getFitScoreStatus: (opts) => systemDashboardProvider.getFitScoreStatus(opts),
   getFitScoreStatusDetail: (opts) =>
     systemDashboardProvider.getFitScoreStatusDetail(opts),

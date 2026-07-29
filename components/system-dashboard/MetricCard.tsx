@@ -14,6 +14,7 @@ export function MetricCard({
   progress,
   progressClassName = "bg-violet-500",
   large = false,
+  onViewDetails,
 }: {
   label: string;
   value: number | string;
@@ -25,9 +26,10 @@ export function MetricCard({
   progress?: number;
   progressClassName?: string;
   large?: boolean;
+  onViewDetails?: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+    <div className="flex h-full flex-col rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-gray-600">{label}</p>
@@ -58,6 +60,16 @@ export function MetricCard({
         </div>
       ) : subtext ? (
         <p className="mt-3 text-sm text-gray-500">{subtext}</p>
+      ) : null}
+
+      {onViewDetails ? (
+        <button
+          type="button"
+          onClick={onViewDetails}
+          className="mt-4 inline-flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
+        >
+          View details
+        </button>
       ) : null}
     </div>
   );

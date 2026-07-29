@@ -25,6 +25,8 @@ export const ENDPOINTS = {
       "/api/system-dashboard/information-acquisition/workflow",
     SYSTEM_DASHBOARD_INFO_ACQUISITION_WORKFLOW_STAGE:
       "/api/system-dashboard/information-acquisition/workflow/stage",
+    SYSTEM_DASHBOARD_INFO_ACQUISITION_WEBSITE_URL_FAILURES:
+      "/api/system-dashboard/information-acquisition/website-url/failures",
     SYSTEM_DASHBOARD_FITSCORE_SUMMARY: "/api/system-dashboard/fitscore/summary",
     SYSTEM_DASHBOARD_FITSCORE: "/api/system-dashboard/fitscore",
     infoAcquisitionDetail: (id: string) =>

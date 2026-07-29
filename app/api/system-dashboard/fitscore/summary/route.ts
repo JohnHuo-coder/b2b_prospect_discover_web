@@ -60,7 +60,6 @@ export const GET = withAuth(
 
       if (!scope) {
         return jsonResponse({
-          overall: { totalInput: 0, accepted: 0, rejected: 0, failed: 0 },
           requirements: [],
         });
       }
@@ -70,7 +69,6 @@ export const GET = withAuth(
       });
 
       return jsonResponse({
-        overall: mapFitScoreCounts(result.overall as FitScoreSummaryRow),
         requirements: (result.requirements ?? []).map(
           (row: { req_index: number; clarified: string }) => ({
             requirement_index: row.req_index,

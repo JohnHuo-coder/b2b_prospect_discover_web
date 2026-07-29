@@ -37,9 +37,16 @@ const emptyStats: FitscoreSummaryStats = {
   failed: 0,
 };
 
-export function FitscoreSummaryCards() {
+type FitscoreSummaryCardsProps = {
+  requirementIndex: number | null;
+  onRequirementIndexChange: (index: number) => void;
+};
+
+export function FitscoreSummaryCards({
+  requirementIndex,
+  onRequirementIndexChange,
+}: FitscoreSummaryCardsProps) {
   const [scopes, setScopes] = useState<FitscoreSummaryScope[]>([]);
-  const [scopeId, setScopeId] = useState<"all" | number>("all");
   const [scopeStats, setScopeStats] = useState<
     Record<string, FitscoreSummaryStats>
   >({});
@@ -58,22 +65,20 @@ export function FitscoreSummaryCards() {
         const result = await fetchFitscoreSummary();
         if (cancelled) return;
 
-        const nextScopes: FitscoreSummaryScope[] = [
-          {
-            id: "all",
-            label: "All requirements",
-            stats: result.overall,
-          },
-          ...result.requirements.map((row) => ({
+        const nextScopes: FitscoreSummaryScope[] = result.requirements.map(
+          (row) => ({
             id: row.requirement_index,
             label: `Requirement ${row.requirement_index}`,
             stats: emptyStats,
-          })),
-        ];
+          })
+        );
 
         setScopes(nextScopes);
-        setScopeStats({ all: result.overall });
-        setScopeId("all");
+        setScopeStats({});
+
+        if (nextScopes.length > 0) {
+          onRequirementIndexChange(nextScopes[0].id);
+        }
       } catch (loadError) {
         if (cancelled) return;
         setError(
@@ -93,12 +98,13 @@ export function FitscoreSummaryCards() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [onRequirementIndexChange]);
 
   useEffect(() => {
-    if (scopeId === "all") return;
+    if (requirementIndex == null) return;
 
-    const cacheKey = String(scopeId);
+    const activeRequirementIndex = requirementIndex;
+    const cacheKey = String(activeRequirementIndex);
     if (scopeStats[cacheKey]) return;
 
     let cancelled = false;
@@ -108,7 +114,7 @@ export function FitscoreSummaryCards() {
       setError(null);
 
       try {
-        const result = await fetchFitscoreRequirementSummary(scopeId as number);
+        const result = await fetchFitscoreRequirementSummary(activeRequirementIndex);
         if (cancelled) return;
 
         const stats: FitscoreSummaryStats = {
@@ -121,7 +127,7 @@ export function FitscoreSummaryCards() {
         setScopeStats((prev) => ({ ...prev, [cacheKey]: stats }));
         setScopes((prev) =>
           prev.map((scope) =>
-            scope.id === scopeId ? { ...scope, stats } : scope
+            scope.id === activeRequirementIndex ? { ...scope, stats } : scope
           )
         );
       } catch (loadError) {
@@ -142,22 +148,23 @@ export function FitscoreSummaryCards() {
     return () => {
       cancelled = true;
     };
-  }, [scopeId, scopeStats]);
+  }, [requirementIndex, scopeStats]);
 
   const activeScope = useMemo(
-    () => scopes.find((scope) => scope.id === scopeId) ?? scopes[0],
-    [scopeId, scopes]
+    () => scopes.find((scope) => scope.id === requirementIndex) ?? scopes[0],
+    [requirementIndex, scopes]
   );
 
   const activeStats =
-    scopeId === "all"
-      ? scopeStats.all
-      : scopeStats[String(scopeId)] ?? activeScope?.stats;
+    requirementIndex != null
+      ? scopeStats[String(requirementIndex)] ?? activeScope?.stats
+      : undefined;
 
   const stats = activeStats ?? emptyStats;
   const { accepted, rejected, failed } = stats;
   const { nonFailed, successRate, acceptanceRate } = computeFitscoreRates(stats);
-  const cardsLoading = loading || (scopeId !== "all" && scopeLoading);
+  const cardsLoading =
+    loading || (requirementIndex != null && scopeLoading);
 
   if (loading) {
     return (
@@ -198,11 +205,14 @@ export function FitscoreSummaryCards() {
   }
 
   if (!activeScope) {
-    return null;
+    return (
+      <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+        No requirements configured yet.
+      </div>
+    );
   }
 
-  const scopeLabel =
-    scopeId === "all" ? "all requirements" : activeScope.label.toLowerCase();
+  const scopeLabel = activeScope.label.toLowerCase();
 
   return (
     <div className="mb-6">
@@ -215,13 +225,13 @@ export function FitscoreSummaryCards() {
       {scopes.length > 1 ? (
         <div className="mb-4 flex flex-wrap items-center gap-2">
           {scopes.map((scope) => {
-            const active = scopeId === scope.id;
+            const active = requirementIndex === scope.id;
 
             return (
               <button
                 key={String(scope.id)}
                 type="button"
-                onClick={() => setScopeId(scope.id)}
+                onClick={() => onRequirementIndexChange(scope.id)}
                 className={`rounded-lg px-3.5 py-2 text-sm font-medium transition ${
                   active
                     ? "bg-violet-600 text-white"

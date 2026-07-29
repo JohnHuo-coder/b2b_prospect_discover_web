@@ -30,6 +30,16 @@ export const GET = withAuth(
       const statusParam = searchParams.get("status");
       const status =
         statusParam && allowedStatuses.has(statusParam) ? statusParam : undefined;
+      const requirementIndexParam = searchParams.get("requirement_index");
+
+      if (!requirementIndexParam) {
+        return errorResponse("requirement_index is required", 400);
+      }
+
+      const requirement_index = Number(requirementIndexParam);
+      if (!Number.isFinite(requirement_index)) {
+        return errorResponse("Invalid requirement_index", 400);
+      }
 
       const result = await systemDashboardRepository.getFitScoreStatus({
         ...scope,
@@ -37,6 +47,7 @@ export const GET = withAuth(
         limit,
         search,
         status,
+        requirement_index,
       });
 
       return jsonResponse({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ExternalLink, Search } from "lucide-react";
 import {
   fetchFitscoreCandidateDetail,
@@ -35,6 +35,7 @@ const statusFilterLabels: Record<FitscoreStatusFilter, string> = {
 };
 
 export function FitscoreContent() {
+  const [requirementIndex, setRequirementIndex] = useState<number | null>(null);
   const [candidates, setCandidates] = useState<FitscoreTableCandidate[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
@@ -49,12 +50,23 @@ export function FitscoreContent() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
 
+  const handleRequirementIndexChange = useCallback((index: number) => {
+    setRequirementIndex(index);
+  }, []);
+
   useEffect(() => {
     setPage(1);
     setSelectedId(null);
-  }, [search, statusFilter]);
+  }, [search, statusFilter, requirementIndex]);
 
   useEffect(() => {
+    if (requirementIndex == null) {
+      setCandidates([]);
+      setTotal(0);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
 
     const load = async () => {
@@ -63,6 +75,7 @@ export function FitscoreContent() {
 
       try {
         const result = await fetchFitscoreCandidates({
+          requirement_index: requirementIndex,
           search: search.trim() || undefined,
           status: statusFilter,
           page,
@@ -91,12 +104,12 @@ export function FitscoreContent() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [search, statusFilter, page]);
+  }, [search, statusFilter, page, requirementIndex]);
 
   const totalPages = Math.max(1, Math.ceil(total / CANDIDATES_PAGE_SIZE));
 
   useEffect(() => {
-    if (!selectedId) {
+    if (!selectedId || requirementIndex == null) {
       setSelectedDetail(null);
       setDetailError(null);
       setDetailLoading(false);
@@ -108,6 +121,7 @@ export function FitscoreContent() {
 
     const selectedSummary = summary;
     const candidateId = selectedId;
+    const activeRequirementIndex = requirementIndex;
     let cancelled = false;
 
     async function loadDetail() {
@@ -122,7 +136,10 @@ export function FitscoreContent() {
       });
 
       try {
-        const detail = await fetchFitscoreCandidateDetail(candidateId);
+        const detail = await fetchFitscoreCandidateDetail(
+          candidateId,
+          activeRequirementIndex
+        );
         if (!cancelled) setSelectedDetail(detail);
       } catch (loadError) {
         if (!cancelled) {
@@ -142,7 +159,7 @@ export function FitscoreContent() {
     return () => {
       cancelled = true;
     };
-  }, [selectedId, candidates]);
+  }, [selectedId, candidates, requirementIndex]);
 
   return (
     <div className="px-8 py-8">
@@ -157,7 +174,10 @@ export function FitscoreContent() {
         </div>
       ) : null}
 
-      <FitscoreSummaryCards />
+      <FitscoreSummaryCards
+        requirementIndex={requirementIndex}
+        onRequirementIndexChange={handleRequirementIndexChange}
+      />
 
       <div className="mb-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="relative max-w-xl flex-1">
@@ -196,7 +216,11 @@ export function FitscoreContent() {
       <DataTableSection
         title="Candidates"
         subtitle={
-          loading ? "Loading candidates..." : `${total} candidates scored`
+          loading
+            ? "Loading candidates..."
+            : requirementIndex != null
+              ? `${total} candidates scored for requirement ${requirementIndex}`
+              : "Select a requirement to view candidates"
         }
         hint="Click a row to view fit score details"
       >

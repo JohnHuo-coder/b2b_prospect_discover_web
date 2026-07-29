@@ -127,6 +127,8 @@ export function FitscoreCandidateDetail({
 
   if (!candidate) return null;
 
+  const requirement = candidate.requirements[0] ?? null;
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <button
@@ -175,59 +177,48 @@ export function FitscoreCandidateDetail({
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
-          ) : candidate.requirements.length === 0 ? (
-            <p className="text-sm text-gray-500">No requirement details found.</p>
+          ) : !requirement ? (
+            <p className="text-sm text-gray-500">No fit score details found.</p>
           ) : (
-            <>
-              <p className="mb-4 text-sm text-gray-500">
-                Fit scores grouped by requirement ({candidate.requirements.length})
-              </p>
-
-              <div className="space-y-4">
-                {candidate.requirements.map((req) => (
-                  <section
-                    key={req.requirement_index}
-                    className="rounded-xl border border-gray-200 bg-gray-50/60 p-4"
-                  >
-                    <div className="mb-4 border-b border-gray-200 pb-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
-                        Requirement {req.requirement_index}
-                      </p>
-                      {req.requirement_text ? (
-                        <p className="mt-1 text-sm leading-relaxed text-gray-700">
-                          {req.requirement_text}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <DetailField label="Status">
-                        <RequirementStatusBadge status={req.status} />
-                      </DetailField>
-                      <DetailField label="Score">
-                        {req.score != null ? (
-                          <span className="font-mono font-semibold tabular-nums">
-                            {req.score}
-                          </span>
-                        ) : (
-                          "—"
-                        )}
-                      </DetailField>
-                      <div className="sm:col-span-2">
-                        <DetailField label="Reason">{req.reason || "—"}</DetailField>
-                      </div>
-                    </dl>
-
-                    <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Supporting facts
-                      </p>
-                      <SupportingFactsList facts={req.supporting_facts} />
-                    </div>
-                  </section>
-                ))}
+            <section className="rounded-xl border border-gray-200 bg-gray-50/60 p-4">
+              <div className="mb-4 border-b border-gray-200 pb-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
+                  Requirement {requirement.requirement_index}
+                </p>
+                {requirement.requirement_text ? (
+                  <p className="mt-1 text-sm leading-relaxed text-gray-700">
+                    {requirement.requirement_text}
+                  </p>
+                ) : null}
               </div>
-            </>
+
+              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <DetailField label="Status">
+                  <RequirementStatusBadge status={requirement.status} />
+                </DetailField>
+                <DetailField label="Score">
+                  {requirement.score != null ? (
+                    <span className="font-mono font-semibold tabular-nums">
+                      {requirement.score}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </DetailField>
+                <div className="sm:col-span-2">
+                  <DetailField label="Reason">
+                    {requirement.reason || "—"}
+                  </DetailField>
+                </div>
+              </dl>
+
+              <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Supporting facts
+                </p>
+                <SupportingFactsList facts={requirement.supporting_facts} />
+              </div>
+            </section>
           )}
         </div>
       </aside>
