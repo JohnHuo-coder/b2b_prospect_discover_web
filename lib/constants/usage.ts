@@ -1,12 +1,6 @@
 export function formatEstimatedCost(value: number | null | undefined): string {
   const amount = Number(value) || 0;
-  if (amount >= 1) {
-    return `$${amount.toFixed(2)}`;
-  }
-  if (amount >= 0.01) {
-    return `$${amount.toFixed(4)}`;
-  }
-  return `$${amount.toFixed(6)}`;
+  return `$${amount.toFixed(2)}`;
 }
 
 export function formatUsageLabel(value: string | null | undefined): string {
@@ -17,6 +11,6 @@ export function formatUsageLabel(value: string | null | undefined): string {
     .join(" ");
 }
 
-export function formatConfigLabel(configId: string, version: number): string {
-  return `Config v${version} (#${configId})`;
+export function formatConfigLabel(_configId: string, version: number): string {
+  return `v${version}`;
 }

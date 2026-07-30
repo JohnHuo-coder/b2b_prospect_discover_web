@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  AlertTriangle,
   AtSign,
   BarChart3,
   ChevronRight,
@@ -65,6 +66,15 @@ const workflowStages: WorkflowStage[] = [
     icon: Coins,
     iconBoxClassName: "bg-emerald-100",
     iconClassName: "text-emerald-600",
+  },
+  {
+    title: "API Errors",
+    description:
+      "External API failures — drill down by workflow, API name, and execution ID per config.",
+    href: "/system-dashboard/api-errors",
+    icon: AlertTriangle,
+    iconBoxClassName: "bg-red-100",
+    iconClassName: "text-red-600",
   },
 ];
 

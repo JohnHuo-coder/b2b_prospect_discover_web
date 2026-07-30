@@ -732,7 +732,7 @@ export function DashboardContent() {
           </div>
           <p className="mt-1 text-sm text-gray-500">
             {isAlternateVersion
-              ? `Viewing configuration version ${selectedVersion}`
+              ? `Viewing ${selectedVersion > 0 ? `v${selectedVersion}` : "alternate version"}`
               : "All lead candidates"}
           </p>
         </div>

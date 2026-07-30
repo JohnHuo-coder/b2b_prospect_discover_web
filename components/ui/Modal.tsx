@@ -17,7 +17,7 @@ export function Modal({
   onClose: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  size?: "default" | "lg";
+  size?: "default" | "lg" | "xl";
 }) {
   useEffect(() => {
     if (!open) return;
@@ -50,7 +50,11 @@ export function Modal({
         aria-modal="true"
         aria-labelledby="modal-title"
         className={`relative z-10 flex max-h-[90vh] w-full flex-col rounded-xl bg-white shadow-xl ${
-          size === "lg" ? "max-w-2xl" : "max-w-lg"
+          size === "xl"
+            ? "max-w-4xl"
+            : size === "lg"
+              ? "max-w-2xl"
+              : "max-w-lg"
         }`}
       >
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">

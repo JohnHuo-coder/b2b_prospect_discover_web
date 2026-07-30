@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { ChevronDown, ChevronRight, Coins, Search } from "lucide-react";
+import { Coins, Search } from "lucide-react";
 import {
   fetchBusinessLevelUsage,
   fetchCandidateLevelLeads,
@@ -28,6 +28,8 @@ import {
 import { DataTableSection, MetricCard } from "./MetricCard";
 import { SystemDashboardBackLink } from "./SystemDashboardShared";
 import { Pagination } from "@/components/ui/Pagination";
+import { Modal } from "@/components/ui/Modal";
+import { SimpleSelect } from "@/components/ui/SimpleSelect";
 
 type UsageTab = "business" | "candidate";
 
@@ -44,22 +46,23 @@ function ConfigSelect({
   configs: Array<{ config_id: string; version: number }>;
   includeAll?: boolean;
 }) {
+  const options = [
+    ...(includeAll ? [{ value: "", label: "All configs" }] : []),
+    ...configs.map((config) => ({
+      value: config.config_id,
+      label: formatConfigLabel(config.config_id, config.version),
+    })),
+  ];
+
   return (
-    <label className="flex flex-col gap-1.5 text-sm">
-      <span className="font-medium text-gray-700">Config</span>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
-      >
-        {includeAll ? <option value="">All configs</option> : null}
-        {configs.map((config) => (
-          <option key={config.config_id} value={config.config_id}>
-            {formatConfigLabel(config.config_id, config.version)}
-          </option>
-        ))}
-      </select>
-    </label>
+    <SimpleSelect
+      label="Config"
+      value={value}
+      onChange={onChange}
+      options={options}
+      placeholder="Select config"
+      className="w-full min-w-[160px]"
+    />
   );
 }
 
@@ -230,39 +233,44 @@ function StageBreakdownTable({
   configId: string;
   stages: CandidateConfigStages["stages"];
 }) {
-  const [expandedStage, setExpandedStage] = useState<string | null>(null);
-  const [stageDetails, setStageDetails] = useState<
-    Record<string, CandidateStageDetail>
-  >({});
-  const [loadingStage, setLoadingStage] = useState<string | null>(null);
-  const [stageError, setStageError] = useState<string | null>(null);
+  const [selectedStage, setSelectedStage] = useState<
+    CandidateConfigStages["stages"][number] | null
+  >(null);
+  const [stageDetail, setStageDetail] = useState<CandidateStageDetail | null>(
+    null
+  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const toggleStage = useCallback(
-    async (stage: string) => {
-      if (expandedStage === stage) {
-        setExpandedStage(null);
-        return;
-      }
-
-      setExpandedStage(stage);
-      if (stageDetails[stage]) return;
-
-      setLoadingStage(stage);
-      setStageError(null);
+  const openStageModal = useCallback(
+    async (stage: CandidateConfigStages["stages"][number]) => {
+      setSelectedStage(stage);
+      setStageDetail(null);
+      setError(null);
+      setLoading(true);
 
       try {
-        const detail = await fetchCandidateStageDetail(configId, stage);
-        setStageDetails((current) => ({ ...current, [stage]: detail }));
-      } catch (error) {
-        setStageError(
-          error instanceof Error ? error.message : "Failed to load stage detail"
+        const detail = await fetchCandidateStageDetail(configId, stage.stage);
+        setStageDetail(detail);
+      } catch (loadError) {
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Failed to load stage detail"
         );
       } finally {
-        setLoadingStage(null);
+        setLoading(false);
       }
     },
-    [configId, expandedStage, stageDetails]
+    [configId]
   );
+
+  const closeStageModal = useCallback(() => {
+    setSelectedStage(null);
+    setStageDetail(null);
+    setError(null);
+    setLoading(false);
+  }, []);
 
   if (stages.length === 0) {
     return (
@@ -273,93 +281,121 @@ function StageBreakdownTable({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-100">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Stage
-            </th>
-            <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Candidates
-            </th>
-            <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Calls
-            </th>
-            <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Cost
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">
-          {stages.map((stage) => {
-            const isExpanded = expandedStage === stage.stage;
-            const detail = stageDetails[stage.stage];
+    <>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-100">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Stage
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Candidates
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Calls
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Cost
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Details
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 bg-white">
+            {stages.map((stage) => (
+              <tr key={stage.stage} className="hover:bg-gray-50/80">
+                <td className="px-6 py-3 text-sm font-medium text-gray-900">
+                  {formatUsageLabel(stage.stage)}
+                </td>
+                <td className="px-6 py-3 text-right text-sm tabular-nums text-gray-700">
+                  {stage.candidate_count}
+                </td>
+                <td className="px-6 py-3 text-right text-sm tabular-nums text-gray-700">
+                  {stage.call_count}
+                </td>
+                <td className="px-6 py-3 text-right text-sm tabular-nums text-gray-900">
+                  {formatEstimatedCost(stage.total_cost)}
+                </td>
+                <td className="px-6 py-3 text-right">
+                  <button
+                    type="button"
+                    onClick={() => openStageModal(stage)}
+                    className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
+                  >
+                    View tasks
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-            return (
-              <FragmentRow key={stage.stage}>
-                <tr
-                  className="cursor-pointer hover:bg-gray-50/80"
-                  onClick={() => toggleStage(stage.stage)}
-                >
-                  <td className="px-6 py-3 text-sm font-medium text-gray-900">
-                    <span className="inline-flex items-center gap-2">
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-gray-400" />
-                      )}
-                      {formatUsageLabel(stage.stage)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-right text-sm tabular-nums text-gray-700">
-                    {stage.candidate_count}
-                  </td>
-                  <td className="px-6 py-3 text-right text-sm tabular-nums text-gray-700">
-                    {stage.call_count}
-                  </td>
-                  <td className="px-6 py-3 text-right text-sm tabular-nums text-gray-900">
-                    {formatEstimatedCost(stage.total_cost)}
-                  </td>
-                </tr>
-                {isExpanded ? (
-                  <tr className="bg-gray-50/60">
-                    <td colSpan={4} className="px-6 py-4">
-                      {loadingStage === stage.stage ? (
-                        <p className="text-sm text-gray-500">
-                          Loading task breakdown…
-                        </p>
-                      ) : stageError ? (
-                        <p className="text-sm text-red-600">{stageError}</p>
-                      ) : (
-                        <UsageTable
-                          emptyMessage="No task usage for this stage."
-                          columns={[
-                            { key: "task", label: "Task" },
-                            { key: "calls", label: "Calls", align: "right" },
-                            { key: "cost", label: "Cost", align: "right" },
-                          ]}
-                          rows={(detail?.tasks ?? []).map((task) => ({
-                            task: formatUsageLabel(task.task),
-                            calls: task.call_count,
-                            cost: formatEstimatedCost(task.total_cost),
-                          }))}
-                        />
-                      )}
-                    </td>
-                  </tr>
-                ) : null}
-              </FragmentRow>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+      <Modal
+        open={selectedStage != null}
+        title={
+          selectedStage
+            ? `${formatUsageLabel(selectedStage.stage)} — task breakdown`
+            : "Stage breakdown"
+        }
+        onClose={closeStageModal}
+        size="lg"
+      >
+        {selectedStage ? (
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  Candidates
+                </p>
+                <p className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+                  {selectedStage.candidate_count}
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  Calls
+                </p>
+                <p className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+                  {selectedStage.call_count}
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  Stage cost
+                </p>
+                <p className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+                  {formatEstimatedCost(selectedStage.total_cost)}
+                </p>
+              </div>
+            </div>
+
+            {loading ? (
+              <p className="text-sm text-gray-500">Loading task breakdown…</p>
+            ) : error ? (
+              <p className="text-sm text-red-600">{error}</p>
+            ) : (
+              <UsageTable
+                emptyMessage="No task usage for this stage."
+                columns={[
+                  { key: "task", label: "Task" },
+                  { key: "calls", label: "Calls", align: "right" },
+                  { key: "cost", label: "Cost", align: "right" },
+                ]}
+                rows={(stageDetail?.tasks ?? []).map((task) => ({
+                  task: formatUsageLabel(task.task),
+                  calls: task.call_count,
+                  cost: formatEstimatedCost(task.total_cost),
+                }))}
+              />
+            )}
+          </div>
+        ) : null}
+      </Modal>
+    </>
   );
-}
-
-function FragmentRow({ children }: { children: ReactNode }) {
-  return <>{children}</>;
 }
 
 function LeadBreakdownTable({
@@ -379,153 +415,169 @@ function LeadBreakdownTable({
   search: string;
   onSearchChange: (value: string) => void;
 }) {
-  const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
+  const [selectedLead, setSelectedLead] = useState<CandidateLeadUsage | null>(
+    null
+  );
   const totalPages = Math.max(1, Math.ceil(total / LEADS_PAGE_SIZE));
 
   return (
-    <DataTableSection
-      title="Candidates by place ID"
-      subtitle="Total cost per lead with stage and task breakdown"
-      hint="From candidate_level_usage"
-    >
-      <div className="border-b border-gray-100 px-6 py-4">
-        <div className="relative max-w-md">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search company or place ID…"
-            className="w-full rounded-lg border border-gray-200 py-2 pl-10 pr-3 text-sm text-gray-900 shadow-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+    <>
+      <DataTableSection
+        title="Candidates by place ID"
+        subtitle="Total cost per lead with stage and task breakdown"
+        hint="From candidate_level_usage"
+      >
+        <div className="border-b border-gray-100 px-6 py-4">
+          <div className="relative max-w-md">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Search company or place ID…"
+              className="w-full rounded-lg border border-gray-200 py-2 pl-10 pr-3 text-sm text-gray-900 shadow-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            />
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="px-6 py-10 text-center text-sm text-gray-500">
+            Loading candidates…
+          </div>
+        ) : leads.length === 0 ? (
+          <div className="px-6 py-10 text-center text-sm text-gray-500">
+            No candidate usage found for this config.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-100">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Lead
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Calls
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Total cost
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Details
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 bg-white">
+                {leads.map((lead) => (
+                  <tr key={lead.place_id} className="hover:bg-gray-50/80">
+                    <td className="px-6 py-3 text-sm text-gray-900">
+                      <span className="font-medium">
+                        {lead.company_name || "Unknown company"}
+                      </span>
+                      <span className="mt-0.5 block font-mono text-xs text-gray-500">
+                        {lead.place_id}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3 text-right text-sm tabular-nums text-gray-700">
+                      {lead.call_count}
+                    </td>
+                    <td className="px-6 py-3 text-right text-sm tabular-nums font-medium text-gray-900">
+                      {formatEstimatedCost(lead.total_cost)}
+                    </td>
+                    <td className="px-6 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedLead(lead)}
+                        className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
+                      >
+                        View breakdown
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {totalPages > 1 ? (
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            pageSize={LEADS_PAGE_SIZE}
+            onPageChange={onPageChange}
+            loading={loading}
           />
-        </div>
-      </div>
+        ) : null}
+      </DataTableSection>
 
-      {loading ? (
-        <div className="px-6 py-10 text-center text-sm text-gray-500">
-          Loading candidates…
-        </div>
-      ) : leads.length === 0 ? (
-        <div className="px-6 py-10 text-center text-sm text-gray-500">
-          No candidate usage found for this config.
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-100">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Lead
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Calls
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Total cost
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
-              {leads.map((lead) => {
-                const isExpanded = expandedLeadId === lead.place_id;
+      <Modal
+        open={selectedLead != null}
+        title={selectedLead?.company_name || "Lead usage breakdown"}
+        onClose={() => setSelectedLead(null)}
+        size="xl"
+      >
+        {selectedLead ? (
+          <div className="space-y-5">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+              <p className="font-mono text-xs text-gray-500">
+                {selectedLead.place_id}
+              </p>
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                    Total calls
+                  </p>
+                  <p className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+                    {selectedLead.call_count}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                    Total cost
+                  </p>
+                  <p className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+                    {formatEstimatedCost(selectedLead.total_cost)}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-                return (
-                  <FragmentRow key={lead.place_id}>
-                    <tr
-                      className="cursor-pointer hover:bg-gray-50/80"
-                      onClick={() =>
-                        setExpandedLeadId((current) =>
-                          current === lead.place_id ? null : lead.place_id
-                        )
-                      }
-                    >
-                      <td className="px-6 py-3 text-sm text-gray-900">
-                        <span className="inline-flex items-start gap-2">
-                          {isExpanded ? (
-                            <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
-                          ) : (
-                            <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
-                          )}
-                          <span>
-                            <span className="font-medium">
-                              {lead.company_name || "Unknown company"}
-                            </span>
-                            <span className="mt-0.5 block font-mono text-xs text-gray-500">
-                              {lead.place_id}
-                            </span>
-                          </span>
-                        </span>
-                      </td>
-                      <td className="px-6 py-3 text-right text-sm tabular-nums text-gray-700">
-                        {lead.call_count}
-                      </td>
-                      <td className="px-6 py-3 text-right text-sm tabular-nums font-medium text-gray-900">
-                        {formatEstimatedCost(lead.total_cost)}
-                      </td>
-                    </tr>
-                    {isExpanded ? (
-                      <tr className="bg-gray-50/60">
-                        <td colSpan={3} className="px-6 py-4">
-                          <div className="space-y-4">
-                            {lead.stages.map((stage) => (
-                              <div
-                                key={`${lead.place_id}-${stage.stage}`}
-                                className="rounded-lg border border-gray-200 bg-white"
-                              >
-                                <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-                                  <p className="text-sm font-medium text-gray-900">
-                                    {formatUsageLabel(stage.stage)}
-                                  </p>
-                                  <p className="text-sm tabular-nums text-gray-700">
-                                    {formatEstimatedCost(stage.total_cost)}
-                                  </p>
-                                </div>
-                                <UsageTable
-                                  emptyMessage="No tasks recorded."
-                                  columns={[
-                                    { key: "task", label: "Task" },
-                                    {
-                                      key: "calls",
-                                      label: "Calls",
-                                      align: "right",
-                                    },
-                                    {
-                                      key: "cost",
-                                      label: "Cost",
-                                      align: "right",
-                                    },
-                                  ]}
-                                  rows={stage.tasks.map((task) => ({
-                                    task: formatUsageLabel(task.task),
-                                    calls: task.call_count,
-                                    cost: formatEstimatedCost(task.total_cost),
-                                  }))}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
-                    ) : null}
-                  </FragmentRow>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {totalPages > 1 ? (
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          total={total}
-          pageSize={LEADS_PAGE_SIZE}
-          onPageChange={onPageChange}
-          loading={loading}
-        />
-      ) : null}
-    </DataTableSection>
+            <div className="space-y-4">
+              {selectedLead.stages.map((stage) => (
+                <div
+                  key={`${selectedLead.place_id}-${stage.stage}`}
+                  className="overflow-hidden rounded-xl border border-gray-200"
+                >
+                  <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-4 py-3">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {formatUsageLabel(stage.stage)}
+                    </p>
+                    <p className="text-sm tabular-nums font-medium text-gray-700">
+                      {formatEstimatedCost(stage.total_cost)}
+                    </p>
+                  </div>
+                  <UsageTable
+                    emptyMessage="No tasks recorded."
+                    columns={[
+                      { key: "task", label: "Task" },
+                      { key: "calls", label: "Calls", align: "right" },
+                      { key: "cost", label: "Cost", align: "right" },
+                    ]}
+                    rows={stage.tasks.map((task) => ({
+                      task: formatUsageLabel(task.task),
+                      calls: task.call_count,
+                      cost: formatEstimatedCost(task.total_cost),
+                    }))}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+    </>
   );
 }
 
@@ -750,7 +802,7 @@ function CandidateUsagePanel() {
               selectedConfigId,
               stageData?.version ?? selectedConfigSummary?.version ?? 0
             )}`}
-            hint="Expand a stage to see task-level cost"
+            hint="Click View tasks to open stage breakdown"
           >
             {detailLoading ? (
               <div className="px-6 py-10 text-center text-sm text-gray-500">

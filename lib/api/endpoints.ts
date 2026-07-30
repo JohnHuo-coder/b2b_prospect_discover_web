@@ -57,6 +57,12 @@ export const ENDPOINTS = {
       "/api/system-dashboard/usage/candidate/stages/detail",
     SYSTEM_DASHBOARD_USAGE_CANDIDATE_LEADS:
       "/api/system-dashboard/usage/candidate/leads",
+    SYSTEM_DASHBOARD_API_ERRORS_CONFIGS:
+      "/api/system-dashboard/api-errors/configs",
+    SYSTEM_DASHBOARD_API_ERRORS: "/api/system-dashboard/api-errors",
+    SYSTEM_DASHBOARD_API_ERRORS_APIS: "/api/system-dashboard/api-errors/apis",
+    SYSTEM_DASHBOARD_API_ERRORS_EXECUTIONS:
+      "/api/system-dashboard/api-errors/executions",
     outreachDetail: (id: string) => `/api/system-dashboard/outreach/${id}`,
     leadDetail: (id: string) => `/api/leads/${id}`,
     leadContact: (id: string) => `/api/leads/${id}/contacts`,

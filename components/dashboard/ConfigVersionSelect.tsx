@@ -1,5 +1,7 @@
 "use client";
 
+import { SimpleSelect } from "@/components/ui/SimpleSelect";
+
 type ConfigVersionSelectProps = {
   currentVersion: number;
   selectedVersion: number;
@@ -20,21 +22,18 @@ export function ConfigVersionSelect({
   const versions = Array.from({ length: currentVersion }, (_, index) => index + 1);
 
   return (
-    <label className="inline-flex items-center gap-2 text-sm text-gray-600">
-      <span className="font-medium text-gray-700">Version</span>
-      <select
-        value={selectedVersion}
+    <div className="inline-flex items-center gap-2">
+      <span className="text-sm font-medium text-gray-700">Version</span>
+      <SimpleSelect
+        value={String(selectedVersion)}
+        onChange={(value) => onChange(Number(value))}
         disabled={disabled}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100 disabled:cursor-not-allowed disabled:bg-gray-50"
-      >
-        {versions.map((version) => (
-          <option key={version} value={version}>
-            {version}
-            {version === currentVersion ? " (current)" : ""}
-          </option>
-        ))}
-      </select>
-    </label>
+        options={versions.map((version) => ({
+          value: String(version),
+          label: `v${version}`,
+        }))}
+        className="w-[84px]"
+      />
+    </div>
   );
 }
