@@ -48,6 +48,15 @@ export const ENDPOINTS = {
       "/api/system-dashboard/outreach/workflow",
     SYSTEM_DASHBOARD_OUTREACH_WORKFLOW_STAGE:
       "/api/system-dashboard/outreach/workflow/stage",
+    SYSTEM_DASHBOARD_USAGE_BUSINESS: "/api/system-dashboard/usage/business",
+    SYSTEM_DASHBOARD_USAGE_CANDIDATE_SUMMARY:
+      "/api/system-dashboard/usage/candidate/summary",
+    SYSTEM_DASHBOARD_USAGE_CANDIDATE_STAGES:
+      "/api/system-dashboard/usage/candidate/stages",
+    SYSTEM_DASHBOARD_USAGE_CANDIDATE_STAGE_DETAIL:
+      "/api/system-dashboard/usage/candidate/stages/detail",
+    SYSTEM_DASHBOARD_USAGE_CANDIDATE_LEADS:
+      "/api/system-dashboard/usage/candidate/leads",
     outreachDetail: (id: string) => `/api/system-dashboard/outreach/${id}`,
     leadDetail: (id: string) => `/api/leads/${id}`,
     leadContact: (id: string) => `/api/leads/${id}/contacts`,

@@ -5,6 +5,7 @@ import {
   AtSign,
   BarChart3,
   ChevronRight,
+  Coins,
   ScanSearch,
   Send,
   type LucideIcon,
@@ -55,6 +56,15 @@ const workflowStages: WorkflowStage[] = [
     icon: Send,
     iconBoxClassName: "bg-amber-100",
     iconClassName: "text-amber-600",
+  },
+  {
+    title: "Usage",
+    description:
+      "Estimated LLM cost — review business-level and candidate-level usage by config, stage, and task.",
+    href: "/system-dashboard/usage",
+    icon: Coins,
+    iconBoxClassName: "bg-emerald-100",
+    iconClassName: "text-emerald-600",
   },
 ];
 
