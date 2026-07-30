@@ -17,8 +17,8 @@ function DetailField({
 }) {
   return (
     <div>
-      <dt className="text-sm font-medium text-gray-700">{label}</dt>
-      <dd className="mt-1 text-sm text-gray-800">{children}</dd>
+      <dt className="text-sm font-medium text-zinc-700">{label}</dt>
+      <dd className="mt-1 text-sm text-zinc-800">{children}</dd>
     </div>
   );
 }
@@ -78,11 +78,11 @@ function SupportingFactsList({
   const items = parseSupportingFactsItems(facts);
 
   if (items.length === 0) {
-    return <p className="text-sm text-gray-500">—</p>;
+    return <p className="text-sm text-zinc-500">—</p>;
   }
 
   return (
-    <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-700">
+    <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-zinc-700">
       {items.map((fact, index) => (
         <li key={index}>{fact}</li>
       ))}
@@ -143,19 +143,19 @@ export function FitscoreCandidateDetail({
         aria-labelledby="fitscore-detail-title"
         className="relative z-10 flex h-full w-full max-w-2xl flex-col bg-white shadow-xl"
       >
-        <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
+        <div className="flex items-start justify-between border-b border-zinc-100 px-6 py-5">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
               {candidate.id}
             </p>
             <h2
               id="fitscore-detail-title"
-              className="mt-1 text-lg font-semibold text-gray-900"
+              className="mt-1 text-lg font-semibold text-zinc-950"
             >
               {candidate.company}
             </h2>
             {candidate.website ? (
-              <p className="mt-1 text-sm text-gray-500">{candidate.website}</p>
+              <p className="mt-1 text-sm text-zinc-500">{candidate.website}</p>
             ) : null}
             <div className="mt-2">
               <FitscoreStatusBadge status={candidate.status} />
@@ -164,7 +164,7 @@ export function FitscoreCandidateDetail({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-lg p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600"
           >
             <X className="h-5 w-5" />
           </button>
@@ -172,21 +172,21 @@ export function FitscoreCandidateDetail({
 
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {loading ? (
-            <p className="text-sm text-gray-500">Loading requirement details...</p>
+            <p className="text-sm text-zinc-500">Loading requirement details...</p>
           ) : error ? (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           ) : !requirement ? (
-            <p className="text-sm text-gray-500">No fit score details found.</p>
+            <p className="text-sm text-zinc-500">No fit score details found.</p>
           ) : (
-            <section className="rounded-xl border border-gray-200 bg-gray-50/60 p-4">
-              <div className="mb-4 border-b border-gray-200 pb-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
+            <section className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4">
+              <div className="mb-4 border-b border-zinc-200 pb-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-teal-800">
                   Requirement {requirement.requirement_index}
                 </p>
                 {requirement.requirement_text ? (
-                  <p className="mt-1 text-sm leading-relaxed text-gray-700">
+                  <p className="mt-1 text-sm leading-relaxed text-zinc-700">
                     {requirement.requirement_text}
                   </p>
                 ) : null}
@@ -212,8 +212,8 @@ export function FitscoreCandidateDetail({
                 </div>
               </dl>
 
-              <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <div className="mt-4 rounded-lg border border-zinc-200 bg-white p-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   Supporting facts
                 </p>
                 <SupportingFactsList facts={requirement.supporting_facts} />

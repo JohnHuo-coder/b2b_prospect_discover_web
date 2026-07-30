@@ -65,7 +65,7 @@ export function ContactSummaryCards() {
   if (loading) {
     return (
       <div className="mb-6 max-w-md">
-        <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+        <div className="rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-sm">
           <SkeletonBar className="h-4 w-24" />
           <SkeletonBar className="mt-3 h-9 w-20" />
           <SkeletonBar className="mt-4 h-2 w-full" />
@@ -89,10 +89,10 @@ export function ContactSummaryCards() {
           progress={passRate}
           subtext={`${succeed} of ${totalInput}`}
           icon={Percent}
-          iconClassName="text-violet-600"
-          iconBoxClassName="bg-violet-100"
-          valueClassName="text-violet-600"
-          progressClassName="bg-violet-500"
+          iconClassName="text-teal-800"
+          iconBoxClassName="bg-teal-100"
+          valueClassName="text-teal-800"
+          progressClassName="bg-teal-500"
         />
       </div>
     </div>

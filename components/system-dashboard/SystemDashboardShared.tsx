@@ -14,14 +14,14 @@ export function SystemDashboardBackLink({
     <div className="mb-8">
       <Link
         href="/system-dashboard"
-        className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-violet-600 transition hover:text-violet-700"
+        className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-teal-800 transition hover:text-teal-900"
       >
         <ChevronLeft className="h-4 w-4" />
         System Dashboard
       </Link>
-      <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+      <h1 className="text-2xl font-bold text-zinc-950">{title}</h1>
       {subtitle ? (
-        <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
+        <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>
       ) : null}
     </div>
   );
@@ -104,7 +104,7 @@ export function OutreachHumanReviewDetailTags({
   return (
     <>
       {modified === true ? (
-        <span className="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700">
+        <span className="inline-flex items-center rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[11px] font-medium text-teal-800">
           Modified
         </span>
       ) : null}

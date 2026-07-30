@@ -176,14 +176,14 @@ export function RegisterForm() {
       }
       showBackToLanding
     >
-      <div className="mb-6 grid grid-cols-2 gap-2 rounded-lg bg-gray-100 p-1">
+      <div className="mb-6 grid grid-cols-2 gap-2 rounded-lg bg-zinc-100 p-1">
         <button
           type="button"
           onClick={() => setMode("business")}
           className={`rounded-md px-3 py-2 text-sm font-medium transition ${
             mode === "business"
-              ? "bg-white text-violet-700 shadow-sm"
-              : "text-gray-600 hover:text-gray-900"
+              ? "bg-white text-teal-800 shadow-sm"
+              : "text-zinc-600 hover:text-zinc-950"
           }`}
         >
           Business
@@ -193,8 +193,8 @@ export function RegisterForm() {
           onClick={() => setMode("member")}
           className={`rounded-md px-3 py-2 text-sm font-medium transition ${
             mode === "member"
-              ? "bg-white text-violet-700 shadow-sm"
-              : "text-gray-600 hover:text-gray-900"
+              ? "bg-white text-teal-800 shadow-sm"
+              : "text-zinc-600 hover:text-zinc-950"
           }`}
         >
           Member
@@ -297,9 +297,9 @@ export function RegisterForm() {
         </>
       ) : null}
 
-      <p className={`text-center text-sm text-gray-500 ${mode === "member" ? "mt-6" : "mt-4"}`}>
+      <p className={`text-center text-sm text-zinc-500 ${mode === "member" ? "mt-6" : "mt-4"}`}>
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-violet-600 hover:text-violet-700">
+        <Link href="/login" className="font-medium text-teal-800 hover:text-teal-900">
           Sign in
         </Link>
       </p>

@@ -46,14 +46,14 @@ export function RequirementsEditForm({
 
   return (
     <div>
-      <p className="mb-4 text-xs leading-relaxed text-gray-500">
+      <p className="mb-4 text-xs leading-relaxed text-zinc-500">
         {REQUIREMENTS_TESTING_NOTICE}
       </p>
 
       <div className="space-y-3">
         {requirements.map((requirement, index) => (
           <div key={`${index}-${requirement.slice(0, 20)}`} className="flex items-start gap-3">
-            <span className="w-5 shrink-0 pt-2.5 text-sm font-medium text-gray-500">
+            <span className="w-5 shrink-0 pt-2.5 text-sm font-medium text-zinc-500">
               {index + 1}.
             </span>
             <div className="flex min-w-0 flex-1 items-start gap-2">
@@ -61,13 +61,13 @@ export function RequirementsEditForm({
                 value={requirement}
                 rows={2}
                 onChange={(event) => updateRequirement(index, event.target.value)}
-                className="min-h-[44px] flex-1 resize-none rounded-lg border border-gray-200 px-3 py-2.5 text-sm leading-relaxed text-gray-800 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                className="min-h-[44px] flex-1 resize-none rounded-lg border border-zinc-200 px-3 py-2.5 text-sm leading-relaxed text-zinc-800 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
               />
               <button
                 type="button"
                 onClick={() => removeRequirement(index)}
                 aria-label={`Remove requirement ${index + 1}`}
-                className="shrink-0 rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+                className="shrink-0 rounded-lg p-1.5 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -93,23 +93,23 @@ export function RequirementsEditForm({
               addRequirement();
             }
           }}
-          className="flex-1 rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-violet-300 focus:ring-2 focus:ring-violet-100 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+          className="flex-1 rounded-lg border border-zinc-200 px-3 py-2.5 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-teal-300 focus:ring-2 focus:ring-teal-100 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-500"
         />
         <button
           type="button"
           onClick={addRequirement}
           disabled={atRequirementLimit}
-          className="shrink-0 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-transparent"
+          className="shrink-0 rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:text-zinc-400 disabled:hover:bg-transparent"
         >
           + Add
         </button>
       </div>
 
       {hasPendingSuggestions ? (
-        <div className="mt-8 border-t border-gray-100 pt-6">
+        <div className="mt-8 border-t border-zinc-100 pt-6">
           <div className="mb-4 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-violet-500" />
-            <h3 className="text-sm font-semibold text-gray-900">LLM Rephrase Suggestions</h3>
+            <Sparkles className="h-4 w-4 text-teal-600" />
+            <h3 className="text-sm font-semibold text-zinc-950">LLM Rephrase Suggestions</h3>
           </div>
 
           <div className="space-y-4">
@@ -120,10 +120,10 @@ export function RequirementsEditForm({
               return (
                 <div
                   key={`suggestion-${index}-${requirement.slice(0, 20)}`}
-                  className="rounded-xl border border-violet-100 bg-violet-50/40 p-4"
+                  className="rounded-xl border border-teal-100 bg-teal-50/40 p-4"
                 >
                   <div className="mb-2 flex items-center justify-between gap-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-teal-800">
                       Suggestion for #{index + 1}
                     </p>
                     <div className="flex items-center gap-2">
@@ -132,7 +132,7 @@ export function RequirementsEditForm({
                         onClick={() =>
                           onDiscardRephraseSuggestion?.(index)
                         }
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
+                        className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 transition hover:bg-zinc-50"
                       >
                         Discard
                       </button>
@@ -141,7 +141,7 @@ export function RequirementsEditForm({
                         onClick={() =>
                           onKeepRephraseSuggestion?.(index, suggestion.clarified)
                         }
-                        className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-violet-700"
+                        className="rounded-lg bg-teal-800 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-teal-900"
                       >
                         Keep
                       </button>
@@ -154,11 +154,11 @@ export function RequirementsEditForm({
                     onChange={(event) =>
                       onUpdateRephraseSuggestion?.(index, event.target.value)
                     }
-                    className="min-h-[44px] w-full resize-none rounded-lg border border-violet-200 bg-white px-3 py-2.5 text-sm leading-relaxed text-gray-800 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+                    className="min-h-[44px] w-full resize-none rounded-lg border border-teal-200 bg-white px-3 py-2.5 text-sm leading-relaxed text-zinc-800 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
                   />
 
                   {suggestion.reason ? (
-                    <p className="mt-2 text-xs leading-relaxed text-gray-500">
+                    <p className="mt-2 text-xs leading-relaxed text-zinc-500">
                       {suggestion.reason}
                     </p>
                   ) : null}
@@ -198,7 +198,7 @@ export function RequirementsModalFooter({
           type="button"
           onClick={onRephrase}
           disabled={saving || rephrasing}
-          className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-100 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-800 transition hover:bg-teal-100 disabled:opacity-50"
         >
           <Sparkles className="h-4 w-4" />
           {rephrasing ? "Rephrasing..." : "LLM Rephrase"}
@@ -211,7 +211,7 @@ export function RequirementsModalFooter({
                 type="button"
                 onClick={onCancel}
                 disabled={saving || rephrasing}
-                className="text-sm font-medium text-gray-600 transition hover:text-gray-900 disabled:opacity-50"
+                className="text-sm font-medium text-zinc-600 transition hover:text-zinc-950 disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -221,7 +221,7 @@ export function RequirementsModalFooter({
                 type="button"
                 onClick={onSave}
                 disabled={saving || rephrasing}
-                className="rounded-lg bg-violet-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:opacity-50"
+                className="rounded-lg bg-teal-800 px-5 py-2 text-sm font-medium text-white transition hover:bg-teal-900 disabled:opacity-50"
               >
                 {saving ? "Saving..." : "Save"}
               </button>

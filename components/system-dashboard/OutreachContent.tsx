@@ -173,7 +173,7 @@ export function OutreachContent() {
       <div className="mb-6">
         <Link
           href="/system-dashboard/outreach/pipeline"
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
+          className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-900"
         >
           <GitBranch className="h-4 w-4" />
           View failure on each stage
@@ -188,13 +188,13 @@ export function OutreachContent() {
 
       <div className="mb-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="relative max-w-xl flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
           <input
             type="text"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by company or website..."
-            className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+            className="w-full rounded-lg border border-zinc-200 bg-white py-2.5 pl-10 pr-4 text-sm text-zinc-950 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
           />
         </div>
 
@@ -209,8 +209,8 @@ export function OutreachContent() {
                 onClick={() => setStatusFilter(status)}
                 className={`rounded-lg px-3.5 py-2 text-sm font-medium transition ${
                   active
-                    ? "bg-violet-600 text-white"
-                    : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                    ? "bg-teal-800 text-white"
+                    : "border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
                 }`}
               >
                 {statusFilterLabels[status]}
@@ -235,7 +235,7 @@ export function OutreachContent() {
             <col className="w-28" />
           </colgroup>
           <thead>
-            <tr className="border-b border-gray-100 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            <tr className="border-b border-zinc-100 text-left text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
               <th className="px-6 py-4">ID</th>
               <th className="px-6 py-4">Company</th>
               <th className="px-6 py-4">Website</th>
@@ -247,7 +247,7 @@ export function OutreachContent() {
               <tr>
                 <td
                   colSpan={4}
-                  className="px-6 py-10 text-center text-sm text-gray-500"
+                  className="px-6 py-10 text-center text-sm text-zinc-500"
                 >
                   Loading...
                 </td>
@@ -256,7 +256,7 @@ export function OutreachContent() {
               <tr>
                 <td
                   colSpan={4}
-                  className="px-6 py-10 text-center text-sm text-gray-500"
+                  className="px-6 py-10 text-center text-sm text-zinc-500"
                 >
                   No candidates match your filters.
                 </td>
@@ -269,15 +269,15 @@ export function OutreachContent() {
                   <tr
                     key={candidate.id}
                     onClick={() => setSelectedId(candidate.id)}
-                    className={`cursor-pointer border-b border-gray-50 last:border-b-0 transition hover:bg-gray-50/60 ${
-                      selected ? "bg-violet-50/60" : ""
+                    className={`cursor-pointer border-b border-zinc-50 last:border-b-0 transition hover:bg-zinc-50/60 ${
+                      selected ? "bg-teal-50/60" : ""
                     }`}
                   >
-                    <td className="px-6 py-4 text-sm font-medium text-gray-700">
+                    <td className="px-6 py-4 text-sm font-medium text-zinc-700">
                       {candidate.id}
                     </td>
                     <td
-                      className="truncate px-6 py-4 text-sm font-semibold text-gray-900"
+                      className="truncate px-6 py-4 text-sm font-semibold text-zinc-950"
                       title={candidate.company}
                     >
                       {candidate.company}
@@ -293,14 +293,14 @@ export function OutreachContent() {
                           target="_blank"
                           rel="noopener noreferrer"
                           title={candidate.website}
-                          className="inline-flex max-w-full min-w-0 items-center gap-1.5 text-sm text-violet-600 hover:text-violet-700"
+                          className="inline-flex max-w-full min-w-0 items-center gap-1.5 text-sm text-teal-800 hover:text-teal-900"
                           onClick={(event) => event.stopPropagation()}
                         >
                           <span className="truncate">{candidate.website}</span>
                           <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                         </a>
                       ) : (
-                        <span className="text-sm text-gray-400">—</span>
+                        <span className="text-sm text-zinc-400">—</span>
                       )}
                     </td>
                     <td className="px-6 py-4">

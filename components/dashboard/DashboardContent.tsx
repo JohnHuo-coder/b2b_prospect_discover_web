@@ -37,8 +37,8 @@ const summaryCardMeta = [
   {
     key: "ready" as const,
     label: "Ready",
-    valueClass: "text-violet-600",
-    bgClass: "bg-violet-50",
+    valueClass: "text-teal-800",
+    bgClass: "bg-teal-50",
   },
   {
     key: "sent" as const,
@@ -61,8 +61,8 @@ const summaryCardMeta = [
   {
     key: "rejected" as const,
     label: "Rejected",
-    valueClass: "text-gray-600",
-    bgClass: "bg-gray-100",
+    valueClass: "text-zinc-600",
+    bgClass: "bg-zinc-100",
   },
 ];
 
@@ -92,7 +92,7 @@ function SummaryStatCard({
 }) {
   return (
     <div
-      className={`rounded-xl border border-gray-200 ${bgClass} px-5 py-4`}
+      className={`rounded-xl border border-zinc-200 ${bgClass} px-5 py-4`}
       aria-busy={loading}
     >
       {loading ? (
@@ -102,7 +102,7 @@ function SummaryStatCard({
         </>
       ) : (
         <>
-          <p className="text-sm font-medium text-gray-600">{label}</p>
+          <p className="text-sm font-medium text-zinc-600">{label}</p>
           <p className={`mt-2 text-3xl font-bold ${valueClass}`}>{value}</p>
         </>
       )}
@@ -150,7 +150,7 @@ function BusinessJoinActions({
           type="button"
           disabled={acting}
           onClick={onCancel}
-          className="text-xs font-medium text-violet-600 transition hover:text-violet-700 hover:underline disabled:opacity-50"
+          className="text-xs font-medium text-teal-800 transition hover:text-teal-900 hover:underline disabled:opacity-50"
         >
           Cancel
         </button>
@@ -163,7 +163,7 @@ function BusinessJoinActions({
       type="button"
       disabled={!canJoin || joinDisabled || acting || !rowBusinessId}
       onClick={() => rowBusinessId && onJoin(rowBusinessId)}
-      className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500"
+      className="rounded-lg bg-teal-800 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-teal-900 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500"
     >
       Join
     </button>
@@ -290,7 +290,7 @@ function PendingDashboard() {
   return (
     <div className="px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-zinc-950">Dashboard</h1>
       </div>
 
       <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-6 py-5 text-sm text-amber-800">
@@ -299,15 +299,15 @@ function PendingDashboard() {
       </div>
 
       {userBusinessId ? (
-        <div className="mb-6 max-w-xl rounded-xl border border-violet-200 bg-violet-50 px-5 py-4 text-sm text-violet-900">
+        <div className="mb-6 max-w-xl rounded-xl border border-teal-200 bg-teal-50 px-5 py-4 text-sm text-teal-900">
           You have a pending join request. Cancel it from the search results
           below before creating your own company.
         </div>
       ) : null}
 
       <section className="max-w-xl">
-        <h2 className="text-lg font-semibold text-gray-900">Create a company</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-lg font-semibold text-zinc-950">Create a company</h2>
+        <p className="mt-1 text-sm text-zinc-500">
           Start your own workspace and become the company owner.
         </p>
 
@@ -318,11 +318,11 @@ function PendingDashboard() {
             onChange={(event) => setBusinessName(event.target.value)}
             placeholder="Company name"
             disabled={!canCreateCompany || creating}
-            className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100 disabled:cursor-not-allowed disabled:bg-gray-50"
+            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-950 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100 disabled:cursor-not-allowed disabled:bg-zinc-50"
           />
-          <p className="text-xs text-gray-500">{BUSINESS_NAME_IMMUTABLE_HINT}</p>
+          <p className="text-xs text-zinc-500">{BUSINESS_NAME_IMMUTABLE_HINT}</p>
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-gray-700">
+            <span className="mb-1.5 block text-sm font-medium text-zinc-700">
               {ACCESS_REQUEST_NOTE_LABEL}
               <span className="text-red-500"> *</span>
             </span>
@@ -332,9 +332,9 @@ function PendingDashboard() {
               placeholder={ACCESS_REQUEST_NOTE_PLACEHOLDER}
               rows={4}
               disabled={!canCreateCompany || creating}
-              className="w-full resize-y rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100 disabled:cursor-not-allowed disabled:bg-gray-50"
+              className="w-full resize-y rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-950 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100 disabled:cursor-not-allowed disabled:bg-zinc-50"
             />
-            <p className="mt-1.5 text-xs text-gray-500">{ACCESS_REQUEST_NOTE_HELP}</p>
+            <p className="mt-1.5 text-xs text-zinc-500">{ACCESS_REQUEST_NOTE_HELP}</p>
           </label>
           <button
             type="button"
@@ -345,7 +345,7 @@ function PendingDashboard() {
               !developerNote.trim()
             }
             onClick={() => void handleCreateCompany()}
-            className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500"
+            className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-900 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500"
           >
             {creating ? "Creating..." : "Create company"}
           </button>
@@ -353,27 +353,27 @@ function PendingDashboard() {
       </section>
 
       <div className="my-8 flex max-w-xl items-center gap-3">
-        <div className="h-px flex-1 bg-gray-200" />
-        <span className="text-xs font-medium uppercase tracking-wide text-gray-400">
+        <div className="h-px flex-1 bg-zinc-200" />
+        <span className="text-xs font-medium uppercase tracking-wide text-zinc-400">
           Or join an existing company
         </span>
-        <div className="h-px flex-1 bg-gray-200" />
+        <div className="h-px flex-1 bg-zinc-200" />
       </div>
 
       <section className="max-w-xl">
-        <h2 className="text-lg font-semibold text-gray-900">Join a company</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-lg font-semibold text-zinc-950">Join a company</h2>
+        <p className="mt-1 text-sm text-zinc-500">
           Search for a company and request to join as a team member.
         </p>
 
       <div className="relative mt-4 max-w-xl">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
         <input
           type="text"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search by business name, owner email or name..."
-          className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+          className="w-full rounded-lg border border-zinc-200 bg-white py-2.5 pl-10 pr-4 text-sm text-zinc-950 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
         />
       </div>
 
@@ -389,7 +389,7 @@ function PendingDashboard() {
         </div>
       ) : null}
 
-      <div className="mt-3 text-sm text-gray-500">
+      <div className="mt-3 text-sm text-zinc-500">
         {loading
           ? "Searching..."
           : hasSearched
@@ -398,10 +398,10 @@ function PendingDashboard() {
       </div>
 
       {hasSearched ? (
-        <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
+        <div className="mt-4 overflow-hidden rounded-xl border border-zinc-200 bg-white">
           <table className="min-w-full">
             <thead>
-              <tr className="border-b border-gray-100 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+              <tr className="border-b border-zinc-100 text-left text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
                 <th className="px-6 py-4">Business Name</th>
                 <th className="px-6 py-4">Owner</th>
                 <th className="px-6 py-4">Owner Email</th>
@@ -412,17 +412,17 @@ function PendingDashboard() {
               {results.map((business) => (
                 <tr
                   key={business.firebaseUid}
-                  className="border-b border-gray-50 last:border-b-0 hover:bg-gray-50/60"
+                  className="border-b border-zinc-50 last:border-b-0 hover:bg-zinc-50/60"
                 >
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                  <td className="px-6 py-4 text-sm font-medium text-zinc-950">
                     {business.business_name?.trim() || "—"}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
+                  <td className="px-6 py-4 text-sm text-zinc-700">
                     {hasUserName(business)
                       ? getUserDisplayName(business)
                       : "—"}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
+                  <td className="px-6 py-4 text-sm text-zinc-700">
                     {business.email}
                   </td>
                   <td className="px-6 py-4">
@@ -440,7 +440,7 @@ function PendingDashboard() {
           </table>
 
           {!loading && results.length === 0 ? (
-            <div className="px-6 py-12 text-center text-sm text-gray-500">
+            <div className="px-6 py-12 text-center text-sm text-zinc-500">
               No businesses match your search.
             </div>
           ) : null}
@@ -721,7 +721,7 @@ export function DashboardContent() {
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-4">
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-zinc-950">Dashboard</h1>
             {!needsConfiguration ? (
               <ConfigVersionSelect
                 currentVersion={configVersion}
@@ -730,7 +730,7 @@ export function DashboardContent() {
               />
             ) : null}
           </div>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-zinc-500">
             {isAlternateVersion
               ? `Viewing ${selectedVersion > 0 ? `v${selectedVersion}` : "alternate version"}`
               : "All lead candidates"}
@@ -744,7 +744,7 @@ export function DashboardContent() {
               <button
                 type="button"
                 onClick={() => setRunModalOpen(true)}
-                className="rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-violet-700"
+                className="rounded-lg bg-teal-800 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-teal-900"
               >
                 Start Prospect Discover
               </button>
@@ -777,7 +777,7 @@ export function DashboardContent() {
           </p>
           <Link
             href="/configuration"
-            className="mt-3 inline-flex text-sm font-medium text-violet-700 transition hover:text-violet-800 hover:underline"
+            className="mt-3 inline-flex text-sm font-medium text-teal-800 transition hover:text-teal-900 hover:underline"
           >
             Go to Configuration
           </Link>
@@ -807,13 +807,13 @@ export function DashboardContent() {
 
       <div className="mb-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="relative max-w-xl flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
           <input
             type="text"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by company, ID or contact..."
-            className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+            className="w-full rounded-lg border border-zinc-200 bg-white py-2.5 pl-10 pr-4 text-sm text-zinc-950 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
           />
         </div>
 
@@ -828,8 +828,8 @@ export function DashboardContent() {
                 onClick={() => setStatusFilter(status)}
                 className={`rounded-lg px-3.5 py-2 text-sm font-medium transition ${
                   active
-                    ? "bg-violet-600 text-white"
-                    : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                    ? "bg-teal-800 text-white"
+                    : "border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
                 }`}
               >
                 {statusLabels[status]}
@@ -851,14 +851,14 @@ export function DashboardContent() {
         </div>
       ) : null}
 
-      <div className="mb-3 text-right text-sm text-gray-500">
+      <div className="mb-3 text-right text-sm text-zinc-500">
         {leadsLoading ? "Loading..." : null}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
         <table className="min-w-full">
           <thead>
-            <tr className="border-b border-gray-100 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            <tr className="border-b border-zinc-100 text-left text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
               <th className="px-6 py-4">ID</th>
               <th className="px-6 py-4">Company</th>
               <th className="px-6 py-4">Contact</th>
@@ -871,23 +871,23 @@ export function DashboardContent() {
             {leads.map((lead) => (
               <tr
                 key={lead.id}
-                className="border-b border-gray-50 last:border-b-0 hover:bg-gray-50/60"
+                className="border-b border-zinc-50 last:border-b-0 hover:bg-zinc-50/60"
               >
-                <td className="px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm text-zinc-500">
                   <Link
                     href={leadDetailHref(lead.id)}
-                    className="block text-violet-600 hover:text-violet-700"
+                    className="block text-teal-800 hover:text-teal-900"
                   >
                     {lead.id}
                   </Link>
                 </td>
-                <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                  <Link href={leadDetailHref(lead.id)} className="hover:text-violet-700">
+                <td className="px-6 py-4 text-sm font-semibold text-zinc-950">
+                  <Link href={leadDetailHref(lead.id)} className="hover:text-teal-900">
                     {lead.company}
                   </Link>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-700">
-                  <Link href={leadDetailHref(lead.id)} className="block hover:text-violet-700">
+                <td className="px-6 py-4 text-sm text-zinc-700">
+                  <Link href={leadDetailHref(lead.id)} className="block hover:text-teal-900">
                     {lead.contact}
                   </Link>
                 </td>
@@ -902,14 +902,14 @@ export function DashboardContent() {
                       target="_blank"
                       rel="noopener noreferrer"
                       title={lead.website}
-                      className="inline-flex max-w-full min-w-0 items-center gap-1.5 text-sm text-violet-600 hover:text-violet-700"
+                      className="inline-flex max-w-full min-w-0 items-center gap-1.5 text-sm text-teal-800 hover:text-teal-900"
                       onClick={(event) => event.stopPropagation()}
                     >
                       <span className="truncate">{lead.website}</span>
                       <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                     </a>
                   ) : (
-                    <span className="text-sm text-gray-400">—</span>
+                    <span className="text-sm text-zinc-400">—</span>
                   )}
                 </td>
                 <td className="px-6 py-4">
@@ -927,7 +927,7 @@ export function DashboardContent() {
                           event.stopPropagation();
                           void handleUpdateLeadStatus(lead.id, "heard_back", "sent");
                         }}
-                        className="text-xs font-medium text-gray-400 underline-offset-2 transition hover:text-emerald-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                        className="text-xs font-medium text-zinc-400 underline-offset-2 transition hover:text-emerald-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {updatingLeadId === lead.id ? "Updating..." : "Heard back?"}
                       </button>
@@ -941,15 +941,15 @@ export function DashboardContent() {
                           event.stopPropagation();
                           void handleUpdateLeadStatus(lead.id, "sent", "heard_back");
                         }}
-                        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-zinc-200 text-zinc-400 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Undo2 className="h-3.5 w-3.5" />
                       </button>
                     ) : null}
                   </div>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  <Link href={leadDetailHref(lead.id)} className="block hover:text-violet-700">
+                <td className="px-6 py-4 text-sm text-zinc-600">
+                  <Link href={leadDetailHref(lead.id)} className="block hover:text-teal-900">
                     {lead.added}
                   </Link>
                 </td>
@@ -959,7 +959,7 @@ export function DashboardContent() {
         </table>
 
         {!leadsLoading && leads.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm text-gray-500">
+          <div className="px-6 py-12 text-center text-sm text-zinc-500">
             {needsConfiguration
               ? "Complete your configuration to view leads."
               : "No leads match your filters."}

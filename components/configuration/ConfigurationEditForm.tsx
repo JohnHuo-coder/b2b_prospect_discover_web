@@ -139,7 +139,7 @@ export function ConfigurationEditForm({
           onKeepRephraseSuggestion={onKeepRephraseSuggestion}
           onDiscardRephraseSuggestion={onDiscardRephraseSuggestion}
         />
-        <div className="mt-4 border-t border-gray-100 pt-4">
+        <div className="mt-4 border-t border-zinc-100 pt-4">
           <RequirementsModalFooter
             onCancel={() => undefined}
             onSave={() => undefined}

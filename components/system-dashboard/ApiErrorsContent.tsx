@@ -29,7 +29,7 @@ function UnsolvedCount({ value }: { value: number }) {
       className={
         value > 0
           ? "font-semibold tabular-nums text-red-600"
-          : "tabular-nums text-gray-500"
+          : "tabular-nums text-zinc-500"
       }
     >
       {value}
@@ -64,7 +64,7 @@ function DetailTable({
 }) {
   if (rows.length === 0) {
     return (
-      <div className="px-2 py-8 text-center text-sm text-gray-500">
+      <div className="px-2 py-8 text-center text-sm text-zinc-500">
         {emptyMessage}
       </div>
     );
@@ -72,13 +72,13 @@ function DetailTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-100">
-        <thead className="bg-gray-50">
+      <table className="min-w-full divide-y divide-zinc-100">
+        <thead className="bg-zinc-50">
           <tr>
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={`px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 ${
+                className={`px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 ${
                   column.align === "right" ? "text-right" : "text-left"
                 }`}
               >
@@ -87,13 +87,13 @@ function DetailTable({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">
+        <tbody className="divide-y divide-zinc-100 bg-white">
           {rows.map((row, index) => (
-            <tr key={index} className="hover:bg-gray-50/80">
+            <tr key={index} className="hover:bg-zinc-50/80">
               {columns.map((column) => (
                 <td
                   key={column.key}
-                  className={`px-4 py-3 text-sm text-gray-700 ${
+                  className={`px-4 py-3 text-sm text-zinc-700 ${
                     column.align === "right" ? "text-right tabular-nums" : ""
                   }`}
                 >
@@ -330,8 +330,8 @@ export function ApiErrorsContent() {
                 : "Select a config"
             }
             icon={AlertTriangle}
-            iconClassName="text-gray-600"
-            iconBoxClassName="bg-gray-100"
+            iconClassName="text-zinc-600"
+            iconBoxClassName="bg-zinc-100"
             large
           />
           <MetricCard
@@ -349,14 +349,14 @@ export function ApiErrorsContent() {
             valueClassName={
               (summary?.unsolved_errors ?? 0) > 0
                 ? "text-red-700"
-                : "text-gray-900"
+                : "text-zinc-950"
             }
           />
           <div className="flex items-end">
             {configsLoading ? (
-              <p className="pb-2 text-sm text-gray-500">Loading configs…</p>
+              <p className="pb-2 text-sm text-zinc-500">Loading configs…</p>
             ) : configOptions.length === 0 ? (
-              <p className="pb-2 text-sm text-gray-500">No configs found</p>
+              <p className="pb-2 text-sm text-zinc-500">No configs found</p>
             ) : (
               <SimpleSelect
                 label="Config"
@@ -400,11 +400,11 @@ export function ApiErrorsContent() {
           hint="From api_error"
         >
           {configsLoading || summaryLoading ? (
-            <div className="px-6 py-10 text-center text-sm text-gray-500">
+            <div className="px-6 py-10 text-center text-sm text-zinc-500">
               Loading workflow errors…
             </div>
           ) : !selectedConfigId ? (
-            <div className="px-6 py-10 text-center text-sm text-gray-500">
+            <div className="px-6 py-10 text-center text-sm text-zinc-500">
               No config selected.
             </div>
           ) : (
@@ -418,7 +418,7 @@ export function ApiErrorsContent() {
               ]}
               rows={(summary?.workflows ?? []).map((workflow) => ({
                 workflow: (
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-zinc-950">
                     {workflow.workflow_name}
                   </span>
                 ),
@@ -428,7 +428,7 @@ export function ApiErrorsContent() {
                   <button
                     type="button"
                     onClick={() => openWorkflowModal(workflow)}
-                    className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
+                    className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-900"
                   >
                     View APIs
                   </button>
@@ -448,11 +448,11 @@ export function ApiErrorsContent() {
         {selectedWorkflow ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Total errors
                 </p>
-                <p className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+                <p className="mt-1 text-lg font-semibold tabular-nums text-zinc-950">
                   {apiSummary?.total_errors ?? selectedWorkflow.error_count}
                 </p>
               </div>
@@ -468,7 +468,7 @@ export function ApiErrorsContent() {
             </div>
 
             {apisLoading ? (
-              <p className="text-sm text-gray-500">Loading API breakdown…</p>
+              <p className="text-sm text-zinc-500">Loading API breakdown…</p>
             ) : apisError ? (
               <p className="text-sm text-red-600">{apisError}</p>
             ) : (
@@ -482,7 +482,7 @@ export function ApiErrorsContent() {
                 ]}
                 rows={(apiSummary?.apis ?? []).map((api) => ({
                   api: (
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-zinc-950">
                       {api.api_name}
                     </span>
                   ),
@@ -492,7 +492,7 @@ export function ApiErrorsContent() {
                     <button
                       type="button"
                       onClick={() => openExecutionsModal(api)}
-                      className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
+                      className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-900"
                     >
                       View executions
                     </button>
@@ -512,14 +512,14 @@ export function ApiErrorsContent() {
       >
         {selectedApi && selectedWorkflow ? (
           <div className="space-y-4">
-            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+            <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
               <p>
-                <span className="font-medium text-gray-700">Workflow:</span>{" "}
+                <span className="font-medium text-zinc-700">Workflow:</span>{" "}
                 {selectedWorkflow.workflow_name}
               </p>
               <div className="mt-2 flex flex-wrap gap-4">
                 <p>
-                  <span className="font-medium text-gray-700">Total:</span>{" "}
+                  <span className="font-medium text-zinc-700">Total:</span>{" "}
                   {selectedApi.error_count}
                 </p>
                 <p>
@@ -532,7 +532,7 @@ export function ApiErrorsContent() {
             </div>
 
             {executionsLoading ? (
-              <p className="text-sm text-gray-500">Loading execution IDs…</p>
+              <p className="text-sm text-zinc-500">Loading execution IDs…</p>
             ) : executionsError ? (
               <p className="text-sm text-red-600">{executionsError}</p>
             ) : (
@@ -546,7 +546,7 @@ export function ApiErrorsContent() {
                 ]}
                 rows={(executionsData?.executions ?? []).map((execution) => ({
                   execution_id: (
-                    <span className="font-mono text-sm text-gray-900">
+                    <span className="font-mono text-sm text-zinc-950">
                       {execution.execution_id}
                     </span>
                   ),

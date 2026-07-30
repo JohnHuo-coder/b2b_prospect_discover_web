@@ -8,7 +8,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: "border-zinc-200 bg-zinc-100 text-zinc-700",
-        stage: "border-violet-200 bg-violet-50 text-violet-700",
+        stage: "border-teal-200 bg-teal-50 text-teal-800",
         decision: "border-amber-200 bg-amber-50 text-amber-700",
         retry: "border-teal-200 bg-teal-50 text-teal-700",
         skip: "border-zinc-200 bg-zinc-50 text-zinc-600",

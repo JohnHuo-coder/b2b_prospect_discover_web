@@ -142,10 +142,10 @@ export function OutreachComplianceReviewModal({
         aria-labelledby="compliance-review-title"
         className="relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col rounded-xl bg-white shadow-xl"
       >
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-4">
           <h2
             id="compliance-review-title"
-            className="text-base font-semibold text-gray-900"
+            className="text-base font-semibold text-zinc-950"
           >
             Compliance review
           </h2>
@@ -153,7 +153,7 @@ export function OutreachComplianceReviewModal({
             type="button"
             onClick={onClose}
             disabled={Boolean(submitting)}
-            className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
@@ -169,7 +169,7 @@ export function OutreachComplianceReviewModal({
         </div>
 
         {detail && !loading && !error ? (
-          <div className="border-t border-gray-100 px-6 py-4">
+          <div className="border-t border-zinc-100 px-6 py-4">
             {emailState.isEditingEmail ? (
               <p className="mb-3 text-sm text-amber-700">
                 Save or cancel your email edits before approving or discarding.

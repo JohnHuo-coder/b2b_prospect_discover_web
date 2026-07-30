@@ -170,13 +170,13 @@ export function ComplianceCheckContent() {
 
       <div className="mb-4">
         <div className="relative max-w-xl">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
           <input
             type="text"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by company or website..."
-            className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+            className="w-full rounded-lg border border-zinc-200 bg-white py-2.5 pl-10 pr-4 text-sm text-zinc-950 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
           />
         </div>
       </div>
@@ -197,7 +197,7 @@ export function ComplianceCheckContent() {
             <col className="w-[38%]" />
           </colgroup>
           <thead>
-            <tr className="border-b border-gray-100 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            <tr className="border-b border-zinc-100 text-left text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
               <th className="px-6 py-4">ID</th>
               <th className="px-6 py-4">Company</th>
               <th className="px-6 py-4">Website</th>
@@ -208,7 +208,7 @@ export function ComplianceCheckContent() {
               <tr>
                 <td
                   colSpan={3}
-                  className="px-6 py-10 text-center text-sm text-gray-500"
+                  className="px-6 py-10 text-center text-sm text-zinc-500"
                 >
                   Loading...
                 </td>
@@ -217,7 +217,7 @@ export function ComplianceCheckContent() {
               <tr>
                 <td
                   colSpan={3}
-                  className="px-6 py-10 text-center text-sm text-gray-500"
+                  className="px-6 py-10 text-center text-sm text-zinc-500"
                 >
                   No items match your search.
                 </td>
@@ -230,15 +230,15 @@ export function ComplianceCheckContent() {
                   <tr
                     key={item.id}
                     onClick={() => setSelectedId(item.id)}
-                    className={`cursor-pointer border-b border-gray-50 last:border-b-0 transition hover:bg-gray-50/60 ${
-                      selected ? "bg-violet-50/60" : ""
+                    className={`cursor-pointer border-b border-zinc-50 last:border-b-0 transition hover:bg-zinc-50/60 ${
+                      selected ? "bg-teal-50/60" : ""
                     }`}
                   >
-                    <td className="px-6 py-4 text-sm font-medium text-violet-600">
+                    <td className="px-6 py-4 text-sm font-medium text-teal-800">
                       {item.id}
                     </td>
                     <td
-                      className="truncate px-6 py-4 text-sm font-semibold text-gray-900"
+                      className="truncate px-6 py-4 text-sm font-semibold text-zinc-950"
                       title={item.company}
                     >
                       {item.company}
@@ -255,13 +255,13 @@ export function ComplianceCheckContent() {
                           rel="noopener noreferrer"
                           title={item.website}
                           onClick={(event) => event.stopPropagation()}
-                          className="inline-flex max-w-full min-w-0 items-center gap-1.5 text-sm text-violet-600 hover:text-violet-700"
+                          className="inline-flex max-w-full min-w-0 items-center gap-1.5 text-sm text-teal-800 hover:text-teal-900"
                         >
                           <span className="truncate">{item.website}</span>
                           <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                         </a>
                       ) : (
-                        <span className="text-sm text-gray-400">—</span>
+                        <span className="text-sm text-zinc-400">—</span>
                       )}
                     </td>
                   </tr>

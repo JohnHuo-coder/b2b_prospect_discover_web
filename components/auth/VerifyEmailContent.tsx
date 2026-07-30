@@ -91,7 +91,7 @@ export function VerifyEmailContent() {
   if (isLoading || !user || user.emailVerified) {
     return (
       <AuthShell title="Verify your email" subtitle="Loading...">
-        <p className="text-sm text-gray-500">Loading...</p>
+        <p className="text-sm text-zinc-500">Loading...</p>
       </AuthShell>
     );
   }
@@ -104,13 +104,13 @@ export function VerifyEmailContent() {
       subtitle="We sent a confirmation link to finish setting up your account"
     >
       <div className="space-y-5">
-        <div className="flex items-start gap-3 rounded-xl border border-violet-200 bg-violet-50 px-4 py-4">
-          <MailCheck className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
+        <div className="flex items-start gap-3 rounded-xl border border-teal-200 bg-teal-50 px-4 py-4">
+          <MailCheck className="mt-0.5 h-5 w-5 shrink-0 text-teal-800" />
           <div className="space-y-1">
-            <p className="text-sm font-medium text-violet-900">
+            <p className="text-sm font-medium text-teal-900">
               Check your inbox
             </p>
-            <p className="text-sm leading-relaxed text-violet-800">
+            <p className="text-sm leading-relaxed text-teal-800">
               We sent a verification link to{" "}
               <span className="font-medium">{user.email}</span>. Open it to
               activate your account, then return here and continue.
@@ -143,23 +143,23 @@ export function VerifyEmailContent() {
             type="button"
             onClick={() => void handleResend()}
             disabled={isBusy}
-            className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isResending ? "Sending..." : "Resend verification email"}
           </button>
         </div>
 
-        <p className="text-center text-sm text-gray-500">
+        <p className="text-center text-sm text-zinc-500">
           Wrong account?{" "}
           <button
             type="button"
             onClick={() => void handleSignOut()}
-            className="font-medium text-violet-600 hover:text-violet-700"
+            className="font-medium text-teal-800 hover:text-teal-900"
           >
             Sign out
           </button>{" "}
           or{" "}
-          <Link href="/login" className="font-medium text-violet-600 hover:text-violet-700">
+          <Link href="/login" className="font-medium text-teal-800 hover:text-teal-900">
             back to login
           </Link>
         </p>

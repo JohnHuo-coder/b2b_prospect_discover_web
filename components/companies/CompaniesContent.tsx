@@ -120,8 +120,8 @@ export function CompaniesContent() {
   return (
     <div className="px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Companies</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">
+        <h1 className="text-2xl font-bold text-zinc-950">Companies</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-600">
           Monitor any company workspace as a member while keeping superadmin
           access. Switch back to your own company to restore owner permissions.
         </p>
@@ -139,10 +139,10 @@ export function CompaniesContent() {
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
         <table className="min-w-full">
           <thead>
-            <tr className="border-b border-gray-100 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            <tr className="border-b border-zinc-100 text-left text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
               <th className="px-6 py-4">Company</th>
               <th className="px-6 py-4">Owner</th>
               <th className="px-6 py-4">Owner Email</th>
@@ -153,7 +153,7 @@ export function CompaniesContent() {
           <tbody>
             {loading ? (
               Array.from({ length: 5 }).map((_, index) => (
-                <tr key={index} className="border-b border-gray-50">
+                <tr key={index} className="border-b border-zinc-50">
                   <td className="px-6 py-4" colSpan={5}>
                     <SkeletonBar className="h-5 w-full" />
                   </td>
@@ -162,7 +162,7 @@ export function CompaniesContent() {
             ) : companies.length === 0 ? (
               <tr>
                 <td
-                  className="px-6 py-12 text-center text-sm text-gray-500"
+                  className="px-6 py-12 text-center text-sm text-zinc-500"
                   colSpan={5}
                 >
                   No companies found.
@@ -194,34 +194,34 @@ export function CompaniesContent() {
                 return (
                   <tr
                     key={companyId ?? company.business_name ?? Math.random()}
-                    className={`border-b border-gray-50 last:border-b-0 ${
-                      isCurrent ? "bg-violet-50/60" : "hover:bg-gray-50/60"
+                    className={`border-b border-zinc-50 last:border-b-0 ${
+                      isCurrent ? "bg-teal-50/60" : "hover:bg-zinc-50/60"
                     }`}
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-teal-800">
                           <Building2 className="h-4 w-4" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-zinc-950">
                             {company.business_name?.trim() || "—"}
                           </p>
                           {isHome ? (
-                            <p className="text-xs font-medium text-violet-600">
+                            <p className="text-xs font-medium text-teal-800">
                               Your company
                             </p>
                           ) : null}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
+                    <td className="px-6 py-4 text-sm text-zinc-700">
                       {getOwnerLabel(company)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
+                    <td className="px-6 py-4 text-sm text-zinc-700">
                       {company.owner_email?.trim() || "—"}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
+                    <td className="px-6 py-4 text-sm text-zinc-700">
                       {company.version ?? 0}
                     </td>
                     <td className="px-6 py-4">
@@ -233,7 +233,7 @@ export function CompaniesContent() {
                           (isCurrent && !isHome && user.role === "member")
                         }
                         onClick={() => void handleMonitor(company)}
-                        className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500"
+                        className="inline-flex items-center gap-2 rounded-lg bg-teal-800 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-teal-900 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500"
                       >
                         {isMonitoring ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />

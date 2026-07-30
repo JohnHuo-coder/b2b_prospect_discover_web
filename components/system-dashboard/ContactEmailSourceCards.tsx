@@ -43,11 +43,11 @@ function SummarySection({
   children: ReactNode;
 }) {
   return (
-    <section className="mb-6 rounded-xl border border-gray-200 bg-gray-50/60 p-5">
+    <section className="mb-6 rounded-xl border border-zinc-200 bg-zinc-50/60 p-5">
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-zinc-950">{title}</h3>
         {description ? (
-          <p className="mt-0.5 text-xs text-gray-500">{description}</p>
+          <p className="mt-0.5 text-xs text-zinc-500">{description}</p>
         ) : null}
       </div>
       {children}
@@ -79,10 +79,10 @@ function SourceMetricCard({
   onViewDetails: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+    <div className="flex h-full flex-col rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-gray-600">{label}</p>
+          <p className="text-sm font-medium text-zinc-600">{label}</p>
           <p className={`mt-2 text-3xl font-bold ${valueClassName}`}>{rate}%</p>
         </div>
         <div
@@ -93,13 +93,13 @@ function SourceMetricCard({
       </div>
 
       <div className="mt-4">
-        <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+        <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
           <div
             className={`h-full rounded-full ${progressClassName}`}
             style={{ width: `${Math.min(Math.max(rate, 0), 100)}%` }}
           />
         </div>
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-zinc-500">
           {found} of {total} candidates found email via this source
         </p>
       </div>
@@ -107,7 +107,7 @@ function SourceMetricCard({
       <button
         type="button"
         onClick={onViewDetails}
-        className="mt-4 inline-flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
+        className="mt-4 inline-flex w-full items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-900"
       >
         View details
       </button>
@@ -117,7 +117,7 @@ function SourceMetricCard({
 
 function SourceCardSkeleton() {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+    <div className="rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-sm">
       <SkeletonBar className="h-4 w-24" />
       <SkeletonBar className="mt-3 h-9 w-20" />
       <SkeletonBar className="mt-4 h-2 w-full" />
@@ -148,29 +148,29 @@ function SourceDetailBreakdown({
 
   if (items.length === 0) {
     return (
-      <p className="text-sm text-gray-500">{emptyMessage}</p>
+      <p className="text-sm text-zinc-500">{emptyMessage}</p>
     );
   }
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-600">{description}</p>
-      <div className="overflow-hidden rounded-lg border border-gray-200">
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-50">
+      <p className="text-sm text-zinc-600">{description}</p>
+      <div className="overflow-hidden rounded-lg border border-zinc-200">
+        <table className="min-w-full divide-y divide-zinc-200 text-sm">
+          <thead className="bg-zinc-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+              <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                 {labelColumn}
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+              <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-zinc-500">
                 Count
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+              <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-zinc-500">
                 Share
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 bg-white">
+          <tbody className="divide-y divide-zinc-100 bg-white">
             {items.map((row) => {
               const share =
                 row.percentage ??
@@ -178,13 +178,13 @@ function SourceDetailBreakdown({
 
               return (
                 <tr key={row.label}>
-                  <td className="px-4 py-3 align-top font-mono text-xs text-gray-700">
+                  <td className="px-4 py-3 align-top font-mono text-xs text-zinc-700">
                     {formatDetailLabel(row.label)}
                   </td>
-                  <td className="px-4 py-3 align-top text-right font-medium text-gray-700">
+                  <td className="px-4 py-3 align-top text-right font-medium text-zinc-700">
                     {row.count}
                   </td>
-                  <td className="px-4 py-3 align-top text-right text-gray-500">
+                  <td className="px-4 py-3 align-top text-right text-zinc-500">
                     {share}%
                   </td>
                 </tr>
@@ -207,7 +207,7 @@ function WebsiteEmailSourceDetail({
   return (
     <div className="space-y-8">
       <section>
-        <h3 className="mb-4 text-sm font-semibold text-gray-900">Failures</h3>
+        <h3 className="mb-4 text-sm font-semibold text-zinc-950">Failures</h3>
         <SourceDetailBreakdown
           items={failureItems}
           labelColumn="Stage"
@@ -217,17 +217,17 @@ function WebsiteEmailSourceDetail({
       </section>
 
       <section>
-        <h3 className="mb-4 text-sm font-semibold text-gray-900">
+        <h3 className="mb-4 text-sm font-semibold text-zinc-950">
           Email sufficiency
         </h3>
         {sufficiency && sufficiency.total > 0 ? (
           <div className="space-y-4">
-            <div className="rounded-xl border border-gray-200 bg-gray-50/60 px-5 py-4">
-              <p className="text-sm font-medium text-gray-600">Sufficiency rate</p>
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50/60 px-5 py-4">
+              <p className="text-sm font-medium text-zinc-600">Sufficiency rate</p>
               <p className="mt-2 text-3xl font-bold text-teal-600">
                 {sufficiency.sufficiencyRate}%
               </p>
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-zinc-500">
                 {sufficiency.sufficient} of {sufficiency.total} website emails
                 marked sufficient
               </p>
@@ -242,7 +242,7 @@ function WebsiteEmailSourceDetail({
             />
           </div>
         ) : (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-zinc-500">
             No website email sufficiency data available.
           </p>
         )}

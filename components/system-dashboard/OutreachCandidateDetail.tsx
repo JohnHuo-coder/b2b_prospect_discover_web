@@ -16,10 +16,10 @@ function DetailField({
 }) {
   return (
     <div>
-      <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
+      <dt className="text-xs font-medium uppercase tracking-wide text-zinc-400">
         {label}
       </dt>
-      <dd className="mt-1 text-sm text-gray-800">{children}</dd>
+      <dd className="mt-1 text-sm text-zinc-800">{children}</dd>
     </div>
   );
 }
@@ -80,14 +80,14 @@ export function OutreachCandidateDetail({
         aria-labelledby="outreach-detail-title"
         className="relative z-10 flex h-full w-full max-w-2xl flex-col bg-white shadow-xl"
       >
-        <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
+        <div className="flex items-start justify-between border-b border-zinc-100 px-6 py-5">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
               {candidate.id}
             </p>
             <h2
               id="outreach-detail-title"
-              className="mt-1 text-lg font-semibold text-gray-900"
+              className="mt-1 text-lg font-semibold text-zinc-950"
             >
               {candidate.company}
             </h2>
@@ -100,7 +100,7 @@ export function OutreachCandidateDetail({
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-1 inline-flex items-center gap-1 text-sm text-violet-600 hover:text-violet-700"
+                className="mt-1 inline-flex items-center gap-1 text-sm text-teal-800 hover:text-teal-900"
               >
                 {candidate.website}
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -119,7 +119,7 @@ export function OutreachCandidateDetail({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-lg p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600"
           >
             <X className="h-5 w-5" />
           </button>
@@ -132,7 +132,7 @@ export function OutreachCandidateDetail({
             </div>
           ) : null}
 
-          <section className="rounded-xl border border-gray-200 bg-gray-50/60 p-4">
+          <section className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4">
             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <DetailField label="status">
                 <span className="font-medium capitalize">{candidate.status}</span>
@@ -166,34 +166,34 @@ export function OutreachCandidateDetail({
           ) : null}
 
           <section className="mt-6">
-            <h3 className="mb-3 text-sm font-semibold text-gray-900">
+            <h3 className="mb-3 text-sm font-semibold text-zinc-950">
               Outreach emails
             </h3>
             {loading ? (
-              <p className="text-sm text-gray-500">Loading emails...</p>
+              <p className="text-sm text-zinc-500">Loading emails...</p>
             ) : candidate.emails.length === 0 ? (
-              <p className="text-sm text-gray-500">No outreach emails found.</p>
+              <p className="text-sm text-zinc-500">No outreach emails found.</p>
             ) : (
               <div className="space-y-3">
                 {candidate.emails.map((row) => (
                   <div
                     key={row.email}
-                    className="rounded-lg border border-gray-200 bg-white p-4"
+                    className="rounded-lg border border-zinc-200 bg-white p-4"
                   >
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-zinc-950">
                       {row.email}
                     </p>
                     {row.outreach_email ? (
-                      <div className="mt-3 rounded-md bg-gray-50 p-3">
-                        <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400">
+                      <div className="mt-3 rounded-md bg-zinc-50 p-3">
+                        <p className="mb-1 text-xs font-medium uppercase tracking-wide text-zinc-400">
                           Draft
                         </p>
-                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 [overflow-wrap:anywhere]">
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-700 [overflow-wrap:anywhere]">
                           {row.outreach_email}
                         </p>
                       </div>
                     ) : (
-                      <p className="mt-2 text-sm text-gray-400">
+                      <p className="mt-2 text-sm text-zinc-400">
                         No draft generated.
                       </p>
                     )}

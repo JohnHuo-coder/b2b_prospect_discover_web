@@ -59,7 +59,7 @@ export function SimpleSelect({
   return (
     <div ref={containerRef} className={cn("relative", className)}>
       {label ? (
-        <p className="mb-1.5 text-sm font-medium text-gray-700">{label}</p>
+        <p className="mb-1.5 text-sm font-medium text-zinc-700">{label}</p>
       ) : null}
 
       <button
@@ -72,23 +72,23 @@ export function SimpleSelect({
           setOpen((current) => !current);
         }}
         className={cn(
-          "flex min-h-[42px] w-full items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-violet-100",
+          "flex min-h-[42px] w-full items-center justify-between gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-left text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-teal-100",
           disabled
-            ? "cursor-not-allowed bg-gray-50 text-gray-500"
-            : "hover:border-gray-300 focus:border-violet-300"
+            ? "cursor-not-allowed bg-zinc-50 text-zinc-500"
+            : "hover:border-zinc-300 focus:border-teal-300"
         )}
       >
         <span
           className={cn(
             "truncate",
-            selectedOption ? "font-medium text-gray-900" : "text-gray-400"
+            selectedOption ? "font-medium text-zinc-950" : "text-zinc-400"
           )}
         >
           {selectedOption?.label ?? placeholder}
         </span>
         <ChevronDown
           className={cn(
-            "h-4 w-4 shrink-0 text-gray-400 transition-transform",
+            "h-4 w-4 shrink-0 text-zinc-400 transition-transform",
             open && "rotate-180"
           )}
         />
@@ -97,7 +97,7 @@ export function SimpleSelect({
       {open ? (
         <ul
           role="listbox"
-          className="absolute z-20 mt-1.5 max-h-56 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-1 shadow-lg"
+          className="absolute z-20 mt-1.5 max-h-56 w-full overflow-y-auto rounded-xl border border-zinc-200 bg-white p-1 shadow-lg"
         >
           {options.map((option) => {
             const selected = option.value === value;
@@ -115,13 +115,13 @@ export function SimpleSelect({
                   className={cn(
                     "flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm transition",
                     selected
-                      ? "bg-violet-50 font-medium text-violet-700"
-                      : "text-gray-700 hover:bg-gray-50"
+                      ? "bg-teal-50 font-medium text-teal-800"
+                      : "text-zinc-700 hover:bg-zinc-50"
                   )}
                 >
                   <span>{option.label}</span>
                   {selected ? (
-                    <Check className="h-4 w-4 shrink-0 text-violet-600" />
+                    <Check className="h-4 w-4 shrink-0 text-teal-800" />
                   ) : null}
                 </button>
               </li>

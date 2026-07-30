@@ -3,8 +3,8 @@ import type { LeadStatus } from "@/lib/mock-data";
 const styles: Record<LeadStatus, { dot: string; text: string; label: string }> =
   {
     ready: {
-      dot: "bg-violet-500",
-      text: "text-violet-700",
+      dot: "bg-teal-500",
+      text: "text-teal-800",
       label: "Ready",
     },
     sent: {
@@ -23,8 +23,8 @@ const styles: Record<LeadStatus, { dot: string; text: string; label: string }> =
       label: "Pending",
     },
     rejected: {
-      dot: "bg-gray-400",
-      text: "text-gray-600",
+      dot: "bg-zinc-400",
+      text: "text-zinc-600",
       label: "Rejected",
     },
   };

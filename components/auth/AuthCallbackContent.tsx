@@ -84,8 +84,8 @@ export function AuthCallbackContent() {
   }, [router, searchParams]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <p className="text-base text-gray-600">{message}</p>
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
+      <p className="text-base text-zinc-600">{message}</p>
     </div>
   );
 }

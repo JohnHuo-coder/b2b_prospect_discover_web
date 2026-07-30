@@ -173,7 +173,7 @@ export function FitscoreSummaryCards({
           {Array.from({ length: 2 }).map((_, index) => (
             <div
               key={`rate-${index}`}
-              className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
+              className="rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-sm"
             >
               <SkeletonBar className="h-4 w-24" />
               <SkeletonBar className="mt-3 h-9 w-20" />
@@ -185,7 +185,7 @@ export function FitscoreSummaryCards({
           {Array.from({ length: 3 }).map((_, index) => (
             <div
               key={`count-${index}`}
-              className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
+              className="rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-sm"
             >
               <SkeletonBar className="h-4 w-24" />
               <SkeletonBar className="mt-3 h-9 w-20" />
@@ -206,7 +206,7 @@ export function FitscoreSummaryCards({
 
   if (!activeScope) {
     return (
-      <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+      <div className="mb-6 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
         No requirements configured yet.
       </div>
     );
@@ -234,8 +234,8 @@ export function FitscoreSummaryCards({
                 onClick={() => onRequirementIndexChange(scope.id)}
                 className={`rounded-lg px-3.5 py-2 text-sm font-medium transition ${
                   active
-                    ? "bg-violet-600 text-white"
-                    : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                    ? "bg-teal-800 text-white"
+                    : "border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
                 }`}
               >
                 {scope.label}
@@ -251,7 +251,7 @@ export function FitscoreSummaryCards({
             {Array.from({ length: 2 }).map((_, index) => (
               <div
                 key={`rate-${index}`}
-                className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
+                className="rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-sm"
               >
                 <SkeletonBar className="h-4 w-24" />
                 <SkeletonBar className="mt-3 h-9 w-20" />
@@ -263,7 +263,7 @@ export function FitscoreSummaryCards({
             {Array.from({ length: 3 }).map((_, index) => (
               <div
                 key={`count-${index}`}
-                className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
+                className="rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-sm"
               >
                 <SkeletonBar className="h-4 w-24" />
                 <SkeletonBar className="mt-3 h-9 w-20" />
@@ -281,10 +281,10 @@ export function FitscoreSummaryCards({
               progress={successRate}
               subtext={`${nonFailed} of ${stats.totalInput} candidates did not fail (${scopeLabel})`}
               icon={Percent}
-              iconClassName="text-violet-600"
-              iconBoxClassName="bg-violet-100"
-              valueClassName="text-violet-600"
-              progressClassName="bg-violet-500"
+              iconClassName="text-teal-800"
+              iconBoxClassName="bg-teal-100"
+              valueClassName="text-teal-800"
+              progressClassName="bg-teal-500"
             />
             <MetricCard
               large

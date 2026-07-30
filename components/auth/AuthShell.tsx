@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Megaphone } from "lucide-react";
+import { AppAtmosphere } from "@/components/layout/AppAtmosphere";
+import { AppReveal } from "@/components/ui/AppReveal";
 
 export function AuthShell({
   title,
@@ -13,32 +15,35 @@ export function AuthShell({
   showBackToLanding?: boolean;
 }) {
   return (
-    <div className="flex min-h-screen items-center justify-center overflow-y-auto bg-gray-50 px-4 py-10">
-      <div className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center overflow-y-auto bg-zinc-50 px-4 py-10">
+      <AppAtmosphere variant="auth" />
+      <AppReveal className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
-            <Megaphone className="h-6 w-6" />
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-teal-900 text-teal-50">
+            <Megaphone className="h-6 w-6" strokeWidth={1.5} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">
+            {title}
+          </h1>
           {subtitle ? (
-            <p className="mt-2 text-sm text-gray-500">{subtitle}</p>
+            <p className="mt-2 text-sm text-zinc-500">{subtitle}</p>
           ) : null}
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-zinc-200/90 bg-white/90 p-6 shadow-[0_20px_50px_-30px_rgba(24,24,27,0.15)] backdrop-blur-sm">
           {children}
         </div>
         {showBackToLanding ? (
           <div className="mt-4 text-center">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 active:translate-y-px"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to home
             </Link>
           </div>
         ) : null}
-      </div>
+      </AppReveal>
     </div>
   );
 }
@@ -64,7 +69,7 @@ export function AuthField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-gray-700">
+      <span className="mb-1.5 block text-sm font-medium text-zinc-700">
         {label}
         {required ? <span className="text-red-500"> *</span> : null}
       </span>
@@ -75,9 +80,9 @@ export function AuthField({
         autoComplete={autoComplete}
         required={required}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+        className="w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm text-zinc-950 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
       />
-      {hint ? <p className="mt-1.5 text-xs text-gray-500">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-xs text-zinc-500">{hint}</p> : null}
     </label>
   );
 }
@@ -101,7 +106,7 @@ export function AuthTextArea({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-gray-700">
+      <span className="mb-1.5 block text-sm font-medium text-zinc-700">
         {label}
         {required ? <span className="text-red-500"> *</span> : null}
       </span>
@@ -111,9 +116,9 @@ export function AuthTextArea({
         required={required}
         rows={rows}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full resize-y rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+        className="w-full resize-y rounded-lg border border-zinc-200 px-3 py-2.5 text-sm text-zinc-950 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
       />
-      {hint ? <p className="mt-1.5 text-xs text-gray-500">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-xs text-zinc-500">{hint}</p> : null}
     </label>
   );
 }
@@ -133,8 +138,8 @@ export function AuthButton({
 }) {
   const styles =
     variant === "primary"
-      ? "bg-violet-600 text-white hover:bg-violet-700"
-      : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50";
+      ? "bg-teal-800 text-white hover:bg-teal-900 active:translate-y-px"
+      : "border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 active:translate-y-px";
 
   return (
     <button
@@ -162,7 +167,7 @@ export function GoogleButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+      className="flex w-full items-center justify-center gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 active:translate-y-px disabled:opacity-50"
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
         <path
@@ -191,10 +196,10 @@ export function AuthDivider() {
   return (
     <div className="relative my-6">
       <div className="absolute inset-0 flex items-center">
-        <div className="w-full border-t border-gray-200" />
+        <div className="w-full border-t border-zinc-200" />
       </div>
       <div className="relative flex justify-center text-xs uppercase">
-        <span className="bg-white px-2 text-gray-400">or</span>
+        <span className="bg-white px-2 text-zinc-400">or</span>
       </div>
     </div>
   );

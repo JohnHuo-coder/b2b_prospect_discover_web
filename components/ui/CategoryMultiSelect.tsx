@@ -74,16 +74,16 @@ export function CategoryMultiSelect({
             setOpen((prev) => !prev);
           }
         }}
-        className="flex min-h-[44px] w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-gray-200 px-3 py-2 text-left transition hover:border-gray-300 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100"
+        className="flex min-h-[44px] w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-left transition hover:border-zinc-300 focus:border-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-100"
       >
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
           {value.length === 0 ? (
-            <span className="text-sm text-gray-400">Select categories...</span>
+            <span className="text-sm text-zinc-400">Select categories...</span>
           ) : (
             value.map((category) => (
               <span
                 key={category}
-                className="inline-flex items-center gap-1 rounded-md bg-violet-100 px-2.5 py-1 text-sm text-violet-700"
+                className="inline-flex items-center gap-1 rounded-md bg-teal-100 px-2.5 py-1 text-sm text-teal-800"
                 onClick={(event) => event.stopPropagation()}
               >
                 {category}
@@ -94,7 +94,7 @@ export function CategoryMultiSelect({
                     event.stopPropagation();
                     removeCategory(category);
                   }}
-                  className="rounded p-0.5 text-violet-500 transition hover:bg-violet-200 hover:text-violet-800"
+                  className="rounded p-0.5 text-teal-600 transition hover:bg-teal-200 hover:text-teal-900"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -103,7 +103,7 @@ export function CategoryMultiSelect({
           )}
         </div>
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-gray-400 transition ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-zinc-400 transition ${open ? "rotate-180" : ""}`}
         />
       </div>
 
@@ -111,7 +111,7 @@ export function CategoryMultiSelect({
         <ul
           role="listbox"
           aria-multiselectable="true"
-          className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+          className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg"
         >
           {CONTACT_CATEGORY_OPTIONS.map((category) => {
             const selected = value.includes(category);
@@ -125,12 +125,12 @@ export function CategoryMultiSelect({
                   onClick={() => toggleCategory(category)}
                   className={`flex w-full items-center justify-between px-4 py-2.5 text-sm transition ${
                     selected
-                      ? "bg-violet-50 text-violet-700"
-                      : "text-gray-700 hover:bg-gray-50"
+                      ? "bg-teal-50 text-teal-800"
+                      : "text-zinc-700 hover:bg-zinc-50"
                   }`}
                 >
                   <span>{category}</span>
-                  {selected ? <Check className="h-4 w-4 text-violet-600" /> : null}
+                  {selected ? <Check className="h-4 w-4 text-teal-800" /> : null}
                 </button>
               </li>
             );
@@ -138,7 +138,7 @@ export function CategoryMultiSelect({
         </ul>
       ) : null}
 
-      {hint ? <p className="mt-1.5 text-xs text-gray-500">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-xs text-zinc-500">{hint}</p> : null}
     </div>
   );
 }

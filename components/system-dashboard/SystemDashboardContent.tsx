@@ -37,8 +37,8 @@ const workflowStages: WorkflowStage[] = [
       "Confidence scoring overview — review auto-passed, auto-rejected, and leads flagged for human review.",
     href: "/system-dashboard/fitscore",
     icon: BarChart3,
-    iconBoxClassName: "bg-violet-100",
-    iconClassName: "text-violet-600",
+    iconBoxClassName: "bg-teal-100",
+    iconClassName: "text-teal-800",
   },
   {
     title: "Contact",
@@ -89,11 +89,11 @@ function WorkflowStageCard({ stage }: { stage: WorkflowStage }) {
         >
           <Icon className={`h-5 w-5 ${stage.iconClassName}`} />
         </div>
-        <ChevronRight className="h-5 w-5 shrink-0 text-gray-300" aria-hidden />
+        <ChevronRight className="h-5 w-5 shrink-0 text-zinc-300" aria-hidden />
       </div>
 
-      <h2 className="text-base font-semibold text-gray-900">{stage.title}</h2>
-      <p className="mt-2 text-sm leading-relaxed text-gray-500">
+      <h2 className="text-base font-semibold text-zinc-950">{stage.title}</h2>
+      <p className="mt-2 text-sm leading-relaxed text-zinc-500">
         {stage.description}
       </p>
     </>
@@ -103,7 +103,7 @@ function WorkflowStageCard({ stage }: { stage: WorkflowStage }) {
     return (
       <Link
         href={stage.href}
-        className="block rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-gray-300 hover:shadow-md"
+        className="block rounded-xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:border-zinc-300 hover:shadow-md"
       >
         {content}
       </Link>
@@ -111,7 +111,7 @@ function WorkflowStageCard({ stage }: { stage: WorkflowStage }) {
   }
 
   return (
-    <article className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <article className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
       {content}
     </article>
   );
@@ -121,8 +121,8 @@ export function SystemDashboardContent() {
   return (
     <div className="px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">System Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-zinc-950">System Dashboard</h1>
+        <p className="mt-1 text-sm text-zinc-500">
           Workflow stages for prospect discovery
         </p>
       </div>

@@ -77,7 +77,7 @@ function UsageTable({
 }) {
   if (rows.length === 0) {
     return (
-      <div className="px-6 py-10 text-center text-sm text-gray-500">
+      <div className="px-6 py-10 text-center text-sm text-zinc-500">
         {emptyMessage}
       </div>
     );
@@ -85,13 +85,13 @@ function UsageTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-100">
-        <thead className="bg-gray-50">
+      <table className="min-w-full divide-y divide-zinc-100">
+        <thead className="bg-zinc-50">
           <tr>
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={`px-6 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 ${
+                className={`px-6 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 ${
                   column.align === "right" ? "text-right" : "text-left"
                 }`}
               >
@@ -100,13 +100,13 @@ function UsageTable({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">
+        <tbody className="divide-y divide-zinc-100 bg-white">
           {rows.map((row, index) => (
-            <tr key={index} className="hover:bg-gray-50/80">
+            <tr key={index} className="hover:bg-zinc-50/80">
               {columns.map((column) => (
                 <td
                   key={column.key}
-                  className={`px-6 py-3 text-sm text-gray-700 ${
+                  className={`px-6 py-3 text-sm text-zinc-700 ${
                     column.align === "right" ? "text-right tabular-nums" : ""
                   }`}
                 >
@@ -201,7 +201,7 @@ function BusinessUsagePanel() {
         hint="From business_level_usage"
       >
         {loading ? (
-          <div className="px-6 py-10 text-center text-sm text-gray-500">
+          <div className="px-6 py-10 text-center text-sm text-zinc-500">
             Loading breakdown…
           </div>
         ) : (
@@ -274,7 +274,7 @@ function StageBreakdownTable({
 
   if (stages.length === 0) {
     return (
-      <div className="px-6 py-10 text-center text-sm text-gray-500">
+      <div className="px-6 py-10 text-center text-sm text-zinc-500">
         No candidate-level usage recorded for this config.
       </div>
     );
@@ -283,46 +283,46 @@ function StageBreakdownTable({
   return (
     <>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-100">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-zinc-100">
+          <thead className="bg-zinc-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 Stage
               </th>
-              <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 Candidates
               </th>
-              <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 Calls
               </th>
-              <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 Cost
               </th>
-              <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 Details
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 bg-white">
+          <tbody className="divide-y divide-zinc-100 bg-white">
             {stages.map((stage) => (
-              <tr key={stage.stage} className="hover:bg-gray-50/80">
-                <td className="px-6 py-3 text-sm font-medium text-gray-900">
+              <tr key={stage.stage} className="hover:bg-zinc-50/80">
+                <td className="px-6 py-3 text-sm font-medium text-zinc-950">
                   {formatUsageLabel(stage.stage)}
                 </td>
-                <td className="px-6 py-3 text-right text-sm tabular-nums text-gray-700">
+                <td className="px-6 py-3 text-right text-sm tabular-nums text-zinc-700">
                   {stage.candidate_count}
                 </td>
-                <td className="px-6 py-3 text-right text-sm tabular-nums text-gray-700">
+                <td className="px-6 py-3 text-right text-sm tabular-nums text-zinc-700">
                   {stage.call_count}
                 </td>
-                <td className="px-6 py-3 text-right text-sm tabular-nums text-gray-900">
+                <td className="px-6 py-3 text-right text-sm tabular-nums text-zinc-950">
                   {formatEstimatedCost(stage.total_cost)}
                 </td>
                 <td className="px-6 py-3 text-right">
                   <button
                     type="button"
                     onClick={() => openStageModal(stage)}
-                    className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
+                    className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-900"
                   >
                     View tasks
                   </button>
@@ -346,34 +346,34 @@ function StageBreakdownTable({
         {selectedStage ? (
           <div className="space-y-5">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Candidates
                 </p>
-                <p className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+                <p className="mt-1 text-lg font-semibold tabular-nums text-zinc-950">
                   {selectedStage.candidate_count}
                 </p>
               </div>
-              <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Calls
                 </p>
-                <p className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+                <p className="mt-1 text-lg font-semibold tabular-nums text-zinc-950">
                   {selectedStage.call_count}
                 </p>
               </div>
-              <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Stage cost
                 </p>
-                <p className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+                <p className="mt-1 text-lg font-semibold tabular-nums text-zinc-950">
                   {formatEstimatedCost(selectedStage.total_cost)}
                 </p>
               </div>
             </div>
 
             {loading ? (
-              <p className="text-sm text-gray-500">Loading task breakdown…</p>
+              <p className="text-sm text-zinc-500">Loading task breakdown…</p>
             ) : error ? (
               <p className="text-sm text-red-600">{error}</p>
             ) : (
@@ -427,68 +427,68 @@ function LeadBreakdownTable({
         subtitle="Total cost per lead with stage and task breakdown"
         hint="From candidate_level_usage"
       >
-        <div className="border-b border-gray-100 px-6 py-4">
+        <div className="border-b border-zinc-100 px-6 py-4">
           <div className="relative max-w-md">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
             <input
               type="search"
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Search company or place ID…"
-              className="w-full rounded-lg border border-gray-200 py-2 pl-10 pr-3 text-sm text-gray-900 shadow-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+              className="w-full rounded-lg border border-zinc-200 py-2 pl-10 pr-3 text-sm text-zinc-950 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100"
             />
           </div>
         </div>
 
         {loading ? (
-          <div className="px-6 py-10 text-center text-sm text-gray-500">
+          <div className="px-6 py-10 text-center text-sm text-zinc-500">
             Loading candidates…
           </div>
         ) : leads.length === 0 ? (
-          <div className="px-6 py-10 text-center text-sm text-gray-500">
+          <div className="px-6 py-10 text-center text-sm text-zinc-500">
             No candidate usage found for this config.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-100">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-zinc-100">
+              <thead className="bg-zinc-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     Lead
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     Calls
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     Total cost
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500">
                     Details
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
+              <tbody className="divide-y divide-zinc-100 bg-white">
                 {leads.map((lead) => (
-                  <tr key={lead.place_id} className="hover:bg-gray-50/80">
-                    <td className="px-6 py-3 text-sm text-gray-900">
+                  <tr key={lead.place_id} className="hover:bg-zinc-50/80">
+                    <td className="px-6 py-3 text-sm text-zinc-950">
                       <span className="font-medium">
                         {lead.company_name || "Unknown company"}
                       </span>
-                      <span className="mt-0.5 block font-mono text-xs text-gray-500">
+                      <span className="mt-0.5 block font-mono text-xs text-zinc-500">
                         {lead.place_id}
                       </span>
                     </td>
-                    <td className="px-6 py-3 text-right text-sm tabular-nums text-gray-700">
+                    <td className="px-6 py-3 text-right text-sm tabular-nums text-zinc-700">
                       {lead.call_count}
                     </td>
-                    <td className="px-6 py-3 text-right text-sm tabular-nums font-medium text-gray-900">
+                    <td className="px-6 py-3 text-right text-sm tabular-nums font-medium text-zinc-950">
                       {formatEstimatedCost(lead.total_cost)}
                     </td>
                     <td className="px-6 py-3 text-right">
                       <button
                         type="button"
                         onClick={() => setSelectedLead(lead)}
-                        className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700"
+                        className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-900"
                       >
                         View breakdown
                       </button>
@@ -520,24 +520,24 @@ function LeadBreakdownTable({
       >
         {selectedLead ? (
           <div className="space-y-5">
-            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-              <p className="font-mono text-xs text-gray-500">
+            <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+              <p className="font-mono text-xs text-zinc-500">
                 {selectedLead.place_id}
               </p>
               <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Total calls
                   </p>
-                  <p className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+                  <p className="mt-1 text-lg font-semibold tabular-nums text-zinc-950">
                     {selectedLead.call_count}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Total cost
                   </p>
-                  <p className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+                  <p className="mt-1 text-lg font-semibold tabular-nums text-zinc-950">
                     {formatEstimatedCost(selectedLead.total_cost)}
                   </p>
                 </div>
@@ -548,13 +548,13 @@ function LeadBreakdownTable({
               {selectedLead.stages.map((stage) => (
                 <div
                   key={`${selectedLead.place_id}-${stage.stage}`}
-                  className="overflow-hidden rounded-xl border border-gray-200"
+                  className="overflow-hidden rounded-xl border border-zinc-200"
                 >
-                  <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-4 py-3">
-                    <p className="text-sm font-semibold text-gray-900">
+                  <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50 px-4 py-3">
+                    <p className="text-sm font-semibold text-zinc-950">
                       {formatUsageLabel(stage.stage)}
                     </p>
-                    <p className="text-sm tabular-nums font-medium text-gray-700">
+                    <p className="text-sm tabular-nums font-medium text-zinc-700">
                       {formatEstimatedCost(stage.total_cost)}
                     </p>
                   </div>
@@ -773,7 +773,7 @@ function CandidateUsagePanel() {
           hint="From candidate_level_usage"
         >
           {summaryLoading ? (
-            <div className="px-6 py-10 text-center text-sm text-gray-500">
+            <div className="px-6 py-10 text-center text-sm text-zinc-500">
               Loading configs…
             </div>
           ) : (
@@ -805,7 +805,7 @@ function CandidateUsagePanel() {
             hint="Click View tasks to open stage breakdown"
           >
             {detailLoading ? (
-              <div className="px-6 py-10 text-center text-sm text-gray-500">
+              <div className="px-6 py-10 text-center text-sm text-zinc-500">
                 Loading stage breakdown…
               </div>
             ) : (
@@ -841,14 +841,14 @@ export function UsageContent() {
         subtitle="Estimated LLM cost from business-level and candidate-level usage tables"
       />
 
-      <div className="mb-6 inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+      <div className="mb-6 inline-flex rounded-lg border border-zinc-200 bg-zinc-50 p-1">
         <button
           type="button"
           onClick={() => setActiveTab("business")}
           className={`rounded-md px-4 py-2 text-sm font-medium transition ${
             activeTab === "business"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900"
+              ? "bg-white text-zinc-950 shadow-sm"
+              : "text-zinc-600 hover:text-zinc-950"
           }`}
         >
           Business level
@@ -858,8 +858,8 @@ export function UsageContent() {
           onClick={() => setActiveTab("candidate")}
           className={`rounded-md px-4 py-2 text-sm font-medium transition ${
             activeTab === "candidate"
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900"
+              ? "bg-white text-zinc-950 shadow-sm"
+              : "text-zinc-600 hover:text-zinc-950"
           }`}
         >
           Candidate level

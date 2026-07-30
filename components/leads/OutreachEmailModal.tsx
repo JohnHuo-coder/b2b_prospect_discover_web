@@ -237,7 +237,7 @@ export function OutreachEmailModal({
                 type="button"
                 onClick={() => void handleCopy()}
                 disabled={isBusy}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Copy className="h-4 w-4" />
                 Copy
@@ -248,7 +248,7 @@ export function OutreachEmailModal({
                 type="button"
                 onClick={() => setConfirmMarkReadyOpen(true)}
                 disabled={isBusy}
-                className="inline-flex items-center gap-2 rounded-lg border border-violet-200 px-3 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-teal-200 px-3 py-2 text-sm font-medium text-teal-800 transition hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <RotateCcw className="h-4 w-4" />
                 {reopening ? "Updating..." : "Mark as ready"}
@@ -263,7 +263,7 @@ export function OutreachEmailModal({
                   type="button"
                   onClick={handleCancel}
                   disabled={isBusy}
-                  className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -271,7 +271,7 @@ export function OutreachEmailModal({
                   type="button"
                   onClick={() => void handleSave()}
                   disabled={isBusy || !isDirty}
-                  className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {saving ? "Saving..." : "Save"}
                 </button>
@@ -289,7 +289,7 @@ export function OutreachEmailModal({
                 type="button"
                 onClick={handleClose}
                 disabled={isBusy}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Close
               </button>
@@ -300,7 +300,7 @@ export function OutreachEmailModal({
     >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
-          <p className="text-sm text-gray-500">To: {contact.email}</p>
+          <p className="text-sm text-zinc-500">To: {contact.email}</p>
           {contact.outreachStatus ? (
             <StatusBadge status={contact.outreachStatus} />
           ) : null}
@@ -312,10 +312,10 @@ export function OutreachEmailModal({
             onChange={(event) => setDraft(event.target.value)}
             rows={14}
             disabled={isBusy}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm leading-6 text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100 disabled:cursor-not-allowed disabled:bg-gray-50"
+            className="w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm leading-6 text-zinc-950 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100 disabled:cursor-not-allowed disabled:bg-zinc-50"
           />
         ) : (
-          <pre className="whitespace-pre-wrap rounded-lg bg-gray-50 p-4 text-sm leading-6 text-gray-800">
+          <pre className="whitespace-pre-wrap rounded-lg bg-zinc-50 p-4 text-sm leading-6 text-zinc-800">
             {contact.outreachEmail}
           </pre>
         )}
@@ -323,7 +323,7 @@ export function OutreachEmailModal({
         {copyMessage ? <p className="text-sm text-emerald-600">{copyMessage}</p> : null}
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
         {sending ? (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-zinc-500">
             Sending via Gmail. Please wait and do not edit the email.
           </p>
         ) : null}
@@ -343,7 +343,7 @@ export function OutreachEmailModal({
             type="button"
             onClick={() => setConfirmMarkReadyOpen(false)}
             disabled={reopening}
-            className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Cancel
           </button>
@@ -351,14 +351,14 @@ export function OutreachEmailModal({
             type="button"
             onClick={() => void handleMarkReady()}
             disabled={reopening}
-            className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {reopening ? "Updating..." : "Mark as ready"}
           </button>
         </div>
       }
     >
-      <p className="text-sm leading-6 text-gray-700">
+      <p className="text-sm leading-6 text-zinc-700">
         This will change the outreach status back to <strong>ready</strong>. To mark
         it as <strong>sent</strong> again, you will need to send the email through
         Gmail one more time.

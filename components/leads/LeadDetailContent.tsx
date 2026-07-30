@@ -57,7 +57,7 @@ function buildOverviewFields(lead: LeadDetail, websiteHref: string): OverviewFie
           href={websiteHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-violet-600 hover:text-violet-700"
+          className="inline-flex items-center gap-1.5 text-teal-800 hover:text-teal-900"
         >
           <Globe className="h-4 w-4" />
           {lead.website}
@@ -73,7 +73,7 @@ function buildOverviewFields(lead: LeadDetail, websiteHref: string): OverviewFie
       label: "Phone",
       value: (
         <span className="inline-flex items-center gap-1.5">
-          <Phone className="h-4 w-4 text-gray-400" />
+          <Phone className="h-4 w-4 text-zinc-400" />
           {lead.phone}
         </span>
       ),
@@ -97,7 +97,7 @@ function buildOverviewFields(lead: LeadDetail, websiteHref: string): OverviewFie
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-violet-600 hover:text-violet-700"
+          className="inline-flex items-center gap-1.5 text-teal-800 hover:text-teal-900"
         >
           <ExternalLink className="h-4 w-4" />
           View profile
@@ -186,31 +186,31 @@ function RequirementCard({
   const percent = Math.min(Math.max((score / maxScore) * 100, 0), 100);
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white px-6 py-5">
+    <section className="rounded-xl border border-zinc-200 bg-white px-6 py-5">
       <div className="mb-3 flex items-start justify-between gap-4">
-        <h3 className="text-base font-semibold text-gray-900">{name}</h3>
+        <h3 className="text-base font-semibold text-zinc-950">{name}</h3>
         <span className="text-lg font-bold text-emerald-600">
           {score}/{maxScore}
         </span>
       </div>
 
-      <div className="mb-4 h-2 overflow-hidden rounded-full bg-gray-100">
+      <div className="mb-4 h-2 overflow-hidden rounded-full bg-zinc-100">
         <div
           className="h-full rounded-full bg-emerald-500 transition-all"
           style={{ width: `${percent}%` }}
         />
       </div>
 
-      <p className="text-sm leading-6 text-gray-700">{reason}</p>
+      <p className="text-sm leading-6 text-zinc-700">{reason}</p>
 
       {supportingFacts.length > 0 ? (
         <ul className="mt-4 space-y-2.5">
           {supportingFacts.map((fact) => (
             <li
               key={fact}
-              className="flex items-start gap-2.5 text-sm text-gray-700"
+              className="flex items-start gap-2.5 text-sm text-zinc-700"
             >
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-violet-500" />
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />
               <span>{fact}</span>
             </li>
           ))}
@@ -243,7 +243,7 @@ function ContactCard({
   return (
     <article
       className={`rounded-xl border bg-white px-6 py-5 ${
-        selected ? "border-violet-300 ring-2 ring-violet-100" : "border-gray-200"
+        selected ? "border-teal-300 ring-2 ring-teal-100" : "border-zinc-200"
       }`}
     >
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -255,13 +255,13 @@ function ContactCard({
                 checked={selected}
                 disabled={bulkSending}
                 onChange={() => onToggleSelect?.(contact)}
-                className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 disabled:cursor-not-allowed"
+                className="h-4 w-4 rounded border-zinc-300 text-teal-800 focus:ring-teal-600 disabled:cursor-not-allowed"
                 aria-label={`Select ${contact.email}`}
               />
             ) : null}
             <a
               href={`mailto:${contact.email}`}
-              className="inline-flex items-center gap-2 text-sm font-medium text-violet-600 hover:text-violet-700"
+              className="inline-flex items-center gap-2 text-sm font-medium text-teal-800 hover:text-teal-900"
             >
               <Mail className="h-4 w-4 shrink-0" />
               <span className="break-all">{contact.email}</span>
@@ -273,7 +273,7 @@ function ContactCard({
             ) : null}
           </div>
           {contact.emailSource === "website" ? (
-            <p className="flex items-start gap-1.5 text-xs leading-relaxed text-gray-500">
+            <p className="flex items-start gap-1.5 text-xs leading-relaxed text-zinc-500">
               <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>{WEBSITE_SCRAPED_EMAIL_NOTE}</span>
             </p>
@@ -289,7 +289,7 @@ function ContactCard({
               type="button"
               onClick={() => onViewEmail(contact)}
               disabled={bulkSending}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <FileText className="h-4 w-4" />
               View Outreach Email
@@ -331,7 +331,7 @@ function ContactCard({
                     href={contact.linkedinUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-violet-600 hover:text-violet-700"
+                    className="inline-flex items-center gap-1.5 text-teal-800 hover:text-teal-900"
                   >
                     <ExternalLink className="h-4 w-4" />
                     View profile
@@ -673,7 +673,7 @@ export function LeadDetailContent({ leadId }: { leadId: string }) {
     <div className="px-8 py-8">
       <Link
         href="/dashboard"
-        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition hover:text-violet-600"
+        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-zinc-500 transition hover:text-teal-800"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Dashboard
@@ -691,7 +691,7 @@ export function LeadDetailContent({ leadId }: { leadId: string }) {
             <SkeletonBar className="h-9 w-72 max-w-full" />
             <SkeletonBar className="mt-3 h-5 w-48" />
           </div>
-          <div className="rounded-xl border border-gray-200 bg-white px-6 py-5">
+          <div className="rounded-xl border border-zinc-200 bg-white px-6 py-5">
             <SkeletonBar className="h-5 w-24" />
             <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
               <SkeletonBar className="h-12 w-full" />
@@ -706,16 +706,16 @@ export function LeadDetailContent({ leadId }: { leadId: string }) {
       {lead ? (
         <div className="space-y-6">
           <header>
-            <h1 className="text-3xl font-bold text-gray-900">{lead.companyName}</h1>
+            <h1 className="text-3xl font-bold text-zinc-950">{lead.companyName}</h1>
             <div className="mt-3 flex flex-wrap items-center gap-4">
               <StatusBadge status={lead.status} />
-              <span className="text-sm text-gray-500">Added {lead.createdAt}</span>
+              <span className="text-sm text-zinc-500">Added {lead.createdAt}</span>
             </div>
           </header>
 
           {overviewFields.length > 0 ? (
-            <section className="rounded-xl border border-gray-200 bg-white px-6 py-5">
-              <h2 className="text-base font-semibold text-gray-900">Overview</h2>
+            <section className="rounded-xl border border-zinc-200 bg-white px-6 py-5">
+              <h2 className="text-base font-semibold text-zinc-950">Overview</h2>
               <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
                 {overviewFields.map((field) => (
                   <Field key={field.key} label={field.label} value={field.value} />
@@ -738,14 +738,14 @@ export function LeadDetailContent({ leadId }: { leadId: string }) {
           {lead.contacts.length > 0 ? (
             <section className="space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-base font-semibold text-gray-900">Contact</h2>
+                <h2 className="text-base font-semibold text-zinc-950">Contact</h2>
                 {readyContacts.length > 0 ? (
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={handleSelectReadyEmails}
                       disabled={bulkSending}
-                      className="rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-lg border border-zinc-200 bg-white px-3.5 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Select ready emails
                     </button>
@@ -772,7 +772,7 @@ export function LeadDetailContent({ leadId }: { leadId: string }) {
                 <p className="text-sm text-red-600">{bulkSendError}</p>
               ) : null}
               {bulkSending ? (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-zinc-500">
                   Sending outreach emails via Gmail. Please wait.
                 </p>
               ) : null}
@@ -830,7 +830,7 @@ export function LeadDetailContent({ leadId }: { leadId: string }) {
                   setDeleteError("");
                 }}
                 disabled={Boolean(deletingContactEmail)}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -860,9 +860,9 @@ export function LeadDetailContent({ leadId }: { leadId: string }) {
                 </p>
               </div>
             </div>
-            <p className="text-sm leading-6 text-gray-700">
+            <p className="text-sm leading-6 text-zinc-700">
               Are you sure you want to delete{" "}
-              <span className="font-medium text-gray-900">
+              <span className="font-medium text-zinc-950">
                 {contactToDelete.email}
               </span>
               ?

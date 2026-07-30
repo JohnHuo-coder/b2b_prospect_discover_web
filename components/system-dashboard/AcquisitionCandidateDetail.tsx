@@ -17,8 +17,8 @@ function DetailField({
 }) {
   return (
     <div>
-      <dt className="text-sm font-medium text-gray-700">{label}</dt>
-      <dd className="mt-1 text-sm text-gray-800">{children}</dd>
+      <dt className="text-sm font-medium text-zinc-700">{label}</dt>
+      <dd className="mt-1 text-sm text-zinc-800">{children}</dd>
     </div>
   );
 }
@@ -70,27 +70,27 @@ const missMetricMeta = [
 
 function MissMetricsSection({ req }: { req: AcquisitionRequirementResult }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+    <div className="rounded-lg border border-zinc-200 bg-white p-4">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
         Issue counts
       </p>
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-zinc-100">
         {missMetricMeta.map((metric) => {
           const count = req[metric.key];
 
           return (
             <div key={metric.key} className="py-3 first:pt-0 last:pb-0">
               <div className="flex items-center justify-between gap-4">
-                <p className="text-sm font-medium text-gray-900">{metric.label}</p>
+                <p className="text-sm font-medium text-zinc-950">{metric.label}</p>
                 <span
                   className={`shrink-0 font-mono text-base font-semibold tabular-nums ${
-                    count > 0 ? "text-violet-600" : "text-gray-400"
+                    count > 0 ? "text-teal-800" : "text-zinc-400"
                   }`}
                 >
                   {count}
                 </span>
               </div>
-              <p className="mt-1 text-xs leading-relaxed text-gray-500">
+              <p className="mt-1 text-xs leading-relaxed text-zinc-500">
                 {metric.description}
               </p>
             </div>
@@ -144,14 +144,14 @@ export function AcquisitionCandidateDetail({
         aria-labelledby="acquisition-detail-title"
         className="relative z-10 flex h-full w-full max-w-2xl flex-col bg-white shadow-xl"
       >
-        <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
+        <div className="flex items-start justify-between border-b border-zinc-100 px-6 py-5">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
               {candidate.id}
             </p>
             <h2
               id="acquisition-detail-title"
-              className="mt-1 text-lg font-semibold text-gray-900"
+              className="mt-1 text-lg font-semibold text-zinc-950"
             >
               {candidate.company}
             </h2>
@@ -162,7 +162,7 @@ export function AcquisitionCandidateDetail({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-lg p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600"
           >
             <X className="h-5 w-5" />
           </button>
@@ -170,19 +170,19 @@ export function AcquisitionCandidateDetail({
 
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {loading ? (
-            <p className="text-sm text-gray-500">Loading candidate details...</p>
+            <p className="text-sm text-zinc-500">Loading candidate details...</p>
           ) : error ? (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           ) : candidate.detailMode === "web_acquisition" &&
             candidate.webAcquisitionStatus ? (
-            <section className="rounded-xl border border-gray-200 bg-gray-50/60 p-4">
-              <div className="mb-4 border-b border-gray-200 pb-3">
+            <section className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4">
+              <div className="mb-4 border-b border-zinc-200 pb-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-sky-600">
                   Company website URL acquisition
                 </p>
-                <p className="mt-1 text-sm leading-relaxed text-gray-600">
+                <p className="mt-1 text-sm leading-relaxed text-zinc-600">
                   This candidate failed before requirement evaluation because the
                   company website URL could not be collected.
                 </p>
@@ -207,10 +207,10 @@ export function AcquisitionCandidateDetail({
               </dl>
             </section>
           ) : candidate.requirements.length === 0 ? (
-            <p className="text-sm text-gray-500">No requirement details found.</p>
+            <p className="text-sm text-zinc-500">No requirement details found.</p>
           ) : (
             <>
-              <p className="mb-4 text-sm text-gray-500">
+              <p className="mb-4 text-sm text-zinc-500">
                 Results grouped by requirement ({candidate.requirements.length})
               </p>
 
@@ -218,14 +218,14 @@ export function AcquisitionCandidateDetail({
                 {candidate.requirements.map((req) => (
                   <section
                     key={req.requirement_index}
-                    className="rounded-xl border border-gray-200 bg-gray-50/60 p-4"
+                    className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4"
                   >
-                    <div className="mb-4 border-b border-gray-200 pb-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
+                    <div className="mb-4 border-b border-zinc-200 pb-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-teal-800">
                         Requirement {req.requirement_index}
                       </p>
                       {req.requirement_text ? (
-                        <p className="mt-1 text-sm leading-relaxed text-gray-700">
+                        <p className="mt-1 text-sm leading-relaxed text-zinc-700">
                           {req.requirement_text}
                         </p>
                       ) : null}
@@ -255,7 +255,7 @@ export function AcquisitionCandidateDetail({
                           {req.google_review_sufficient ? (
                             <span className="font-medium text-emerald-700">Yes</span>
                           ) : (
-                            <span className="font-medium text-gray-700">No</span>
+                            <span className="font-medium text-zinc-700">No</span>
                           )}
                         </DetailField>
                       ) : null}

@@ -40,13 +40,13 @@ function WebsiteUrlFailureBreakdown({
 
   if (totalFailed === 0 || stages.length === 0) {
     return (
-      <p className="text-sm text-gray-500">No failure breakdown available.</p>
+      <p className="text-sm text-zinc-500">No failure breakdown available.</p>
     );
   }
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-zinc-600">
         {totalFailed} failed candidates grouped by final stage and reason. Share
         is the percentage of all URL acquisition failures.
       </p>
@@ -54,47 +54,47 @@ function WebsiteUrlFailureBreakdown({
       {stages.map((stage) => (
         <section
           key={stage.final_stage}
-          className="overflow-hidden rounded-lg border border-gray-200"
+          className="overflow-hidden rounded-lg border border-zinc-200"
         >
-          <div className="flex items-center justify-between gap-4 border-b border-gray-100 bg-gray-50 px-4 py-3">
+          <div className="flex items-center justify-between gap-4 border-b border-zinc-100 bg-zinc-50 px-4 py-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 Final stage
               </p>
-              <p className="mt-0.5 text-sm font-semibold text-gray-900">
+              <p className="mt-0.5 text-sm font-semibold text-zinc-950">
                 {formatBreakdownLabel(stage.final_stage)}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-sm font-semibold text-gray-900">{stage.count}</p>
-              <p className="text-xs text-gray-500">{stage.percentage}% of failures</p>
+              <p className="text-sm font-semibold text-zinc-950">{stage.count}</p>
+              <p className="text-xs text-zinc-500">{stage.percentage}% of failures</p>
             </div>
           </div>
 
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <table className="min-w-full divide-y divide-zinc-200 text-sm">
             <thead className="bg-white">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Reason
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Count
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Share
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
+            <tbody className="divide-y divide-zinc-100 bg-white">
               {stage.reasons.map((reason) => (
                 <tr key={`${stage.final_stage}-${reason.reason}`}>
-                  <td className="px-4 py-3 align-top font-mono text-xs text-gray-700">
+                  <td className="px-4 py-3 align-top font-mono text-xs text-zinc-700">
                     {formatBreakdownLabel(reason.reason)}
                   </td>
-                  <td className="px-4 py-3 align-top text-right font-medium text-gray-700">
+                  <td className="px-4 py-3 align-top text-right font-medium text-zinc-700">
                     {reason.count}
                   </td>
-                  <td className="px-4 py-3 align-top text-right text-gray-500">
+                  <td className="px-4 py-3 align-top text-right text-zinc-500">
                     {reason.percentage}%
                   </td>
                 </tr>
@@ -131,7 +131,7 @@ function SummaryCardSkeleton({ count }: { count: number }) {
       {Array.from({ length: count }).map((_, index) => (
         <div
           key={index}
-          className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
+          className="rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-sm"
         >
           <SkeletonBar className="h-4 w-24" />
           <SkeletonBar className="mt-3 h-9 w-20" />
@@ -371,8 +371,8 @@ export function InformationAcquisitionSummaryCards() {
                 onClick={() => setScopeId(scope.id)}
                 className={`rounded-lg px-3.5 py-2 text-sm font-medium transition ${
                   active
-                    ? "bg-violet-600 text-white"
-                    : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                    ? "bg-teal-800 text-white"
+                    : "border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
                 }`}
               >
                 {scope.label}
@@ -404,10 +404,10 @@ export function InformationAcquisitionSummaryCards() {
             progress={allPassRate}
             subtext={`${allSucceed} of ${allTotalInput}`}
             icon={Percent}
-            iconClassName="text-violet-600"
-            iconBoxClassName="bg-violet-100"
-            valueClassName="text-violet-600"
-            progressClassName="bg-violet-500"
+            iconClassName="text-teal-800"
+            iconBoxClassName="bg-teal-100"
+            valueClassName="text-teal-800"
+            progressClassName="bg-teal-500"
           />
         </div>
       ) : (
@@ -418,10 +418,10 @@ export function InformationAcquisitionSummaryCards() {
             progress={requirementPassRate}
             subtext={`${reqSucceed} of ${passRatePool}`}
             icon={Percent}
-            iconClassName="text-violet-600"
-            iconBoxClassName="bg-violet-100"
-            valueClassName="text-violet-600"
-            progressClassName="bg-violet-500"
+            iconClassName="text-teal-800"
+            iconBoxClassName="bg-teal-100"
+            valueClassName="text-teal-800"
+            progressClassName="bg-teal-500"
           />
           <MetricCard
             label="Google review fact extraction success rate"

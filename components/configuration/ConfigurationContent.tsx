@@ -93,11 +93,11 @@ function displayNumber(value: number | null | undefined): ReactNode {
 
 function displayRequirements(requirements: string[]): ReactNode {
   if (requirements.length === 0) {
-    return <span className="text-sm text-gray-400">—</span>;
+    return <span className="text-sm text-zinc-400">—</span>;
   }
 
   return (
-    <ol className="list-decimal space-y-3 pl-5 text-sm leading-relaxed text-gray-700">
+    <ol className="list-decimal space-y-3 pl-5 text-sm leading-relaxed text-zinc-700">
       {requirements.map((requirement) => (
         <li key={requirement}>{requirement}</li>
       ))}
@@ -113,7 +113,7 @@ function displayBoolean(enabled: boolean | null | undefined): ReactNode {
   return (
     <span className="inline-flex items-center gap-2">
       <span
-        className={`h-2 w-2 rounded-full ${enabled ? "bg-amber-400" : "bg-gray-300"}`}
+        className={`h-2 w-2 rounded-full ${enabled ? "bg-amber-400" : "bg-zinc-300"}`}
       />
       {enabled ? "Enabled" : "Disabled"}
     </span>
@@ -325,7 +325,7 @@ export function ConfigurationContent() {
     return (
       <div className="px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Configuration</h1>
+          <h1 className="text-2xl font-bold text-zinc-950">Configuration</h1>
         </div>
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-5 text-sm text-amber-800">
           You need to join a company first.
@@ -338,12 +338,12 @@ export function ConfigurationContent() {
     <div className="px-8 py-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Configuration</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-zinc-950">Configuration</h1>
+          <p className="mt-1 text-sm text-zinc-500">
             System configuration for the lead generation pipeline
           </p>
           {config.version > 0 ? (
-            <p className="mt-1 text-xs text-gray-400">Version: {config.version}</p>
+            <p className="mt-1 text-xs text-zinc-400">Version: {config.version}</p>
           ) : null}
         </div>
 
@@ -355,7 +355,7 @@ export function ConfigurationContent() {
                   type="button"
                   onClick={handleCancelEditing}
                   disabled={saving || rephrasing}
-                  className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+                  className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -364,7 +364,7 @@ export function ConfigurationContent() {
                 type="button"
                 onClick={handleSave}
                 disabled={saving || rephrasing || !isDraftDirty}
-                className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saving ? "Saving..." : config.version === 0 ? "Save and continue" : "Save configuration"}
               </button>
@@ -373,7 +373,7 @@ export function ConfigurationContent() {
             <button
               type="button"
               onClick={handleStartEditing}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-violet-300 hover:text-violet-700"
+              className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-teal-300 hover:text-teal-900"
             >
               <Pencil className="h-4 w-4" />
               Edit configuration
@@ -395,7 +395,7 @@ export function ConfigurationContent() {
       ) : null}
 
       {configLoaded && config.version === 0 && isEditing ? (
-        <div className="mb-6 rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800">
+        <div className="mb-6 rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-800">
           Complete your business configuration to get started. This is required before
           you can run the pipeline.
         </div>
@@ -437,7 +437,7 @@ export function ConfigurationContent() {
                 helpContent={COMPANY_DESCRIPTION_HELP}
                 value={
                   hasText(config.description) ? (
-                    <p className="rounded-lg bg-gray-50 p-4 leading-relaxed text-gray-700">
+                    <p className="rounded-lg bg-zinc-50 p-4 leading-relaxed text-zinc-700">
                       {config.description}
                     </p>
                   ) : (
@@ -450,7 +450,7 @@ export function ConfigurationContent() {
                 helpContent={COLLABORATION_INTENT_HELP}
                 value={
                   hasText(config.collaboration_intent) ? (
-                    <p className="rounded-lg bg-gray-50 p-4 leading-relaxed text-gray-700">
+                    <p className="rounded-lg bg-zinc-50 p-4 leading-relaxed text-zinc-700">
                       {config.collaboration_intent}
                     </p>
                   ) : (
@@ -462,7 +462,7 @@ export function ConfigurationContent() {
           </ConfigCard>
 
           <ConfigCard icon={List} title="Requirements" titleHelpContent={REQUIREMENTS_HELP}>
-            <p className="mb-4 text-xs leading-relaxed text-gray-500">
+            <p className="mb-4 text-xs leading-relaxed text-zinc-500">
               {REQUIREMENTS_TESTING_NOTICE}
             </p>
             {displayRequirements(config.requirements)}
@@ -472,7 +472,7 @@ export function ConfigurationContent() {
             icon={MapPin}
             title="Location"
             footer={
-              <div className="flex items-center gap-2 text-xs text-gray-500">
+              <div className="flex items-center gap-2 text-xs text-zinc-500">
                 <Info className="h-3.5 w-3.5 shrink-0" />
                 {DISTANCE_REQUIREMENT_VIEW_FOOTER}
               </div>

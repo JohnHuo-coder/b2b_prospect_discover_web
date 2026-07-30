@@ -159,7 +159,7 @@ export function StartProspectDiscoverModal({
             <button
               type="button"
               onClick={handleClose}
-              className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700"
+              className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-900"
             >
               OK
             </button>
@@ -169,7 +169,7 @@ export function StartProspectDiscoverModal({
                 type="button"
                 onClick={handleClose}
                 disabled={submitting}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -178,7 +178,7 @@ export function StartProspectDiscoverModal({
                 <Link
                   href="/configuration"
                   onClick={handleClose}
-                  className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-100"
+                  className="rounded-lg border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-800 transition hover:bg-teal-100"
                 >
                   Go to Configuration
                 </Link>
@@ -188,7 +188,7 @@ export function StartProspectDiscoverModal({
                 type="button"
                 disabled={loading || Boolean(error) || !readiness.ready || submitting}
                 onClick={() => void handleConfirm()}
-                className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Play className="h-4 w-4" />
                 {submitting ? "Starting..." : "Confirm"}
@@ -262,15 +262,15 @@ export function StartProspectDiscoverModal({
         <div className="space-y-5">
           {readiness.ready ? (
             <>
-              <p className="text-sm leading-relaxed text-gray-700">
+              <p className="text-sm leading-relaxed text-zinc-700">
                 This run will use your current{" "}
-                <span className="font-medium text-gray-900">Configuration</span>{" "}
+                <span className="font-medium text-zinc-950">Configuration</span>{" "}
                 settings — search criteria, scoring thresholds, contact
                 preferences, outreach limits, and requirements.
               </p>
 
-              <div className="rounded-xl border border-violet-200 bg-violet-50 px-5 py-4">
-                <p className="text-sm text-violet-900">
+              <div className="rounded-xl border border-teal-200 bg-teal-50 px-5 py-4">
+                <p className="text-sm text-teal-900">
                   This run will process{" "}
                   <span className="text-2xl font-bold">{candidateCount}</span>{" "}
                   candidate{candidateCount === 1 ? "" : "s"} based on your{" "}
@@ -278,14 +278,14 @@ export function StartProspectDiscoverModal({
                   setting.
                 </p>
                 {quotaLabel ? (
-                  <p className="mt-2 text-sm text-violet-800">
+                  <p className="mt-2 text-sm text-teal-800">
                     Daily usage so far:{" "}
                     <span className="font-medium">{quotaLabel}</span> prospects
                   </p>
                 ) : null}
               </div>
 
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-zinc-500">
                 Click Confirm to start, or Cancel to go back.
               </p>
             </>
@@ -308,14 +308,14 @@ export function StartProspectDiscoverModal({
                 {readiness.issues.map((issue) => (
                   <li
                     key={`${issue.section}-${issue.message}`}
-                    className="flex items-start gap-2 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm"
+                    className="flex items-start gap-2 rounded-lg border border-zinc-100 bg-zinc-50 px-4 py-3 text-sm"
                   >
                     <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-amber-500" />
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-zinc-950">
                         {issue.section}
                       </p>
-                      <p className="text-gray-600">{issue.message}</p>
+                      <p className="text-zinc-600">{issue.message}</p>
                     </div>
                   </li>
                 ))}

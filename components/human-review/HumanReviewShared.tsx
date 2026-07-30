@@ -31,14 +31,14 @@ export function HumanReviewBackLink({
     <div className="mb-8">
       <Link
         href="/human-review"
-        className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-violet-600 transition hover:text-violet-700"
+        className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-teal-800 transition hover:text-teal-900"
       >
         <ChevronLeft className="h-4 w-4" />
         Human Review
       </Link>
-      <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+      <h1 className="text-2xl font-bold text-zinc-950">{title}</h1>
       {subtitle ? (
-        <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
+        <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>
       ) : null}
     </div>
   );

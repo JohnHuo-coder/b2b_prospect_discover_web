@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/components/providers/UserProvider";
 import { requiresEmailVerification } from "@/lib/auth/emailVerification";
 import { isUserApproved } from "@/lib/auth/isUserApproved";
+import { AppAtmosphere } from "@/components/layout/AppAtmosphere";
+import { AppReveal } from "@/components/ui/AppReveal";
 import { Sidebar } from "./Sidebar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -28,8 +30,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-sm text-gray-500">Loading...</p>
+      <div className="relative flex min-h-screen items-center justify-center bg-zinc-50">
+        <AppAtmosphere variant="app" />
+        <p className="relative z-10 text-sm text-zinc-500">Loading...</p>
       </div>
     );
   }
@@ -39,9 +42,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="relative min-h-screen bg-zinc-50">
+      <AppAtmosphere variant="app" />
       <Sidebar />
-      <main className="ml-64 h-screen overflow-y-auto">{children}</main>
+      <main className="relative z-10 ml-64 h-screen overflow-y-auto">
+        <AppReveal>{children}</AppReveal>
+      </main>
     </div>
   );
 }

@@ -9,63 +9,76 @@ import {
   Megaphone,
   Search,
   Settings2,
-  Sparkles,
-  Target,
   Users,
   Workflow,
 } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
 import { getPostAuthDestination } from "@/lib/auth/accessRouting";
 import { isUserApproved } from "@/lib/auth/isUserApproved";
+import { LandingAtmosphere } from "@/components/landing/LandingAtmosphere";
+import { LandingFeatureVisual } from "@/components/landing/LandingFeatureVisual";
+import { LandingHeroVisual } from "@/components/landing/LandingHeroVisual";
+import { LandingReveal } from "@/components/landing/LandingReveal";
 
-const features = [
+const iconClass = "h-5 w-5";
+const iconStroke = 1.5;
+
+const spotlightFeatures = [
   {
     icon: Settings2,
-    title: "Business configuration",
+    label: "Configure once",
+    title: "Business profile and search criteria in one workspace",
     description:
-      "Define your company profile, partnership intent, target industries, search criteria, contact preferences, and outreach settings in one place.",
+      "Define partnership intent, target industries, scoring thresholds, contact preferences, and outreach settings. Your team edits configuration without touching spreadsheets.",
+    visual: "config" as const,
   },
   {
     icon: Search,
-    title: "Automated prospect discovery",
+    label: "Discover on demand",
+    title: "Automated runs that surface qualified companies",
     description:
-      "Launch discovery runs that find companies matching your requirements, score them against your criteria, and surface qualified leads automatically.",
+      "Launch discovery jobs when you are ready. The pipeline finds companies, scores fit against your requirements, and collects contact data so reps open leads with context.",
+    visual: "discovery" as const,
+    reverse: true,
   },
   {
-    icon: BarChart3,
-    title: "Fit scoring & requirements",
+    icon: Mail,
+    label: "Outreach with guardrails",
+    title: "Gmail drafts, human review, and a clear pipeline",
     description:
-      "Every lead is scored against your configured requirements with supporting facts, so your team can focus on the strongest opportunities first.",
+      "Connect Gmail, review AI-drafted emails, pass compliance checks when flagged, and track every lead from Ready through Heard Back.",
+    visual: "outreach" as const,
+  },
+];
+
+const bentoItems = [
+  {
+    icon: BarChart3,
+    title: "Requirement-based fit scoring",
+    description:
+      "Every lead includes a score and supporting facts tied to your configured requirements.",
+    span: "lg:col-span-2",
   },
   {
     icon: Users,
     title: "Contact enrichment",
     description:
-      "Discover decision-maker emails from verified sources and website contacts, with confidence indicators to guide outreach decisions.",
-  },
-  {
-    icon: Mail,
-    title: "Gmail-powered outreach",
-    description:
-      "Connect Gmail, review AI-drafted outreach emails, edit copy when needed, and send directly from the platform.",
+      "Decision-maker emails from verified sources, with confidence indicators.",
+    span: "lg:col-span-1",
   },
   {
     icon: ClipboardCheck,
-    title: "Human review & compliance",
+    title: "Compliance review",
     description:
-      "Flagged outreach goes through a compliance review workflow before sending, keeping messaging accurate and on-brand.",
-  },
-  {
-    icon: Target,
-    title: "Lead pipeline",
-    description:
-      "Track prospects from Ready through Sent, Heard Back, Pending, and Rejected — with full lead and contact detail views.",
+      "Flagged outreach routes through review before anything sends.",
+    span: "lg:col-span-1",
   },
   {
     icon: Workflow,
     title: "Job monitoring",
     description:
-      "See automation job status, queued runs, and daily discovery usage so teams know exactly what the system is doing.",
+      "Queued runs, automation status, and daily discovery usage in one view.",
+    span: "lg:col-span-2",
   },
 ];
 
@@ -74,27 +87,61 @@ const steps = [
     step: "01",
     title: "Configure your search",
     description:
-      "Set requirements, scoring thresholds, target partners, and outreach preferences for your business.",
+      "Set requirements, scoring thresholds, target partners, and outreach preferences.",
   },
   {
     step: "02",
     title: "Run discovery",
     description:
-      "Start a prospect discovery job. The pipeline finds companies, scores them, and collects contact information.",
+      "Start a job. The pipeline finds companies, scores them, and collects contacts.",
   },
   {
     step: "03",
-    title: "Review & reach out",
+    title: "Review and reach out",
     description:
-      "Open lead details, review contacts, pass compliance checks when needed, and send personalized outreach via Gmail.",
+      "Open lead details, pass compliance when needed, send via Gmail.",
   },
   {
     step: "04",
     title: "Track responses",
     description:
-      "Update lead status as conversations progress and keep your pipeline organized for follow-up.",
+      "Update status as conversations progress and keep follow-ups organized.",
   },
 ];
+
+function PrimaryButton({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-2 rounded-lg bg-teal-800 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-teal-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 active:translate-y-px"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function SecondaryButton({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400 active:translate-y-px"
+    >
+      {children}
+    </Link>
+  );
+}
 
 export function LandingPage() {
   const { user, isLoading } = useUser();
@@ -107,227 +154,299 @@ export function LandingPage() {
       })
     : "/login";
 
+  const signedInLabel = isUserApproved(user)
+    ? "Go to Dashboard"
+    : "View application status";
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
-      <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <div className="relative min-h-screen scroll-smooth bg-zinc-50 text-zinc-950">
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0 opacity-[0.035] mix-blend-multiply"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+        }}
+      />
+
+      <header className="sticky top-0 z-40 border-b border-zinc-200/70 bg-zinc-50/85 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
-              <Megaphone className="h-5 w-5" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-900 text-teal-50">
+              <Megaphone className="h-[18px] w-[18px]" strokeWidth={iconStroke} />
             </div>
-            <span className="text-lg font-semibold tracking-tight">
+            <span className="text-[15px] font-semibold tracking-tight">
               Prospect Discover
             </span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <nav className="flex items-center gap-2">
             {!isLoading && isSignedIn ? (
-              <Link
-                href={signedInHref}
-                className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700"
-              >
-                {isUserApproved(user) ? "Go to Dashboard" : "View application status"}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <PrimaryButton href={signedInHref}>
+                {signedInLabel}
+                <ArrowRight className="h-4 w-4" strokeWidth={iconStroke} />
+              </PrimaryButton>
             ) : (
               <>
                 <Link
                   href="/login"
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                  className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-600 transition hover:text-zinc-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
                 >
                   Log in
                 </Link>
-                <Link
-                  href="/register"
-                  className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700"
-                >
+                <PrimaryButton href="/register">
                   Apply for access
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+                  <ArrowRight className="h-4 w-4" strokeWidth={iconStroke} />
+                </PrimaryButton>
               </>
             )}
-          </div>
+          </nav>
         </div>
       </header>
 
-      <main>
-        <section className="relative overflow-hidden border-b border-gray-200 bg-white">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(139,92,246,0.12),transparent_45%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.08),transparent_40%)]" />
-          <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-28">
-            <div className="max-w-3xl">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-sm font-medium text-violet-700">
-                <Sparkles className="h-4 w-4" />
-                B2B partnership prospecting, automated
-              </div>
-              <h1 className="text-4xl font-bold tracking-tight text-gray-900 md:text-5xl md:leading-tight">
-                Find the right partners.
-                <span className="block text-violet-600">
-                  Reach them with confidence.
+      <main className="relative z-10">
+        <section className="relative overflow-hidden border-b border-zinc-200/80">
+          <LandingAtmosphere variant="hero" />
+          <div className="relative mx-auto grid max-w-6xl gap-12 px-6 pb-16 pt-14 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:items-center md:gap-10 md:pb-20 md:pt-16 lg:gap-16 lg:pb-24 lg:pt-20">
+            <LandingReveal>
+              <p className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-teal-800">
+                B2B partnership prospecting
+              </p>
+              <h1 className="mt-4 max-w-xl text-balance text-4xl font-semibold leading-[1.08] tracking-[-0.03em] text-zinc-950 md:text-[2.75rem] lg:text-5xl">
+                Find partners that fit.
+                <span className="mt-1 block text-zinc-600">
+                  Reach them with proof.
                 </span>
               </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-relaxed text-gray-600">
-                Prospect Discover helps B2B teams identify companies that match
-                their partnership criteria, enrich contacts, draft outreach, and
-                manage the full lead lifecycle — from first discovery to heard
-                back.
+              <p className="mt-5 max-w-md text-pretty text-base leading-relaxed text-zinc-600 md:text-[17px]">
+                Identify companies that match your criteria, enrich contacts,
+                draft outreach, and manage the full lead lifecycle from first
+                discovery to heard back.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 {isSignedIn ? (
-                  <Link
-                    href={signedInHref}
-                    className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-violet-700"
-                  >
-                    {isUserApproved(user) ? "Open Dashboard" : "View application status"}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  <PrimaryButton href={signedInHref}>
+                    {isUserApproved(user) ? "Open Dashboard" : signedInLabel}
+                    <ArrowRight
+                      className="h-4 w-4"
+                      strokeWidth={iconStroke}
+                    />
+                  </PrimaryButton>
                 ) : (
                   <>
-                    <Link
-                      href="/register"
-                      className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-violet-700"
-                    >
+                    <PrimaryButton href="/register">
                       Apply for access
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                    <Link
-                      href="/login"
-                      className="rounded-lg border border-gray-200 bg-white px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                    >
-                      Log in
-                    </Link>
+                      <ArrowRight
+                        className="h-4 w-4"
+                        strokeWidth={iconStroke}
+                      />
+                    </PrimaryButton>
+                    <SecondaryButton href="/login">Log in</SecondaryButton>
                   </>
                 )}
               </div>
-            </div>
+            </LandingReveal>
 
-            <div className="mt-14 grid gap-4 sm:grid-cols-3">
+            <LandingReveal delay={0.08} className="relative md:justify-self-stretch">
+              <LandingHeroVisual />
+            </LandingReveal>
+          </div>
+
+          <div className="relative mx-auto max-w-6xl border-t border-zinc-200/80 bg-white/40 px-6 py-8 backdrop-blur-[2px]">
+            <div className="grid gap-6 sm:grid-cols-3 sm:gap-8">
               {[
-                { label: "Discovery runs", value: "Automated pipeline" },
+                { label: "Discovery runs", value: "On-demand pipeline" },
                 { label: "Lead scoring", value: "Requirement-based fit" },
                 { label: "Outreach", value: "Gmail integration" },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-xl border border-gray-200 bg-white/80 px-5 py-4 shadow-sm"
-                >
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    {item.label}
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-gray-900">
-                    {item.value}
-                  </p>
-                </div>
+              ].map((item, index) => (
+                <LandingReveal key={item.label} delay={index * 0.05}>
+                  <div>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-zinc-400">
+                      {item.label}
+                    </p>
+                    <p className="mt-1.5 text-sm font-medium text-zinc-800">
+                      {item.value}
+                    </p>
+                  </div>
+                </LandingReveal>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 py-20">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
-              Everything you need to run outbound partnership discovery
+        <section className="relative mx-auto max-w-6xl px-6 py-20 md:py-24">
+          <LandingAtmosphere variant="section" />
+          <LandingReveal className="relative max-w-2xl">
+            <h2 className="text-balance text-3xl font-semibold tracking-[-0.02em] text-zinc-950 md:text-[2rem]">
+              Built for teams that outgrew spreadsheets
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-gray-600">
-              Built for teams that need more than a spreadsheet — configure once,
-              run discovery on demand, and work leads through a structured
-              pipeline with human review where it matters.
+            <p className="mt-4 max-w-xl text-pretty text-base leading-relaxed text-zinc-600">
+              Configure once, run discovery when you need it, and work leads
+              through a structured pipeline with human review where it matters.
             </p>
-          </div>
+          </LandingReveal>
 
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature) => {
+          <div className="mt-16 space-y-20 md:space-y-28">
+            {spotlightFeatures.map((feature, index) => {
               const Icon = feature.icon;
+              const isReverse = feature.reverse;
+
               return (
-                <article
-                  key={feature.title}
-                  className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-violet-200 hover:shadow-md"
-                >
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="text-base font-semibold text-gray-900">
-                    {feature.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                    {feature.description}
-                  </p>
-                </article>
+                <LandingReveal key={feature.title} delay={index * 0.04}>
+                  <article
+                    className={`grid items-center gap-10 md:grid-cols-2 md:gap-14 ${
+                      isReverse ? "md:[&>*:first-child]:order-2" : ""
+                    }`}
+                  >
+                    <div className={isReverse ? "md:pl-4" : "md:pr-4"}>
+                      <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-teal-800">
+                        {feature.label}
+                      </p>
+                      <h3 className="mt-3 text-2xl font-semibold tracking-tight text-zinc-950">
+                        {feature.title}
+                      </h3>
+                      <p className="mt-3 max-w-md text-pretty text-sm leading-relaxed text-zinc-600 md:text-[15px]">
+                        {feature.description}
+                      </p>
+                    </div>
+                    <LandingFeatureVisual variant={feature.visual} icon={Icon} />
+                  </article>
+                </LandingReveal>
               );
             })}
           </div>
         </section>
 
-        <section className="border-y border-gray-200 bg-white">
-          <div className="mx-auto max-w-6xl px-6 py-20">
-            <div className="max-w-2xl">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900">
-                How it works
+        <section className="border-y border-zinc-200 bg-white">
+          <div className="mx-auto max-w-6xl px-6 py-20 md:py-24">
+            <LandingReveal className="max-w-xl">
+              <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 md:text-3xl">
+                Everything else in the product
               </h2>
-              <p className="mt-4 text-base leading-relaxed text-gray-600">
-                From configuration to outreach, each step is designed to keep
-                your team in control while automation handles the heavy lifting.
+              <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">
+                Scoring, enrichment, compliance, and job visibility without
+                another tab open.
               </p>
-            </div>
+            </LandingReveal>
 
-            <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-              {steps.map((item) => (
-                <article
-                  key={item.step}
-                  className="rounded-xl border border-gray-200 bg-gray-50 p-5"
-                >
-                  <p className="text-sm font-bold text-violet-600">{item.step}</p>
-                  <h3 className="mt-3 text-lg font-semibold text-gray-900">
-                    {item.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                    {item.description}
-                  </p>
-                </article>
-              ))}
+            <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {bentoItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <LandingReveal
+                    key={item.title}
+                    delay={index * 0.05}
+                    className={item.span}
+                  >
+                    <article className="flex h-full flex-col justify-between rounded-2xl bg-zinc-50 p-6 md:p-7">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-900/8 text-teal-900">
+                        <Icon className={iconClass} strokeWidth={iconStroke} />
+                      </div>
+                      <div className="mt-8">
+                        <h3 className="text-base font-semibold text-zinc-950">
+                          {item.title}
+                        </h3>
+                        <p className="mt-2 max-w-sm text-sm leading-relaxed text-zinc-600">
+                          {item.description}
+                        </p>
+                      </div>
+                    </article>
+                  </LandingReveal>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 py-20">
-          <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-600 to-violet-700 px-8 py-10 text-white shadow-lg md:px-12 md:py-12">
-            <h2 className="text-3xl font-bold tracking-tight">
-              Ready to discover your next partners?
+        <section className="mx-auto max-w-6xl px-6 py-20 md:py-24">
+          <LandingReveal className="max-w-xl">
+            <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 md:text-3xl">
+              How it works
             </h2>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-violet-100">
-              Join your company workspace, configure your discovery criteria, and
-              start finding qualified B2B prospects today.
+            <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">
+              Your team stays in control while automation handles discovery,
+              scoring, and enrichment.
             </p>
-            <div className="mt-8">
-              {isSignedIn ? (
-                <Link
-                  href={signedInHref}
-                  className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-medium text-violet-700 transition hover:bg-violet-50"
-                >
-                  {isUserApproved(user) ? "Go to Dashboard" : "View application status"}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              ) : (
-                <Link
-                  href="/register"
-                  className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-medium text-violet-700 transition hover:bg-violet-50"
-                >
-                  Apply for access
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              )}
-            </div>
+          </LandingReveal>
+
+          <div className="relative mt-14">
+            <div
+              aria-hidden
+              className="absolute left-0 right-0 top-5 hidden h-px bg-zinc-200 md:block"
+            />
+            <ol className="grid gap-10 md:grid-cols-4 md:gap-6">
+              {steps.map((item, index) => (
+                <LandingReveal key={item.step} delay={index * 0.06}>
+                  <li>
+                    <p className="font-mono text-xs font-semibold tabular-nums text-teal-800">
+                      {item.step}
+                    </p>
+                    <h3 className="mt-4 text-base font-semibold text-zinc-950">
+                      {item.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-zinc-600">
+                      {item.description}
+                    </p>
+                  </li>
+                </LandingReveal>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="relative overflow-hidden border-t border-zinc-200 bg-white">
+          <LandingAtmosphere variant="section" />
+          <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-24">
+            <LandingReveal>
+              <div className="rounded-2xl border border-zinc-200 bg-zinc-50/90 px-8 py-10 shadow-[0_20px_50px_-30px_rgba(24,24,27,0.15)] backdrop-blur-sm md:flex md:items-end md:justify-between md:gap-10 md:px-12 md:py-12">
+                <div className="max-w-xl">
+                  <h2 className="text-balance text-2xl font-semibold tracking-tight text-zinc-950 md:text-3xl">
+                    Ready to discover your next partners?
+                  </h2>
+                  <p className="mt-4 text-pretty text-sm leading-relaxed text-zinc-600 md:text-base">
+                    Join your company workspace, configure discovery criteria,
+                    and start finding qualified B2B prospects.
+                  </p>
+                </div>
+                <div className="mt-8 shrink-0 md:mt-0">
+                  {isSignedIn ? (
+                    <PrimaryButton href={signedInHref}>
+                      {signedInLabel}
+                      <ArrowRight
+                        className="h-4 w-4"
+                        strokeWidth={iconStroke}
+                      />
+                    </PrimaryButton>
+                  ) : (
+                    <PrimaryButton href="/register">
+                      Apply for access
+                      <ArrowRight
+                        className="h-4 w-4"
+                        strokeWidth={iconStroke}
+                      />
+                    </PrimaryButton>
+                  )}
+                </div>
+              </div>
+            </LandingReveal>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+      <footer className="relative z-10 border-t border-zinc-200 bg-zinc-50">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
           <p>Prospect Discover — B2B partnership lead generation</p>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="transition hover:text-violet-600">
+          <div className="flex items-center gap-5">
+            <Link
+              href="/login"
+              className="transition hover:text-teal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
+            >
               Log in
             </Link>
-            <Link href="/register" className="transition hover:text-violet-600">
+            <Link
+              href="/register"
+              className="transition hover:text-teal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
+            >
               Apply for access
             </Link>
           </div>

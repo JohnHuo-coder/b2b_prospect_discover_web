@@ -44,7 +44,7 @@ export function NoAccessContent() {
   if (isLoading || !user || requiresEmailVerification(user) || isUserApproved(user)) {
     return (
       <AuthShell title="Access pending" subtitle="Loading...">
-        <p className="text-sm text-gray-500">Loading...</p>
+        <p className="text-sm text-zinc-500">Loading...</p>
       </AuthShell>
     );
   }
@@ -68,18 +68,18 @@ export function NoAccessContent() {
           </div>
         </div>
 
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-zinc-500">
           Signed in as{" "}
-          <span className="font-medium text-gray-700">{user.email}</span>
+          <span className="font-medium text-zinc-700">{user.email}</span>
         </p>
 
         <AuthButton type="button" onClick={() => void handleSignOut()}>
           Sign out
         </AuthButton>
 
-        <p className="text-center text-sm text-gray-500">
+        <p className="text-center text-sm text-zinc-500">
           Already approved?{" "}
-          <Link href="/login" className="font-medium text-violet-600 hover:text-violet-700">
+          <Link href="/login" className="font-medium text-teal-800 hover:text-teal-900">
             Sign in again
           </Link>
         </p>

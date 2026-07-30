@@ -49,7 +49,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className={`relative z-10 flex max-h-[90vh] w-full flex-col rounded-xl bg-white shadow-xl ${
+        className={`relative z-10 flex max-h-[90vh] w-full flex-col rounded-xl border border-zinc-200/90 bg-white/95 shadow-[0_28px_60px_-24px_rgba(24,24,27,0.18)] backdrop-blur-sm ${
           size === "xl"
             ? "max-w-4xl"
             : size === "lg"
@@ -57,21 +57,21 @@ export function Modal({
               : "max-w-lg"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-          <h2 id="modal-title" className="text-base font-semibold text-gray-900">
+        <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-4">
+          <h2 id="modal-title" className="text-base font-semibold text-zinc-950">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-lg p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
         <div className="overflow-y-auto px-6 py-5">{children}</div>
         {footer ? (
-          <div className="border-t border-gray-100 px-6 py-4">{footer}</div>
+          <div className="border-t border-zinc-100 px-6 py-4">{footer}</div>
         ) : null}
       </div>
     </div>
@@ -93,7 +93,7 @@ export function ModalActions({
         type="button"
         onClick={onCancel}
         disabled={saving}
-        className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+        className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
       >
         Cancel
       </button>
@@ -101,7 +101,7 @@ export function ModalActions({
         type="button"
         onClick={onSave}
         disabled={saving}
-        className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:opacity-50"
+        className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-900 disabled:opacity-50"
       >
         {saving ? "Saving..." : "Save"}
       </button>
@@ -157,11 +157,11 @@ export function TextInput({
         disabled={disabled}
         readOnly={readOnly}
         onChange={(event) => onChange(event.target.value)}
-        className={`w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100 ${
-          locked ? "cursor-not-allowed bg-gray-50 text-gray-600" : ""
+        className={`w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm text-zinc-950 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100 ${
+          locked ? "cursor-not-allowed bg-zinc-50 text-zinc-600" : ""
         }`}
       />
-      {hint ? <p className="mt-1.5 text-xs text-gray-500">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-xs text-zinc-500">{hint}</p> : null}
     </label>
   );
 }
@@ -197,9 +197,9 @@ export function TextArea({
         rows={rows}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-violet-300 focus:ring-2 focus:ring-violet-100"
+        className="w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm text-zinc-950 outline-none transition focus:border-teal-300 focus:ring-2 focus:ring-teal-100"
       />
-      {hint ? <p className="mt-1.5 text-xs text-gray-500">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-xs text-zinc-500">{hint}</p> : null}
     </label>
   );
 }
@@ -262,12 +262,12 @@ export function CheckboxInput({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex items-center gap-2 text-sm text-gray-700">
+    <label className="flex items-center gap-2 text-sm text-zinc-700">
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+        className="h-4 w-4 rounded border-zinc-300 text-teal-800 focus:ring-teal-600"
       />
       {label}
     </label>
@@ -288,8 +288,8 @@ export function SwitchInput({
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-gray-700">{label}</p>
-        {hint ? <p className="mt-0.5 text-xs text-gray-500">{hint}</p> : null}
+        <p className="text-sm font-medium text-zinc-700">{label}</p>
+        {hint ? <p className="mt-0.5 text-xs text-zinc-500">{hint}</p> : null}
       </div>
       <button
         type="button"
@@ -297,8 +297,8 @@ export function SwitchInput({
         aria-checked={checked}
         aria-label={label}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-violet-100 focus:ring-offset-2 ${
-          checked ? "bg-violet-600" : "bg-gray-200"
+        className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-100 focus:ring-offset-2 ${
+          checked ? "bg-teal-800" : "bg-zinc-200"
         }`}
       >
         <span

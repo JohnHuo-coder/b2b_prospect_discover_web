@@ -111,14 +111,14 @@ export function ComplianceCheckDetailPanel({
         aria-labelledby="compliance-check-detail-title"
         className="relative z-10 flex h-full w-full max-w-3xl flex-col bg-white shadow-xl"
       >
-        <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
+        <div className="flex items-start justify-between border-b border-zinc-100 px-6 py-5">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
               {detail.id}
             </p>
             <h2
               id="compliance-check-detail-title"
-              className="mt-1 text-lg font-semibold text-gray-900"
+              className="mt-1 text-lg font-semibold text-zinc-950"
             >
               {detail.company}
             </h2>
@@ -131,7 +131,7 @@ export function ComplianceCheckDetailPanel({
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-1 inline-flex items-center gap-1 text-sm text-violet-600 hover:text-violet-700"
+                className="mt-1 inline-flex items-center gap-1 text-sm text-teal-800 hover:text-teal-900"
               >
                 {detail.website}
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -142,7 +142,7 @@ export function ComplianceCheckDetailPanel({
             type="button"
             onClick={onClose}
             disabled={Boolean(submitting)}
-            className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
@@ -158,7 +158,7 @@ export function ComplianceCheckDetailPanel({
         </div>
 
         {showActions ? (
-          <div className="border-t border-gray-100 px-6 py-4">
+          <div className="border-t border-zinc-100 px-6 py-4">
             {emailState.isEditingEmail ? (
               <p className="mb-3 text-sm text-amber-700">
                 Save or cancel your email edits before keeping or discarding.

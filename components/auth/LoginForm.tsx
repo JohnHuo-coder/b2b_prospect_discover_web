@@ -122,9 +122,9 @@ export function LoginForm() {
         label={isGoogleLoading ? "Signing in with Google..." : "Continue with Google"}
       />
 
-      <p className="mt-6 text-center text-sm text-gray-500">
+      <p className="mt-6 text-center text-sm text-zinc-500">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="font-medium text-violet-600 hover:text-violet-700">
+        <Link href="/register" className="font-medium text-teal-800 hover:text-teal-900">
           Apply for access
         </Link>
       </p>

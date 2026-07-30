@@ -244,7 +244,7 @@ export function InformationAcquisitionPipelinePage() {
                   onClick={() => setRequirementIndex(row.requirement_index)}
                   className={`rounded-lg px-3.5 py-2 text-sm font-medium transition ${
                     active
-                      ? "bg-violet-600 text-white"
+                      ? "bg-teal-800 text-white"
                       : "border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
                   }`}
                 >

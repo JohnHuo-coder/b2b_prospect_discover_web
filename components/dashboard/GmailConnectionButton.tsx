@@ -71,7 +71,7 @@ export function GmailConnectionButton() {
 
   if (loading) {
     return (
-      <span className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-500">
+      <span className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-500">
         <Mail className="h-4 w-4" />
         Checking Gmail...
       </span>
@@ -102,7 +102,7 @@ export function GmailConnectionButton() {
           });
         }}
         disabled={connecting}
-        className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Mail className="h-4 w-4" />
         {connecting ? "Connecting..." : "Connect to Gmail"}

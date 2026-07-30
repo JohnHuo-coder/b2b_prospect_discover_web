@@ -12,7 +12,7 @@ export function DiscoveryQuotaIndicator({
 }) {
   if (loading) {
     return (
-      <p className="text-xs text-gray-400" aria-busy="true">
+      <p className="text-xs text-zinc-400" aria-busy="true">
         Loading quota...
       </p>
     );
@@ -26,10 +26,10 @@ export function DiscoveryQuotaIndicator({
   const runningLabel = `${quota.runningJobs.count}/${quota.runningJobs.limit} running`;
 
   return (
-    <p className="text-xs text-gray-500">
-      <span className="font-medium text-gray-700">{usageLabel}</span> prospects
+    <p className="text-xs text-zinc-500">
+      <span className="font-medium text-zinc-700">{usageLabel}</span> prospects
       today (company-wide)
-      <span className="mx-1.5 text-gray-300">·</span>
+      <span className="mx-1.5 text-zinc-300">·</span>
       <span>{runningLabel}</span>
     </p>
   );

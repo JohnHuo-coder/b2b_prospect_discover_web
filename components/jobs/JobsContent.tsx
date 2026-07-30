@@ -13,7 +13,7 @@ const statusStyles: Record<string, { dot: string; text: string }> = {
   queued: { dot: "bg-amber-500", text: "text-amber-700" },
   completed: { dot: "bg-emerald-500", text: "text-emerald-700" },
   failed: { dot: "bg-red-500", text: "text-red-700" },
-  cancelled: { dot: "bg-gray-400", text: "text-gray-600" },
+  cancelled: { dot: "bg-zinc-400", text: "text-zinc-600" },
 };
 
 function JobStatusBadge({ status, label }: { status: string; label: string }) {
@@ -69,8 +69,8 @@ export function JobsContent() {
   return (
     <div className="px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Jobs</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-zinc-950">Jobs</h1>
+        <p className="mt-1 text-sm text-zinc-500">
           Automation jobs for your company&apos;s prospect discovery runs.
         </p>
       </div>
@@ -90,10 +90,10 @@ export function JobsContent() {
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-zinc-200">
+            <thead className="bg-zinc-50">
               <tr>
                 {[
                   "Created At",
@@ -105,14 +105,14 @@ export function JobsContent() {
                   <th
                     key={heading}
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
+                    className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500"
                   >
                     {heading}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
+            <tbody className="divide-y divide-zinc-100 bg-white">
               {loading ? (
                 Array.from({ length: 6 }).map((_, index) => (
                   <tr key={`skeleton-${index}`}>
@@ -124,7 +124,7 @@ export function JobsContent() {
               ) : jobs.length === 0 ? (
                 <tr>
                   <td
-                    className="px-6 py-10 text-center text-sm text-gray-500"
+                    className="px-6 py-10 text-center text-sm text-zinc-500"
                     colSpan={5}
                   >
                     No automation jobs yet.
@@ -132,20 +132,20 @@ export function JobsContent() {
                 </tr>
               ) : (
                 jobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-gray-50/80">
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                  <tr key={job.id} className="hover:bg-zinc-50/80">
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-950">
                       {job.createdAtLabel}
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-950">
                       {job.version}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm">
                       <JobStatusBadge status={job.status} label={job.statusLabel} />
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-950">
                       {job.prospectNumber ?? "—"}
                     </td>
-                    <td className="max-w-md px-6 py-4 text-sm text-gray-600">
+                    <td className="max-w-md px-6 py-4 text-sm text-zinc-600">
                       <span className="line-clamp-2" title={job.reason || undefined}>
                         {job.reason || "—"}
                       </span>

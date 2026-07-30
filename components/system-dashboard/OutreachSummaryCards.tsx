@@ -103,11 +103,11 @@ function SummarySection({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-gray-200 bg-gray-50/60 p-5">
+    <section className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-5">
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-zinc-950">{title}</h3>
         {description ? (
-          <p className="mt-0.5 text-xs text-gray-500">{description}</p>
+          <p className="mt-0.5 text-xs text-zinc-500">{description}</p>
         ) : null}
       </div>
       {children}
@@ -117,7 +117,7 @@ function SummarySection({
 
 function RateCardSkeleton() {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+    <div className="rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-sm">
       <SkeletonBar className="h-4 w-24" />
       <SkeletonBar className="mt-3 h-9 w-20" />
       <SkeletonBar className="mt-4 h-2 w-full" />
@@ -127,7 +127,7 @@ function RateCardSkeleton() {
 
 function CountCardSkeleton() {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+    <div className="rounded-xl border border-zinc-200 bg-white px-5 py-4 shadow-sm">
       <SkeletonBar className="h-4 w-24" />
       <SkeletonBar className="mt-3 h-9 w-16" />
       <SkeletonBar className="mt-3 h-4 w-full" />
@@ -237,10 +237,10 @@ export function OutreachSummaryCards() {
               progress={passRate}
               subtext={`${succeed} of ${totalInput} passed`}
               icon={Percent}
-              iconClassName="text-violet-600"
-              iconBoxClassName="bg-violet-100"
-              valueClassName="text-violet-600"
-              progressClassName="bg-violet-500"
+              iconClassName="text-teal-800"
+              iconBoxClassName="bg-teal-100"
+              valueClassName="text-teal-800"
+              progressClassName="bg-teal-500"
             />
             <MetricCard
               label="Human Review Rate"

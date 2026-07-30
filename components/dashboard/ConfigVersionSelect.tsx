@@ -23,7 +23,7 @@ export function ConfigVersionSelect({
 
   return (
     <div className="inline-flex items-center gap-2">
-      <span className="text-sm font-medium text-gray-700">Version</span>
+      <span className="text-sm font-medium text-zinc-700">Version</span>
       <SimpleSelect
         value={String(selectedVersion)}
         onChange={(value) => onChange(Number(value))}

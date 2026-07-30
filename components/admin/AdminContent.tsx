@@ -17,8 +17,8 @@ const roleStyles: Record<
   { dot: string; text: string; label: string }
 > = {
   owner: {
-    dot: "bg-violet-500",
-    text: "text-violet-700",
+    dot: "bg-teal-500",
+    text: "text-teal-800",
     label: "Owner",
   },
   member: {
@@ -36,19 +36,19 @@ const roleStyles: Record<
 function MemberName({ member }: { member: BusinessMember }) {
   if (hasUserName(member)) {
     return (
-      <span className="font-medium text-gray-900">
+      <span className="font-medium text-zinc-950">
         {getUserDisplayName(member)}
       </span>
     );
   }
 
-  return <span className="text-gray-400">—</span>;
+  return <span className="text-zinc-400">—</span>;
 }
 
 function RoleBadge({ role }: { role: string }) {
   const style = roleStyles[role] ?? {
-    dot: "bg-gray-400",
-    text: "text-gray-600",
+    dot: "bg-zinc-400",
+    text: "text-zinc-600",
     label: role,
   };
 
@@ -109,7 +109,7 @@ function MemberRoleActions({
                 type="button"
                 disabled={disabled || saving}
                 onClick={() => void handleRoleChange("member")}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-teal-800 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saving ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -125,7 +125,7 @@ function MemberRoleActions({
                 type="button"
                 disabled={disabled || saving}
                 onClick={() => void handleRoleChange("pending")}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saving ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -221,8 +221,8 @@ export function AdminContent() {
   if (!isOwner) {
     return (
       <div className="px-8 py-8">
-        <h1 className="text-2xl font-bold text-gray-900">Admin</h1>
-        <p className="mt-4 text-sm text-gray-600">
+        <h1 className="text-2xl font-bold text-zinc-950">Admin</h1>
+        <p className="mt-4 text-sm text-zinc-600">
           Only business owners can access this page.
         </p>
       </div>
@@ -232,8 +232,8 @@ export function AdminContent() {
   return (
     <div className="px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Admin</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-zinc-950">Admin</h1>
+        <p className="mt-1 text-sm text-zinc-500">
           Team members in your company
         </p>
       </div>
@@ -244,14 +244,14 @@ export function AdminContent() {
         </div>
       ) : null}
 
-      <div className="mb-3 text-right text-sm text-gray-500">
+      <div className="mb-3 text-right text-sm text-zinc-500">
         {loading ? "Loading..." : `${members.length} members`}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
         <table className="min-w-full">
           <thead>
-            <tr className="border-b border-gray-100 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            <tr className="border-b border-zinc-100 text-left text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
               <th className="px-6 py-4">Name</th>
               <th className="px-6 py-4">Email</th>
               <th className="px-6 py-4">Status</th>
@@ -260,7 +260,7 @@ export function AdminContent() {
           <tbody>
             {loading
               ? Array.from({ length: 4 }).map((_, index) => (
-                  <tr key={index} className="border-b border-gray-50 last:border-b-0">
+                  <tr key={index} className="border-b border-zinc-50 last:border-b-0">
                     <td className="px-6 py-4">
                       <SkeletonBar className="h-4 w-32" />
                     </td>
@@ -275,12 +275,12 @@ export function AdminContent() {
               : members.map((member) => (
                   <tr
                     key={member.firebaseUid}
-                    className="border-b border-gray-50 last:border-b-0 hover:bg-gray-50/60"
+                    className="border-b border-zinc-50 last:border-b-0 hover:bg-zinc-50/60"
                   >
                     <td className="px-6 py-4 text-sm">
                       <MemberName member={member} />
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
+                    <td className="px-6 py-4 text-sm text-zinc-700">
                       {member.email}
                     </td>
                     <td className="px-6 py-4">
@@ -297,7 +297,7 @@ export function AdminContent() {
         </table>
 
         {!loading && members.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm text-gray-500">
+          <div className="px-6 py-12 text-center text-sm text-zinc-500">
             No team members found.
           </div>
         ) : null}

@@ -125,12 +125,12 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-gray-200 bg-white">
+      <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-zinc-200/70 bg-white/85 backdrop-blur-md">
         <div className="flex items-center gap-2.5 px-6 py-5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-900 text-teal-50">
             <Building2 className="h-5 w-5" />
           </div>
-          <span className="truncate text-base font-semibold text-gray-900">
+          <span className="truncate text-base font-semibold text-zinc-950">
             {isLoading ? "..." : businessLabel}
           </span>
         </div>
@@ -145,25 +145,25 @@ export function Sidebar() {
                 href={href}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   active
-                    ? "border border-violet-200 bg-violet-50 text-violet-700"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "border border-teal-200 bg-teal-50 text-teal-800"
+                    : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-950"
                 }`}
               >
-                <Icon className={`h-4 w-4 ${active ? "text-violet-600" : ""}`} />
+                <Icon className={`h-4 w-4 ${active ? "text-teal-800" : ""}`} />
                 {label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="border-t border-gray-200 p-4">
+        <div className="border-t border-zinc-200 p-4">
           {user ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-600 text-sm font-semibold text-white">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-800 text-sm font-semibold text-white">
                   {profileInitials}
                 </div>
-                <p className="min-w-0 flex-1 truncate text-sm font-medium text-gray-900">
+                <p className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-950">
                   {profileLabel}
                 </p>
               </div>
@@ -176,7 +176,7 @@ export function Sidebar() {
                       setLeaveError("");
                       setConfirmLeaveOpen(true);
                     }}
-                    className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-950"
                   >
                     <Building2 className="h-4 w-4 shrink-0" />
                     Leave company
@@ -185,7 +185,7 @@ export function Sidebar() {
                 <button
                   type="button"
                   onClick={() => setConfirmLogoutOpen(true)}
-                  className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-950"
                 >
                   <LogOut className="h-4 w-4 shrink-0" />
                   Log out
@@ -209,7 +209,7 @@ export function Sidebar() {
               type="button"
               onClick={() => setConfirmLogoutOpen(false)}
               disabled={loggingOut}
-              className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
@@ -217,14 +217,14 @@ export function Sidebar() {
               type="button"
               onClick={() => void handleLogout()}
               disabled={loggingOut}
-              className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loggingOut ? "Logging out..." : "Log out"}
             </button>
           </div>
         }
       >
-        <p className="text-sm leading-6 text-gray-700">
+        <p className="text-sm leading-6 text-zinc-700">
           Are you sure you want to log out? You will need to sign in again to
           access your account.
         </p>
@@ -243,7 +243,7 @@ export function Sidebar() {
               type="button"
               onClick={() => setConfirmLeaveOpen(false)}
               disabled={leaving}
-              className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
@@ -251,14 +251,14 @@ export function Sidebar() {
               type="button"
               onClick={() => void handleLeaveCompany()}
               disabled={leaving}
-              className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {leaving ? "Leaving..." : "Leave company"}
             </button>
           </div>
         }
       >
-        <p className="text-sm leading-6 text-gray-700">
+        <p className="text-sm leading-6 text-zinc-700">
           Are you sure you want to leave{" "}
           <strong>{businessLabel}</strong>? You will lose access to this
           company&apos;s data until you join a company again.
