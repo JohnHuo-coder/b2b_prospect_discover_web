@@ -5,10 +5,10 @@ export const COMPANY_DESCRIPTION_HELP =
   "Explain what your company does. This description is used in later outreach email generation.";
 
 export const COMPANY_DESCRIPTION_PLACEHOLDER =
-  "e.g. We are a commercial solar installer based in Penang, Malaysia. We design, procure, and install rooftop solar systems for factories, warehouses, and industrial parks.";
+  "e.g. We provide API-first workflow automation software that helps mid-market businesses connect CRM, billing, ERP, and customer support systems without custom integrations.";
 
 export const COLLABORATION_INTENT_HELP =
   "Explain why you are reaching out and what kind of partnership or collaboration you want to explore. This context helps evaluate prospects and shape outreach emails around your business goal.";
 
 export const COLLABORATION_INTENT_PLACEHOLDER =
-  "e.g. We design and install commercial solar systems for factories and warehouses. We are reaching out to manufacturers in the Penang area to explore rooftop solar partnerships that lower their energy costs.";
+  "e.g. We are looking to identify software companies with complementary products that could become integration partners, allowing customers to automate workflows across both platforms.";

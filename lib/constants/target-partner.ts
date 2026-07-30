@@ -2,7 +2,7 @@ export const TARGET_PARTNER_INDUSTRY_HINT =
   "Optional. Select one or more industries from the list. Avoid selecting too many, or your search scope may become too narrow.";
 
 export const TARGET_PARTNER_SEARCH_KEYWORD_PLACEHOLDER =
-  "e.g. boutique hotels";
+  "e.g. business software";
 
 export const TARGET_PARTNER_SEARCH_KEYWORD_HELP =
   "Use the same kind of keywords you would enter when searching for companies on Google Maps or LinkedIn.";

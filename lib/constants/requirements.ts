@@ -7,4 +7,4 @@ export const REQUIREMENTS_TESTING_NOTICE =
   "This product is still in testing. Keep your requirement count to three or fewer for the best experience.";
 
 export const REQUIREMENT_INPUT_PLACEHOLDER =
-  "e.g. The company operates at least 3 retail locations in Southeast Asia";
+  "e.g. The company provides cloud-based business software.";
