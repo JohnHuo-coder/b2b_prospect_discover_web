@@ -1,5 +1,6 @@
 import { ENDPOINTS } from "@/lib/api/endpoints";
 import { authenticatedFetch } from "@/lib/api/authenticatedFetch";
+import { appendVersionQuery } from "@/lib/api/version-query";
 import type {
   ContactEmailSource as ContactCandidateEmailSource,
   ContactEmailSourceBreakdown,
@@ -145,7 +146,7 @@ type InfoAcquisitionRequirementSummaryApiResponse =
     requirement_text: string;
   };
 
-export async function fetchInfoAcquisitionSummary(): Promise<{
+export async function fetchInfoAcquisitionSummary(version?: number): Promise<{
   overall: InfoAcquisitionSummaryStats;
   websiteUrlAcquisition: InfoAcquisitionWebsiteUrlStats;
   requirements: Array<{
@@ -154,7 +155,7 @@ export async function fetchInfoAcquisitionSummary(): Promise<{
   }>;
 }> {
   const response = await authenticatedFetch(
-    ENDPOINTS.SYSTEM_DASHBOARD_INFO_ACQUISITION_SUMMARY
+    appendVersionQuery(ENDPOINTS.SYSTEM_DASHBOARD_INFO_ACQUISITION_SUMMARY, version)
   );
 
   if (!response.ok) {
@@ -169,11 +170,9 @@ export async function fetchInfoAcquisitionSummary(): Promise<{
   return (await response.json()) as InfoAcquisitionSummaryApiResponse;
 }
 
-export async function fetchInfoAcquisitionRequirementSummary(
-  requirementIndex: number
-): Promise<InfoAcquisitionRequirementSummaryApiResponse> {
+export async function fetchInfoAcquisitionRequirementSummary(requirementIndex: number, version?: number): Promise<InfoAcquisitionRequirementSummaryApiResponse> {
   const response = await authenticatedFetch(
-    `${ENDPOINTS.SYSTEM_DASHBOARD_INFO_ACQUISITION_SUMMARY}?requirement_index=${requirementIndex}`
+    appendVersionQuery(`${ENDPOINTS.SYSTEM_DASHBOARD_INFO_ACQUISITION_SUMMARY}?requirement_index=${requirementIndex}`, version)
   );
 
   if (!response.ok) {
@@ -206,9 +205,9 @@ export type InfoAcquisitionWebsiteUrlFailureBreakdown = {
   stages: InfoAcquisitionWebsiteUrlFailureStage[];
 };
 
-export async function fetchInfoAcquisitionWebsiteUrlFailureBreakdown(): Promise<InfoAcquisitionWebsiteUrlFailureBreakdown> {
+export async function fetchInfoAcquisitionWebsiteUrlFailureBreakdown(version?: number): Promise<InfoAcquisitionWebsiteUrlFailureBreakdown> {
   const response = await authenticatedFetch(
-    ENDPOINTS.SYSTEM_DASHBOARD_INFO_ACQUISITION_WEBSITE_URL_FAILURES
+    appendVersionQuery(ENDPOINTS.SYSTEM_DASHBOARD_INFO_ACQUISITION_WEBSITE_URL_FAILURES, version)
   );
 
   if (!response.ok) {
@@ -234,11 +233,9 @@ export type InfoAcquisitionWorkflowByReq = {
   stages: InfoAcquisitionWorkflowStageCount[];
 };
 
-export async function fetchInfoAcquisitionWorkflowByReq(
-  requirementIndex: number
-): Promise<InfoAcquisitionWorkflowByReq> {
+export async function fetchInfoAcquisitionWorkflowByReq(requirementIndex: number, version?: number): Promise<InfoAcquisitionWorkflowByReq> {
   const response = await authenticatedFetch(
-    `${ENDPOINTS.SYSTEM_DASHBOARD_INFO_ACQUISITION_WORKFLOW}?requirement_index=${requirementIndex}`
+    appendVersionQuery(`${ENDPOINTS.SYSTEM_DASHBOARD_INFO_ACQUISITION_WORKFLOW}?requirement_index=${requirementIndex}`, version)
   );
 
   if (!response.ok) {
@@ -264,7 +261,7 @@ export type InfoAcquisitionStageDetailCandidate = {
 export async function fetchInfoAcquisitionStageDetail(params: {
   requirementIndex: number;
   finalStage: string;
-}): Promise<{
+}, version?: number): Promise<{
   requirement_index: number;
   final_stage: string;
   candidates: InfoAcquisitionStageDetailCandidate[];
@@ -275,7 +272,7 @@ export async function fetchInfoAcquisitionStageDetail(params: {
   });
 
   const response = await authenticatedFetch(
-    `${ENDPOINTS.SYSTEM_DASHBOARD_INFO_ACQUISITION_WORKFLOW_STAGE}?${query.toString()}`
+    appendVersionQuery(`${ENDPOINTS.SYSTEM_DASHBOARD_INFO_ACQUISITION_WORKFLOW_STAGE}?${query.toString()}`, version)
   );
 
   if (!response.ok) {
@@ -299,7 +296,7 @@ export async function fetchInfoAcquisitionCandidates(params?: {
   status?: InfoAcquisitionStatusFilter;
   page?: number;
   limit?: number;
-}): Promise<{ candidates: InfoAcquisitionCandidate[]; total: number }> {
+}, version?: number): Promise<{ candidates: InfoAcquisitionCandidate[]; total: number }> {
   const query = new URLSearchParams();
 
   if (params?.search) query.set("search", params.search);
@@ -313,7 +310,7 @@ export async function fetchInfoAcquisitionCandidates(params?: {
     ? `${ENDPOINTS.SYSTEM_DASHBOARD_INFO_ACQUISITION}?${query.toString()}`
     : ENDPOINTS.SYSTEM_DASHBOARD_INFO_ACQUISITION;
 
-  const response = await authenticatedFetch(url);
+  const response = await authenticatedFetch(appendVersionQuery(url, version));
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -335,11 +332,9 @@ export async function fetchInfoAcquisitionCandidates(params?: {
   };
 }
 
-export async function fetchInfoAcquisitionCandidateDetail(
-  candidateId: string
-): Promise<AcquisitionCandidate> {
+export async function fetchInfoAcquisitionCandidateDetail(candidateId: string, version?: number): Promise<AcquisitionCandidate> {
   const response = await authenticatedFetch(
-    ENDPOINTS.infoAcquisitionDetail(candidateId)
+    appendVersionQuery(ENDPOINTS.infoAcquisitionDetail(candidateId), version)
   );
 
   if (!response.ok) {
@@ -380,14 +375,14 @@ type FitscoreRequirementSummaryApiResponse = FitscoreSummaryStats & {
   requirement_text: string;
 };
 
-export async function fetchFitscoreSummary(): Promise<{
+export async function fetchFitscoreSummary(version?: number): Promise<{
   requirements: Array<{
     requirement_index: number;
     requirement_text: string;
   }>;
 }> {
   const response = await authenticatedFetch(
-    ENDPOINTS.SYSTEM_DASHBOARD_FITSCORE_SUMMARY
+    appendVersionQuery(ENDPOINTS.SYSTEM_DASHBOARD_FITSCORE_SUMMARY, version)
   );
 
   if (!response.ok) {
@@ -402,11 +397,9 @@ export async function fetchFitscoreSummary(): Promise<{
   return (await response.json()) as FitscoreSummaryApiResponse;
 }
 
-export async function fetchFitscoreRequirementSummary(
-  requirementIndex: number
-): Promise<FitscoreRequirementSummaryApiResponse> {
+export async function fetchFitscoreRequirementSummary(requirementIndex: number, version?: number): Promise<FitscoreRequirementSummaryApiResponse> {
   const response = await authenticatedFetch(
-    `${ENDPOINTS.SYSTEM_DASHBOARD_FITSCORE_SUMMARY}?requirement_index=${requirementIndex}`
+    appendVersionQuery(`${ENDPOINTS.SYSTEM_DASHBOARD_FITSCORE_SUMMARY}?requirement_index=${requirementIndex}`, version)
   );
 
   if (!response.ok) {
@@ -500,7 +493,7 @@ export async function fetchFitscoreCandidates(params: {
   status?: FitscoreStatusFilter;
   page?: number;
   limit?: number;
-}): Promise<{ candidates: FitscoreTableCandidate[]; total: number }> {
+}, version?: number): Promise<{ candidates: FitscoreTableCandidate[]; total: number }> {
   const query = new URLSearchParams();
   query.set("requirement_index", String(params.requirement_index));
 
@@ -513,7 +506,7 @@ export async function fetchFitscoreCandidates(params: {
 
   const url = `${ENDPOINTS.SYSTEM_DASHBOARD_FITSCORE}?${query.toString()}`;
 
-  const response = await authenticatedFetch(url);
+  const response = await authenticatedFetch(appendVersionQuery(url, version));
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -535,12 +528,10 @@ export async function fetchFitscoreCandidates(params: {
   };
 }
 
-export async function fetchFitscoreCandidateDetail(
-  candidateId: string,
-  requirementIndex: number
-): Promise<FitscoreCandidate> {
+export async function fetchFitscoreCandidateDetail(candidateId: string,
+  requirementIndex: number, version?: number): Promise<FitscoreCandidate> {
   const response = await authenticatedFetch(
-    `${ENDPOINTS.fitscoreDetail(candidateId)}?requirement_index=${requirementIndex}`
+    appendVersionQuery(`${ENDPOINTS.fitscoreDetail(candidateId)}?requirement_index=${requirementIndex}`, version)
   );
 
   if (!response.ok) {
@@ -569,9 +560,9 @@ export type ContactSummaryStats = {
   emailSources: ContactEmailSourceBreakdown;
 };
 
-export async function fetchContactSummary(): Promise<ContactSummaryStats> {
+export async function fetchContactSummary(version?: number): Promise<ContactSummaryStats> {
   const response = await authenticatedFetch(
-    ENDPOINTS.SYSTEM_DASHBOARD_CONTACT_SUMMARY
+    appendVersionQuery(ENDPOINTS.SYSTEM_DASHBOARD_CONTACT_SUMMARY, version)
   );
 
   if (!response.ok) {
@@ -605,11 +596,9 @@ export type ContactEmailSourceDetailResult = {
   sufficiency?: ContactEmailSourceSufficiencyDetail;
 };
 
-export async function fetchContactEmailSourceDetail(
-  source: "apollo" | "anymail" | "website"
-): Promise<ContactEmailSourceDetailResult> {
+export async function fetchContactEmailSourceDetail(source: "apollo" | "anymail" | "website", version?: number): Promise<ContactEmailSourceDetailResult> {
   const response = await authenticatedFetch(
-    ENDPOINTS.contactEmailSourceDetail(source)
+    appendVersionQuery(ENDPOINTS.contactEmailSourceDetail(source), version)
   );
 
   if (!response.ok) {
@@ -745,7 +734,7 @@ export async function fetchContactCandidates(params?: {
   status?: ContactStatusFilter;
   page?: number;
   limit?: number;
-}): Promise<{ candidates: ContactTableCandidate[]; total: number }> {
+}, version?: number): Promise<{ candidates: ContactTableCandidate[]; total: number }> {
   const query = new URLSearchParams();
 
   if (params?.search) query.set("search", params.search);
@@ -759,7 +748,7 @@ export async function fetchContactCandidates(params?: {
     ? `${ENDPOINTS.SYSTEM_DASHBOARD_CONTACT}?${query.toString()}`
     : ENDPOINTS.SYSTEM_DASHBOARD_CONTACT;
 
-  const response = await authenticatedFetch(url);
+  const response = await authenticatedFetch(appendVersionQuery(url, version));
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -781,10 +770,8 @@ export async function fetchContactCandidates(params?: {
   };
 }
 
-export async function fetchContactCandidateDetail(
-  candidateId: string
-): Promise<ContactCandidate> {
-  const response = await authenticatedFetch(ENDPOINTS.contactDetail(candidateId));
+export async function fetchContactCandidateDetail(candidateId: string, version?: number): Promise<ContactCandidate> {
+  const response = await authenticatedFetch(appendVersionQuery(ENDPOINTS.contactDetail(candidateId), version));
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -827,9 +814,9 @@ export type OutreachSummaryStats = {
   approvedWithoutModification: number;
 };
 
-export async function fetchOutreachSummary(): Promise<OutreachSummaryStats> {
+export async function fetchOutreachSummary(version?: number): Promise<OutreachSummaryStats> {
   const response = await authenticatedFetch(
-    ENDPOINTS.SYSTEM_DASHBOARD_OUTREACH_SUMMARY
+    appendVersionQuery(ENDPOINTS.SYSTEM_DASHBOARD_OUTREACH_SUMMARY, version)
   );
 
   if (!response.ok) {
@@ -858,11 +845,11 @@ export type OutreachStageDetailCandidate = {
   reason: string;
 };
 
-export async function fetchOutreachWorkflow(): Promise<{
+export async function fetchOutreachWorkflow(version?: number): Promise<{
   stages: OutreachWorkflowStageCount[];
 }> {
   const response = await authenticatedFetch(
-    ENDPOINTS.SYSTEM_DASHBOARD_OUTREACH_WORKFLOW
+    appendVersionQuery(ENDPOINTS.SYSTEM_DASHBOARD_OUTREACH_WORKFLOW, version)
   );
 
   if (!response.ok) {
@@ -877,14 +864,14 @@ export async function fetchOutreachWorkflow(): Promise<{
   return (await response.json()) as { stages: OutreachWorkflowStageCount[] };
 }
 
-export async function fetchOutreachStageDetail(finalStage: string): Promise<{
+export async function fetchOutreachStageDetail(finalStage: string, version?: number): Promise<{
   final_stage: string;
   candidates: OutreachStageDetailCandidate[];
 }> {
   const query = new URLSearchParams({ final_stage: finalStage });
 
   const response = await authenticatedFetch(
-    `${ENDPOINTS.SYSTEM_DASHBOARD_OUTREACH_WORKFLOW_STAGE}?${query.toString()}`
+    appendVersionQuery(`${ENDPOINTS.SYSTEM_DASHBOARD_OUTREACH_WORKFLOW_STAGE}?${query.toString()}`, version)
   );
 
   if (!response.ok) {
@@ -992,7 +979,7 @@ export async function fetchOutreachCandidates(params?: {
   status?: OutreachStatusFilter;
   page?: number;
   limit?: number;
-}): Promise<{ candidates: OutreachTableCandidate[]; total: number }> {
+}, version?: number): Promise<{ candidates: OutreachTableCandidate[]; total: number }> {
   const query = new URLSearchParams();
 
   if (params?.search) query.set("search", params.search);
@@ -1006,7 +993,7 @@ export async function fetchOutreachCandidates(params?: {
     ? `${ENDPOINTS.SYSTEM_DASHBOARD_OUTREACH}?${query.toString()}`
     : ENDPOINTS.SYSTEM_DASHBOARD_OUTREACH;
 
-  const response = await authenticatedFetch(url);
+  const response = await authenticatedFetch(appendVersionQuery(url, version));
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -1028,10 +1015,8 @@ export async function fetchOutreachCandidates(params?: {
   };
 }
 
-export async function fetchOutreachCandidateDetail(
-  candidateId: string
-): Promise<OutreachCandidate> {
-  const response = await authenticatedFetch(ENDPOINTS.outreachDetail(candidateId));
+export async function fetchOutreachCandidateDetail(candidateId: string, version?: number): Promise<OutreachCandidate> {
+  const response = await authenticatedFetch(appendVersionQuery(ENDPOINTS.outreachDetail(candidateId), version));
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));

@@ -23,7 +23,7 @@ export const GET = withAuth(
         return errorResponse("final_stage is required", 400);
       }
 
-      const scope = getConfigScope(user);
+      const scope = getConfigScope(user, searchParams.get("version"));
       if (!scope) {
         return jsonResponse({
           final_stage: finalStage,

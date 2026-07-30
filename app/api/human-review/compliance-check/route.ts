@@ -15,14 +15,15 @@ type ComplianceCheckListRow = {
 };
 
 export const GET = withAuth(
-  withApproved(async (_request: Request, _context: unknown, user: DbUserWithConfig) => {
+  withApproved(async (request: Request, _context: unknown, user: DbUserWithConfig) => {
     try {
+      const { searchParams } = new URL(request.url);
       const affiliationError = requireBusinessAffiliation(user);
       if (affiliationError) {
         return affiliationError;
       }
 
-      const scope = getConfigScope(user);
+      const scope = getConfigScope(user, searchParams.get("version"));
       if (!scope) {
         return jsonResponse({ items: [], total: 0 });
       }

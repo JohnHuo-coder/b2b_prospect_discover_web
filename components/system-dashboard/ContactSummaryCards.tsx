@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import { useEffect, useState } from "react";
 import { Percent } from "lucide-react";
 import {
@@ -23,6 +25,7 @@ const emptyStats: ContactSummaryStats = {
 };
 
 export function ContactSummaryCards() {
+  const { selectedVersion } = useConfigVersion();
   const [stats, setStats] = useState<ContactSummaryStats>(emptyStats);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +38,7 @@ export function ContactSummaryCards() {
       setError(null);
 
       try {
-        const result = await fetchContactSummary();
+        const result = await fetchContactSummary(selectedVersion);
         if (!cancelled) setStats(result);
       } catch (loadError) {
         if (!cancelled) {

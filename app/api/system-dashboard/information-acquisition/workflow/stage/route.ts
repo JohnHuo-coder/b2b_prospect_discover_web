@@ -30,7 +30,7 @@ export const GET = withAuth(
         return errorResponse("Invalid requirement_index", 400);
       }
 
-      const scope = getConfigScope(user);
+      const scope = getConfigScope(user, searchParams.get("version"));
       if (!scope) {
         return jsonResponse({
           requirement_index,

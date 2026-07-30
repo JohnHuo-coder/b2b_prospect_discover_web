@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import { useEffect, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Globe, MailSearch, Radar } from "lucide-react";
@@ -259,6 +261,7 @@ function getDetailModalTitle(view: DetailView): string {
 }
 
 export function ContactEmailSourceCards() {
+  const { selectedVersion } = useConfigVersion();
   const [emailSources, setEmailSources] =
     useState<ContactEmailSourceBreakdown>(emptyEmailSources);
   const [loading, setLoading] = useState(true);
@@ -280,7 +283,7 @@ export function ContactEmailSourceCards() {
       setError(null);
 
       try {
-        const result: ContactSummaryStats = await fetchContactSummary();
+        const result: ContactSummaryStats = await fetchContactSummary(selectedVersion);
         if (!cancelled) {
           setEmailSources(result.emailSources ?? emptyEmailSources);
         }
@@ -322,7 +325,7 @@ export function ContactEmailSourceCards() {
       setDetailError(null);
 
       try {
-        const result = await fetchContactEmailSourceDetail(apiSource);
+        const result = await fetchContactEmailSourceDetail(apiSource, selectedVersion);
         if (!cancelled) {
           setDetailItems(result.items);
           setWebsiteSufficiency(result.sufficiency ?? null);

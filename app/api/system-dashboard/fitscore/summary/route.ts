@@ -23,9 +23,9 @@ function mapFitScoreCounts(row: FitScoreSummaryRow) {
 export const GET = withAuth(
   withApproved(async (request: Request, _context: unknown, user: DbUserWithConfig) => {
     try {
-      const scope = getConfigScope(user);
-
       const { searchParams } = new URL(request.url);
+      const scope = getConfigScope(user, searchParams.get("version"));
+
       const requirementIndexParam = searchParams.get("requirement_index");
 
       if (requirementIndexParam) {

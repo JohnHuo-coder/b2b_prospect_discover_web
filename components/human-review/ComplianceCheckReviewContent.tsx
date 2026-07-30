@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import { useEffect, useState } from "react";
 import {
   fetchComplianceCheckRequirementFacts,
@@ -58,6 +60,7 @@ export function ComplianceCheckReviewContent({
   error?: string | null;
   onEmailStateChange?: (state: ComplianceCheckEmailState) => void;
 }) {
+  const { selectedVersion } = useConfigVersion();
   const [selectedRequirement, setSelectedRequirement] = useState<"all" | number>(
     "all"
   );
@@ -139,10 +142,8 @@ export function ComplianceCheckReviewContent({
       setRequirementError(null);
 
       try {
-        const result = await fetchComplianceCheckRequirementFacts(
-          detail.id,
-          selectedRequirement
-        );
+        const result = await fetchComplianceCheckRequirementFacts(detail.id,
+          selectedRequirement, selectedVersion);
         if (!cancelled) {
           setRequirementFacts({
             req_ind: result.req_ind,

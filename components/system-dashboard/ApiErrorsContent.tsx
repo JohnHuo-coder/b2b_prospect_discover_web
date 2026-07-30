@@ -22,6 +22,7 @@ import { DataTableSection, MetricCard } from "./MetricCard";
 import { SystemDashboardBackLink } from "./SystemDashboardShared";
 import { Modal } from "@/components/ui/Modal";
 import { SimpleSelect } from "@/components/ui/SimpleSelect";
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
 
 function UnsolvedCount({ value }: { value: number }) {
   return (
@@ -109,6 +110,7 @@ function DetailTable({
 }
 
 export function ApiErrorsContent() {
+  const { selectedVersion } = useConfigVersion();
   const [configs, setConfigs] = useState<ApiErrorConfig[]>([]);
   const [selectedConfigId, setSelectedConfigId] = useState("");
   const [solvedFilter, setSolvedFilter] = useState<ApiErrorSolvedFilter>("all");
@@ -140,7 +142,6 @@ export function ApiErrorsContent() {
         const result = await fetchApiErrorConfigs();
         if (cancelled) return;
         setConfigs(result.configs);
-        setSelectedConfigId(result.current_config_id ?? "");
       } catch (loadError) {
         if (cancelled) return;
         setError(
@@ -159,6 +160,13 @@ export function ApiErrorsContent() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const match = configs.find((config) => config.version === selectedVersion);
+    if (match) {
+      setSelectedConfigId(match.config_id);
+    }
+  }, [configs, selectedVersion]);
 
   useEffect(() => {
     if (!selectedConfigId) {

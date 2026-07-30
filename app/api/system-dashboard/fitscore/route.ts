@@ -13,17 +13,17 @@ const allowedStatuses = new Set(["accepted", "rejected", "failed"]);
 export const GET = withAuth(
   withApproved(async (request: Request, _context: unknown, user: DbUserWithConfig) => {
     try {
+      const { searchParams } = new URL(request.url);
       const affiliationError = requireBusinessAffiliation(user);
       if (affiliationError) {
         return affiliationError;
       }
 
-      const scope = getConfigScope(user);
+      const scope = getConfigScope(user, searchParams.get("version"));
       if (!scope) {
         return jsonResponse({ candidates: [], total: 0 });
       }
 
-      const { searchParams } = new URL(request.url);
       const page = searchParams.get("page") || "1";
       const limit = searchParams.get("limit") || "25";
       const search = searchParams.get("search")?.trim() || undefined;

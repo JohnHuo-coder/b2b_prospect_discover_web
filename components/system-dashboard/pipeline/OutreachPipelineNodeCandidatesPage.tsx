@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ExternalLink } from "lucide-react";
@@ -18,6 +20,7 @@ export function OutreachPipelineNodeCandidatesPage({
 }: {
   node: OutreachNodeMeta;
 }) {
+  const { selectedVersion } = useConfigVersion();
   const [page, setPage] = useState(1);
   const [candidates, setCandidates] = useState<OutreachStageDetailCandidate[]>(
     []
@@ -44,7 +47,7 @@ export function OutreachPipelineNodeCandidatesPage({
       setError(null);
 
       try {
-        const result = await fetchOutreachStageDetail(node.finalStage!);
+        const result = await fetchOutreachStageDetail(node.finalStage!, selectedVersion);
         if (cancelled) return;
         setCandidates(result.candidates);
       } catch (loadError) {
@@ -65,7 +68,7 @@ export function OutreachPipelineNodeCandidatesPage({
     return () => {
       cancelled = true;
     };
-  }, [node.finalStage]);
+  }, [node.finalStage, selectedVersion]);
 
   const totalPages = Math.max(1, Math.ceil(candidates.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);

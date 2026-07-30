@@ -22,7 +22,8 @@ type FitScoreDetailRow = {
 export const GET = withAuth(
   withApproved(async (request: Request, context: RouteContext, user: DbUserWithConfig) => {
     try {
-      const scope = getConfigScope(user);
+      const { searchParams } = new URL(request.url);
+      const scope = getConfigScope(user, searchParams.get("version"));
       if (!scope) {
         return errorResponse("Candidate not found", 404);
       }
@@ -33,7 +34,6 @@ export const GET = withAuth(
         return errorResponse("Candidate id is required", 400);
       }
 
-      const { searchParams } = new URL(request.url);
       const requirementIndexParam = searchParams.get("requirement_index");
 
       if (!requirementIndexParam) {

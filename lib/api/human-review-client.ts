@@ -1,5 +1,6 @@
 import { ENDPOINTS } from "@/lib/api/endpoints";
 import { authenticatedFetch } from "@/lib/api/authenticatedFetch";
+import { appendVersionQuery } from "@/lib/api/version-query";
 
 export type ComplianceCheckListItem = {
   id: string;
@@ -76,11 +77,13 @@ function mapComplianceCheckDetail(
   };
 }
 
-export async function fetchComplianceCheckQueue(): Promise<{
+export async function fetchComplianceCheckQueue(version?: number): Promise<{
   items: ComplianceCheckListItem[];
   total: number;
 }> {
-  const response = await authenticatedFetch(ENDPOINTS.HUMAN_REVIEW_COMPLIANCE_CHECK);
+  const response = await authenticatedFetch(
+    appendVersionQuery(ENDPOINTS.HUMAN_REVIEW_COMPLIANCE_CHECK, version)
+  );
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -103,10 +106,11 @@ export async function fetchComplianceCheckQueue(): Promise<{
 }
 
 export async function fetchComplianceCheckDetail(
-  candidateId: string
+  candidateId: string,
+  version?: number
 ): Promise<ComplianceCheckDetail> {
   const response = await authenticatedFetch(
-    ENDPOINTS.humanReviewComplianceCheckDetail(candidateId)
+    appendVersionQuery(ENDPOINTS.humanReviewComplianceCheckDetail(candidateId), version)
   );
 
   if (!response.ok) {
@@ -136,10 +140,14 @@ export async function updateComplianceCheckReviewDecision(
 
 export async function fetchComplianceCheckRequirementFacts(
   candidateId: string,
-  requirementIndex: number
+  requirementIndex: number,
+  version?: number
 ): Promise<ComplianceCheckRequirementFacts> {
   const response = await authenticatedFetch(
-    ENDPOINTS.humanReviewComplianceCheckFacts(candidateId, requirementIndex)
+    appendVersionQuery(
+      ENDPOINTS.humanReviewComplianceCheckFacts(candidateId, requirementIndex),
+      version
+    )
   );
 
   if (!response.ok) {

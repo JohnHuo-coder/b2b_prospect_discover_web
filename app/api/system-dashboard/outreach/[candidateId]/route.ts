@@ -46,9 +46,10 @@ function mapOutreachStatus(status: string) {
 }
 
 export const GET = withAuth(
-  withApproved(async (_request: Request, context: RouteContext, user: DbUserWithConfig) => {
+  withApproved(async (request: Request, context: RouteContext, user: DbUserWithConfig) => {
     try {
-      const scope = getConfigScope(user);
+      const { searchParams } = new URL(request.url);
+      const scope = getConfigScope(user, searchParams.get("version"));
       if (!scope) {
         return errorResponse("Candidate not found", 404);
       }
@@ -111,12 +112,13 @@ export const GET = withAuth(
 export const PATCH = withAuth(
   withApproved(async (request: Request, context: RouteContext, user: DbUserWithConfig) => {
     try {
+      const { searchParams } = new URL(request.url);
       const affiliationError = requireBusinessAffiliation(user);
       if (affiliationError) {
         return affiliationError;
       }
 
-      const scope = getConfigScope(user);
+      const scope = getConfigScope(user, searchParams.get("version"));
       if (!scope) {
         return errorResponse("Candidate not found", 404);
       }

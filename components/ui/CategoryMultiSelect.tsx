@@ -55,7 +55,10 @@ export function CategoryMultiSelect({
   };
 
   return (
-    <div ref={containerRef} className="relative block">
+    <div
+      ref={containerRef}
+      className={`relative block ${open ? "dropdown-open" : ""}`}
+    >
       <FormLabelRow
         label={label}
         required={required}
@@ -111,7 +114,7 @@ export function CategoryMultiSelect({
         <ul
           role="listbox"
           aria-multiselectable="true"
-          className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg"
+          className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg"
         >
           {CONTACT_CATEGORY_OPTIONS.map((category) => {
             const selected = value.includes(category);

@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import { useEffect, useMemo, useState } from "react";
 import { BadgeCheck, Globe, Percent, Sparkles } from "lucide-react";
 import {
@@ -143,6 +145,7 @@ function SummaryCardSkeleton({ count }: { count: number }) {
 }
 
 export function InformationAcquisitionSummaryCards() {
+  const { selectedVersion } = useConfigVersion();
   const [scopes, setScopes] = useState<InfoAcquisitionSummaryScope[]>([]);
   const [scopeId, setScopeId] = useState<"all" | number>("all");
   const [scopeStats, setScopeStats] = useState<
@@ -172,7 +175,7 @@ export function InformationAcquisitionSummaryCards() {
       setError(null);
 
       try {
-        const result = await fetchInfoAcquisitionSummary();
+        const result = await fetchInfoAcquisitionSummary(selectedVersion);
         if (cancelled) return;
 
         const nextScopes: InfoAcquisitionSummaryScope[] = [
@@ -229,7 +232,7 @@ export function InformationAcquisitionSummaryCards() {
 
       try {
         const result =
-          await fetchInfoAcquisitionRequirementSummary(requirementIndex);
+          await fetchInfoAcquisitionRequirementSummary(requirementIndex, selectedVersion);
         if (cancelled) return;
 
         const stats: InfoAcquisitionRequirementSummaryStats = {
@@ -272,7 +275,7 @@ export function InformationAcquisitionSummaryCards() {
       setWebsiteUrlDetailError(null);
 
       try {
-        const result = await fetchInfoAcquisitionWebsiteUrlFailureBreakdown();
+        const result = await fetchInfoAcquisitionWebsiteUrlFailureBreakdown(selectedVersion);
         if (!cancelled) {
           setWebsiteUrlFailureBreakdown(result);
         }

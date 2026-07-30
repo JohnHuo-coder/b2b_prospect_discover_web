@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import type { ContactEmailSource } from "@/lib/system-dashboard/contact-status";
 import { getContactEmailSourceLabel } from "@/lib/system-dashboard/contact-status";
+import { ConfigVersionToolbar } from "@/components/ui/ConfigVersionToolbar";
 
 export function SystemDashboardBackLink({
   title,
@@ -23,6 +24,7 @@ export function SystemDashboardBackLink({
       {subtitle ? (
         <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>
       ) : null}
+      <ConfigVersionToolbar className="mt-5" />
     </div>
   );
 }

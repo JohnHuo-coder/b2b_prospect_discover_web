@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { ChevronRight, ShieldCheck, type LucideIcon } from "lucide-react";
 import { fetchComplianceCheckQueue } from "@/lib/api/human-review-client";
 import { SkeletonBar } from "@/components/ui/SkeletonBar";
+import { ConfigVersionToolbar } from "@/components/ui/ConfigVersionToolbar";
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
 import {
   JoinCompanyRequiredBanner,
   PendingReviewBadge,
@@ -50,6 +52,7 @@ function ReviewCategoryCard({ category }: { category: ReviewCategory }) {
 }
 
 export function HumanReviewContent() {
+  const { selectedVersion } = useConfigVersion();
   const { isLoading: authLoading, isPending, isApproved } = useHumanReviewAccess();
   const [compliancePendingCount, setCompliancePendingCount] = useState(0);
 
@@ -60,7 +63,7 @@ export function HumanReviewContent() {
 
     const loadCounts = async () => {
       try {
-        const compliance = await fetchComplianceCheckQueue();
+        const compliance = await fetchComplianceCheckQueue(selectedVersion);
         if (cancelled) return;
         setCompliancePendingCount(compliance.total);
       } catch {
@@ -75,7 +78,7 @@ export function HumanReviewContent() {
     return () => {
       cancelled = true;
     };
-  }, [isApproved]);
+  }, [isApproved, selectedVersion]);
 
   if (authLoading) {
     return (
@@ -120,6 +123,7 @@ export function HumanReviewContent() {
         <p className="mt-1 text-sm text-zinc-500">
           Review and approve lead candidates flagged for manual review
         </p>
+        <ConfigVersionToolbar className="mt-5" />
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:max-w-xl">

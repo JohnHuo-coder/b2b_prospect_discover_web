@@ -30,6 +30,7 @@ import { SystemDashboardBackLink } from "./SystemDashboardShared";
 import { Pagination } from "@/components/ui/Pagination";
 import { Modal } from "@/components/ui/Modal";
 import { SimpleSelect } from "@/components/ui/SimpleSelect";
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
 
 type UsageTab = "business" | "candidate";
 
@@ -122,10 +123,19 @@ function UsageTable({
 }
 
 function BusinessUsagePanel() {
+  const { selectedVersion } = useConfigVersion();
   const [selectedConfigId, setSelectedConfigId] = useState("");
   const [data, setData] = useState<BusinessLevelUsage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const configs = data?.configs ?? [];
+    const match = configs.find((config) => config.version === selectedVersion);
+    if (match) {
+      setSelectedConfigId(match.config_id);
+    }
+  }, [data?.configs, selectedVersion]);
 
   useEffect(() => {
     let cancelled = false;
@@ -582,6 +592,7 @@ function LeadBreakdownTable({
 }
 
 function CandidateUsagePanel() {
+  const { selectedVersion } = useConfigVersion();
   const [summary, setSummary] = useState<CandidateLevelSummary | null>(null);
   const [selectedConfigId, setSelectedConfigId] = useState("");
   const [stageData, setStageData] = useState<CandidateConfigStages | null>(null);
@@ -623,6 +634,14 @@ function CandidateUsagePanel() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const configs = summary?.configs ?? [];
+    const match = configs.find((config) => config.version === selectedVersion);
+    if (match) {
+      setSelectedConfigId(match.config_id);
+    }
+  }, [summary?.configs, selectedVersion]);
 
   useEffect(() => {
     setLeadsPage(1);

@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
@@ -46,6 +48,7 @@ export function FitscoreSummaryCards({
   requirementIndex,
   onRequirementIndexChange,
 }: FitscoreSummaryCardsProps) {
+  const { selectedVersion } = useConfigVersion();
   const [scopes, setScopes] = useState<FitscoreSummaryScope[]>([]);
   const [scopeStats, setScopeStats] = useState<
     Record<string, FitscoreSummaryStats>
@@ -62,7 +65,7 @@ export function FitscoreSummaryCards({
       setError(null);
 
       try {
-        const result = await fetchFitscoreSummary();
+        const result = await fetchFitscoreSummary(selectedVersion);
         if (cancelled) return;
 
         const nextScopes: FitscoreSummaryScope[] = result.requirements.map(
@@ -98,13 +101,13 @@ export function FitscoreSummaryCards({
     return () => {
       cancelled = true;
     };
-  }, [onRequirementIndexChange]);
+  }, [onRequirementIndexChange, selectedVersion]);
 
   useEffect(() => {
     if (requirementIndex == null) return;
 
     const activeRequirementIndex = requirementIndex;
-    const cacheKey = String(activeRequirementIndex);
+    const cacheKey = `${selectedVersion}:${activeRequirementIndex}`;
     if (scopeStats[cacheKey]) return;
 
     let cancelled = false;
@@ -114,7 +117,7 @@ export function FitscoreSummaryCards({
       setError(null);
 
       try {
-        const result = await fetchFitscoreRequirementSummary(activeRequirementIndex);
+        const result = await fetchFitscoreRequirementSummary(activeRequirementIndex, selectedVersion);
         if (cancelled) return;
 
         const stats: FitscoreSummaryStats = {
@@ -148,7 +151,7 @@ export function FitscoreSummaryCards({
     return () => {
       cancelled = true;
     };
-  }, [requirementIndex, scopeStats]);
+  }, [requirementIndex, scopeStats, selectedVersion]);
 
   const activeScope = useMemo(
     () => scopes.find((scope) => scope.id === requirementIndex) ?? scopes[0],

@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -62,6 +64,7 @@ function onFlowInit(instance: ReactFlowInstance<Node<OutreachNodeData>>) {
 }
 
 export function OutreachPipelinePage() {
+  const { selectedVersion } = useConfigVersion();
   const router = useRouter();
   const [nodes, setNodes, onNodesChange] = useNodesState(
     outreachPipelineInitialNodes
@@ -78,7 +81,7 @@ export function OutreachPipelinePage() {
       setError(null);
 
       try {
-        const result = await fetchOutreachWorkflow();
+        const result = await fetchOutreachWorkflow(selectedVersion);
         if (cancelled) return;
 
         const stageCounts = mapOutreachWorkflowStageCounts(result.stages);

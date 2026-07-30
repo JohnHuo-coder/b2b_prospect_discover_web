@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ExternalLink, GitBranch, Search } from "lucide-react";
@@ -34,6 +36,7 @@ const statusFilterLabels: Record<InfoAcquisitionStatusFilter, string> = {
 };
 
 export function InformationAcquisitionContent() {
+  const { selectedVersion } = useConfigVersion();
   const [candidates, setCandidates] = useState<InfoAcquisitionCandidate[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
@@ -67,7 +70,7 @@ export function InformationAcquisitionContent() {
           status: statusFilter,
           page,
           limit: CANDIDATES_PAGE_SIZE,
-        });
+        }, selectedVersion);
         if (cancelled) return;
         setCandidates(result.candidates);
         setTotal(result.total);
@@ -123,7 +126,7 @@ export function InformationAcquisitionContent() {
       });
 
       try {
-        const detail = await fetchInfoAcquisitionCandidateDetail(candidateId);
+        const detail = await fetchInfoAcquisitionCandidateDetail(candidateId, selectedVersion);
         if (!cancelled) setSelectedDetail(detail);
       } catch (loadError) {
         if (!cancelled) {

@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -66,6 +68,7 @@ function onFlowInit(instance: ReactFlowInstance<Node<PipelineNodeData>>) {
 }
 
 export function InformationAcquisitionPipelinePage() {
+  const { selectedVersion } = useConfigVersion();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialRequirementParam = searchParams.get("requirement_index");
@@ -92,7 +95,7 @@ export function InformationAcquisitionPipelinePage() {
       setError(null);
 
       try {
-        const result = await fetchInfoAcquisitionSummary();
+        const result = await fetchInfoAcquisitionSummary(selectedVersion);
         if (cancelled) return;
 
         setRequirements(result.requirements);
@@ -163,7 +166,7 @@ export function InformationAcquisitionPipelinePage() {
       setError(null);
 
       try {
-        const result = await fetchInfoAcquisitionWorkflowByReq(activeRequirementIndex);
+        const result = await fetchInfoAcquisitionWorkflowByReq(activeRequirementIndex, selectedVersion);
         if (cancelled) return;
 
         const stageCounts = mapWorkflowStageCounts(result.stages);

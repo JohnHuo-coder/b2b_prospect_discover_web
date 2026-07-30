@@ -62,9 +62,10 @@ function mapSufficiencyDetail(summary: SufficiencySummaryRow) {
 }
 
 export const GET = withAuth(
-  withApproved(async (_request: Request, context: RouteContext, user: DbUserWithConfig) => {
+  withApproved(async (request: Request, context: RouteContext, user: DbUserWithConfig) => {
     try {
-      const scope = getConfigScope(user);
+      const { searchParams } = new URL(request.url);
+      const scope = getConfigScope(user, searchParams.get("version"));
       const { source } = await context.params;
 
       if (source === "apollo") {

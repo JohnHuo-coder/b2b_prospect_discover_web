@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import { useEffect, useState } from "react";
 import { ExternalLink, Search } from "lucide-react";
 import {
@@ -30,6 +32,7 @@ const statusFilterLabels: Record<ContactStatusFilter, string> = {
 };
 
 export function ContactContent() {
+  const { selectedVersion } = useConfigVersion();
   const [candidates, setCandidates] = useState<ContactTableCandidate[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
@@ -62,7 +65,7 @@ export function ContactContent() {
           status: statusFilter,
           page,
           limit: CANDIDATES_PAGE_SIZE,
-        });
+        }, selectedVersion);
         if (cancelled) return;
         setCandidates(result.candidates);
         setTotal(result.total);
@@ -122,7 +125,7 @@ export function ContactContent() {
       });
 
       try {
-        const detail = await fetchContactCandidateDetail(candidateId);
+        const detail = await fetchContactCandidateDetail(candidateId, selectedVersion);
         if (!cancelled) setSelectedDetail(detail);
       } catch (loadError) {
         if (!cancelled) {

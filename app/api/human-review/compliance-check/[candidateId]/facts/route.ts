@@ -15,12 +15,13 @@ type RouteContext = {
 export const GET = withAuth(
   withApproved(async (request: Request, context: RouteContext, user: DbUserWithConfig) => {
     try {
+      const { searchParams } = new URL(request.url);
       const affiliationError = requireBusinessAffiliation(user);
       if (affiliationError) {
         return affiliationError;
       }
 
-      const scope = getConfigScope(user);
+      const scope = getConfigScope(user, searchParams.get("version"));
       if (!scope) {
         return errorResponse("Facts not found for requirement", 404);
       }
@@ -31,7 +32,6 @@ export const GET = withAuth(
         return errorResponse("Candidate id is required", 400);
       }
 
-      const { searchParams } = new URL(request.url);
       const requirementIndexParam = searchParams.get("requirement_index");
 
       if (!requirementIndexParam) {

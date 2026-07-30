@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import { useEffect, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
@@ -136,6 +138,7 @@ function CountCardSkeleton() {
 }
 
 export function OutreachSummaryCards() {
+  const { selectedVersion } = useConfigVersion();
   const [stats, setStats] = useState<OutreachSummaryStats>(emptyStats);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +151,7 @@ export function OutreachSummaryCards() {
       setError(null);
 
       try {
-        const result = await fetchOutreachSummary();
+        const result = await fetchOutreachSummary(selectedVersion);
         if (!cancelled) {
           setStats(result);
         }

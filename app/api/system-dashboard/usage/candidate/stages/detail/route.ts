@@ -19,12 +19,12 @@ function parseConfigId(raw: string | null): number | null {
 export const GET = withAuth(
   withApproved(async (request: Request, _context: unknown, user: DbUserWithConfig) => {
     try {
+      const { searchParams } = new URL(request.url);
       const affiliationError = requireBusinessAffiliation(user);
       if (affiliationError) {
         return affiliationError;
       }
 
-      const { searchParams } = new URL(request.url);
       const configId = parseConfigId(searchParams.get("config_id"));
       const stage = searchParams.get("stage")?.trim();
 

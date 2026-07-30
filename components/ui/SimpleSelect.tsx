@@ -57,7 +57,10 @@ export function SimpleSelect({
   }, [open]);
 
   return (
-    <div ref={containerRef} className={cn("relative", className)}>
+    <div
+      ref={containerRef}
+      className={cn("relative", open && "dropdown-open", className)}
+    >
       {label ? (
         <p className="mb-1.5 text-sm font-medium text-zinc-700">{label}</p>
       ) : null}
@@ -97,7 +100,7 @@ export function SimpleSelect({
       {open ? (
         <ul
           role="listbox"
-          className="absolute z-20 mt-1.5 max-h-56 w-full overflow-y-auto rounded-xl border border-zinc-200 bg-white p-1 shadow-lg"
+          className="absolute z-50 mt-1.5 max-h-56 w-full overflow-y-auto rounded-xl border border-zinc-200 bg-white p-1 shadow-lg"
         >
           {options.map((option) => {
             const selected = option.value === value;

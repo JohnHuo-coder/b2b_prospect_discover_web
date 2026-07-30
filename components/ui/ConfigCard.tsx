@@ -19,7 +19,7 @@ export function ConfigCard({
   onEdit?: () => void;
 }) {
   return (
-    <section className="rounded-xl border border-zinc-200/90 bg-white/90 shadow-[0_20px_50px_-30px_rgba(24,24,27,0.08)] backdrop-blur-sm">
+    <section className="config-card rounded-xl border border-zinc-200/90 bg-white/90 shadow-[0_20px_50px_-30px_rgba(24,24,27,0.08)] backdrop-blur-sm">
       <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-4">
         <div className="flex items-center gap-2.5">
           <Icon className="h-4 w-4 text-zinc-500" />

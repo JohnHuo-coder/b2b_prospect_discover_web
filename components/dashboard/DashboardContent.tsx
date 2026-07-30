@@ -11,6 +11,7 @@ import { CandidatesPerRunControl } from "@/components/dashboard/CandidatesPerRun
 import { DiscoveryQuotaIndicator } from "@/components/dashboard/DiscoveryQuotaIndicator";
 import { GmailConnectionButton } from "@/components/dashboard/GmailConnectionButton";
 import { ConfigVersionSelect } from "@/components/dashboard/ConfigVersionSelect";
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
 import {
   fetchDashboardSummary,
   fetchDiscoveryQuota,
@@ -456,9 +457,9 @@ export function DashboardContent() {
   const isPending = Boolean(user && (!user.role || user.role === "pending"));
   const configVersion = Number(user?.config_version) || 0;
   const needsConfiguration = configVersion < 1;
-  const [selectedVersion, setSelectedVersion] = useState(configVersion);
-  const isAlternateVersion =
-    configVersion > 0 && selectedVersion > 0 && selectedVersion !== configVersion;
+  const { selectedVersion, setSelectedVersion, isViewingHistoricalVersion } =
+    useConfigVersion();
+  const isAlternateVersion = isViewingHistoricalVersion;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
   const [summary, setSummary] = useState<Record<
@@ -484,10 +485,6 @@ export function DashboardContent() {
     if (authLoading || isPending) return;
     void refreshUser();
   }, [authLoading, isPending, refreshUser]);
-
-  useEffect(() => {
-    setSelectedVersion(configVersion);
-  }, [configVersion]);
 
   const leadDetailHref = (leadId: string) =>
     isAlternateVersion

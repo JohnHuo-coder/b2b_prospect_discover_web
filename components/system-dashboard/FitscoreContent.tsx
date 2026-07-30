@@ -13,6 +13,7 @@ import { FitscoreCandidateDetail } from "./FitscoreCandidateDetail";
 import { FitscoreSummaryCards } from "./FitscoreSummaryCards";
 import { DataTableSection } from "./MetricCard";
 import { Pagination } from "@/components/ui/Pagination";
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
 import {
   FitscoreStatusBadge,
   SystemDashboardBackLink,
@@ -35,6 +36,7 @@ const statusFilterLabels: Record<FitscoreStatusFilter, string> = {
 };
 
 export function FitscoreContent() {
+  const { selectedVersion } = useConfigVersion();
   const [requirementIndex, setRequirementIndex] = useState<number | null>(null);
   const [candidates, setCandidates] = useState<FitscoreTableCandidate[]>([]);
   const [total, setTotal] = useState(0);
@@ -80,7 +82,7 @@ export function FitscoreContent() {
           status: statusFilter,
           page,
           limit: CANDIDATES_PAGE_SIZE,
-        });
+        }, selectedVersion);
         if (cancelled) return;
         setCandidates(result.candidates);
         setTotal(result.total);
@@ -136,10 +138,8 @@ export function FitscoreContent() {
       });
 
       try {
-        const detail = await fetchFitscoreCandidateDetail(
-          candidateId,
-          activeRequirementIndex
-        );
+        const detail = await fetchFitscoreCandidateDetail(candidateId,
+          activeRequirementIndex, selectedVersion);
         if (!cancelled) setSelectedDetail(detail);
       } catch (loadError) {
         if (!cancelled) {

@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExternalLink, Search } from "lucide-react";
 import {
@@ -18,6 +20,7 @@ import { DataTableSection } from "@/components/system-dashboard/MetricCard";
 import { SkeletonBar } from "@/components/ui/SkeletonBar";
 
 export function ComplianceCheckContent() {
+  const { selectedVersion } = useConfigVersion();
   const { isLoading: authLoading, isPending, isApproved } = useHumanReviewAccess();
   const [items, setItems] = useState<ComplianceCheckListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -46,7 +49,7 @@ export function ComplianceCheckContent() {
       setError(null);
 
       try {
-        const result = await fetchComplianceCheckQueue();
+        const result = await fetchComplianceCheckQueue(selectedVersion);
         if (cancelled) return;
         setItems(result.items);
         setTotal(result.total);
@@ -100,7 +103,7 @@ export function ComplianceCheckContent() {
       });
 
       try {
-        const detail = await fetchComplianceCheckDetail(candidateId);
+        const detail = await fetchComplianceCheckDetail(candidateId, selectedVersion);
         if (!cancelled) setSelectedDetail(detail);
       } catch (loadError) {
         if (!cancelled) {

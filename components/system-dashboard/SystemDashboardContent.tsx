@@ -11,6 +11,7 @@ import {
   Send,
   type LucideIcon,
 } from "lucide-react";
+import { ConfigVersionToolbar } from "@/components/ui/ConfigVersionToolbar";
 
 type WorkflowStage = {
   title: string;
@@ -125,6 +126,7 @@ export function SystemDashboardContent() {
         <p className="mt-1 text-sm text-zinc-500">
           Workflow stages for prospect discovery
         </p>
+        <ConfigVersionToolbar className="mt-5" />
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">

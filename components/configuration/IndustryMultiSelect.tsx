@@ -106,7 +106,10 @@ export function IndustryMultiSelect({
   const showDropdown = open && query.trim().length > 0;
 
   return (
-    <div ref={containerRef} className="relative block">
+    <div
+      ref={containerRef}
+      className={`relative block ${showDropdown ? "dropdown-open" : ""}`}
+    >
       <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-400">
         {label}
       </span>
@@ -156,7 +159,7 @@ export function IndustryMultiSelect({
         <ul
           id={listboxId}
           role="listbox"
-          className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg"
+          className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg"
         >
           {loading ? (
             <li className="px-3 py-2 text-sm text-zinc-500">Searching...</li>

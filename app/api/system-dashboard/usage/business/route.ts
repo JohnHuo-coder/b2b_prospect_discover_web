@@ -19,12 +19,12 @@ function parseOptionalConfigId(raw: string | null): number | null {
 export const GET = withAuth(
   withApproved(async (request: Request, _context: unknown, user: DbUserWithConfig) => {
     try {
+      const { searchParams } = new URL(request.url);
       const affiliationError = requireBusinessAffiliation(user);
       if (affiliationError) {
         return affiliationError;
       }
 
-      const { searchParams } = new URL(request.url);
       const configId = parseOptionalConfigId(searchParams.get("config_id"));
       if (Number.isNaN(configId)) {
         return errorResponse("Invalid config_id", 400);

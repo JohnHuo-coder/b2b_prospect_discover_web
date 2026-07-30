@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ExternalLink, GitBranch, Search } from "lucide-react";
@@ -40,6 +42,7 @@ const statusFilterLabels: Record<OutreachStatusFilter, string> = {
 };
 
 export function OutreachContent() {
+  const { selectedVersion } = useConfigVersion();
   const [candidates, setCandidates] = useState<OutreachTableCandidate[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
@@ -77,7 +80,7 @@ export function OutreachContent() {
           status: statusFilter,
           page,
           limit: CANDIDATES_PAGE_SIZE,
-        });
+        }, selectedVersion);
         if (cancelled) return;
         setCandidates(result.candidates);
         setTotal(result.total);
@@ -139,7 +142,7 @@ export function OutreachContent() {
       });
 
       try {
-        const detail = await fetchOutreachCandidateDetail(candidateId);
+        const detail = await fetchOutreachCandidateDetail(candidateId, selectedVersion);
         if (!cancelled) setSelectedDetail(detail);
       } catch (loadError) {
         if (!cancelled) {

@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import { useCallback, useEffect, useState } from "react";
 import { X } from "lucide-react";
 import {
@@ -32,6 +34,7 @@ export function OutreachComplianceReviewModal({
   onClose: () => void;
   onComplete?: () => void;
 }) {
+  const { selectedVersion } = useConfigVersion();
   const [detail, setDetail] = useState<ComplianceCheckDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +67,7 @@ export function OutreachComplianceReviewModal({
       setError(null);
 
       try {
-        const result = await fetchComplianceCheckDetail(candidateId);
+        const result = await fetchComplianceCheckDetail(candidateId, selectedVersion);
         if (!cancelled) setDetail(result);
       } catch (loadError) {
         if (!cancelled) {
@@ -85,7 +88,7 @@ export function OutreachComplianceReviewModal({
     return () => {
       cancelled = true;
     };
-  }, [open, candidateId]);
+  }, [open, candidateId, selectedVersion]);
 
   useEffect(() => {
     if (!open) return;

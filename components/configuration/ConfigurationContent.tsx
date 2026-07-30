@@ -33,7 +33,9 @@ import {
   FIT_SCORE_CUTOFF_HELP,
 } from "@/lib/constants/scoring-thresholds";
 import { ConfigCard, Field, TagList } from "@/components/ui/ConfigCard";
+import { ConfigVersionToolbar } from "@/components/ui/ConfigVersionToolbar";
 import { SkeletonBar } from "@/components/ui/SkeletonBar";
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
 import { useUser } from "@/components/providers/UserProvider";
 import {
   DEFAULT_CONTACT_TITLES,
@@ -123,6 +125,11 @@ function displayBoolean(enabled: boolean | null | undefined): ReactNode {
 export function ConfigurationContent() {
   const router = useRouter();
   const { user, isLoading: authLoading, refreshUser } = useUser();
+  const {
+    currentVersion,
+    selectedVersion,
+    isViewingHistoricalVersion,
+  } = useConfigVersion();
   const [config, setConfig] = useState<BusinessConfigState>(emptyConfig);
   const [draft, setDraft] = useState<BusinessConfigState>(emptyConfig);
   const [isEditing, setIsEditing] = useState(false);
@@ -159,14 +166,26 @@ export function ConfigurationContent() {
     const loadConfig = async () => {
       setConfigLoaded(false);
       setLoadError(null);
+      setIsEditing(false);
+      setRephraseSuggestions([]);
+      setRephraseError(null);
+      setError(null);
 
       try {
-        const data = await fetchBusinessConfig();
+        const data = await fetchBusinessConfig(
+          selectedVersion > 0 ? selectedVersion : undefined
+        );
         if (!cancelled) {
           setConfig(data);
-          if (data.version === 0 && user?.role === "owner") {
+          if (
+            data.version === currentVersion &&
+            data.version === 0 &&
+            user?.role === "owner"
+          ) {
             setDraft(data);
             setIsEditing(true);
+          } else {
+            setDraft(data);
           }
           setConfigLoaded(true);
         }
@@ -186,7 +205,7 @@ export function ConfigurationContent() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, isApproved, user?.role]);
+  }, [authLoading, isApproved, user?.role, selectedVersion, currentVersion]);
 
   const patchDraft = useCallback(
     <K extends keyof BusinessConfigState>(key: K, value: BusinessConfigState[K]) => {
@@ -205,6 +224,7 @@ export function ConfigurationContent() {
   }, [patchDraft]);
 
   const handleStartEditing = () => {
+    if (isViewingHistoricalVersion) return;
     setDraft({ ...config });
     setRephraseSuggestions([]);
     setRephraseError(null);
@@ -342,12 +362,10 @@ export function ConfigurationContent() {
           <p className="mt-1 text-sm text-zinc-500">
             System configuration for the lead generation pipeline
           </p>
-          {config.version > 0 ? (
-            <p className="mt-1 text-xs text-zinc-400">Version: {config.version}</p>
-          ) : null}
+          <ConfigVersionToolbar className="mt-4" />
         </div>
 
-        {isOwner && configLoaded ? (
+        {isOwner && configLoaded && !isViewingHistoricalVersion ? (
           isEditing ? (
             <div className="flex flex-wrap items-center gap-3">
               {config.version > 0 ? (
@@ -391,6 +409,12 @@ export function ConfigurationContent() {
       {error ? (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
+        </div>
+      ) : null}
+
+      {isViewingHistoricalVersion && configLoaded ? (
+        <div className="mb-6 rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-800">
+          Viewing v{selectedVersion} in read-only mode. Switch to v{currentVersion} to edit the current configuration.
         </div>
       ) : null}
 

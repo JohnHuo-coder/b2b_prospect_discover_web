@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfigVersion } from "@/components/providers/ConfigVersionProvider";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ExternalLink } from "lucide-react";
@@ -19,6 +21,7 @@ export function PipelineNodeCandidatesPage({
   node: PipelineNodeMeta;
   requirementIndex: number;
 }) {
+  const { selectedVersion } = useConfigVersion();
   const [page, setPage] = useState(1);
   const [candidates, setCandidates] = useState<
     InfoAcquisitionStageDetailCandidate[]
@@ -48,7 +51,7 @@ export function PipelineNodeCandidatesPage({
         const result = await fetchInfoAcquisitionStageDetail({
           requirementIndex,
           finalStage: node.finalStage!,
-        });
+        }, selectedVersion);
         if (cancelled) return;
         setCandidates(result.candidates);
       } catch (loadError) {
@@ -69,7 +72,7 @@ export function PipelineNodeCandidatesPage({
     return () => {
       cancelled = true;
     };
-  }, [node.finalStage, requirementIndex]);
+  }, [node.finalStage, requirementIndex, selectedVersion]);
 
   const totalPages = Math.max(1, Math.ceil(candidates.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
