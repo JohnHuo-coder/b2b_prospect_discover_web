@@ -12,6 +12,7 @@ import {
   AuthTextArea,
   GoogleButton,
 } from "@/components/auth/AuthShell";
+import { AuthPasswordField } from "@/components/auth/AuthPasswordField";
 import {
   businessSignup,
   memberSignup,
@@ -247,9 +248,8 @@ export function RegisterForm() {
           />
         </div>
 
-        <AuthField
+        <AuthPasswordField
           label="Password"
-          type="password"
           value={password}
           onChange={setPassword}
           placeholder="Create a password"

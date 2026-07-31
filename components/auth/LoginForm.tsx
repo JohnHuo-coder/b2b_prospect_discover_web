@@ -10,12 +10,18 @@ import {
   AuthShell,
   GoogleButton,
 } from "@/components/auth/AuthShell";
+import { AuthPasswordField } from "@/components/auth/AuthPasswordField";
 import { useUser } from "@/components/providers/UserProvider";
 import { getPostAuthDestination } from "@/lib/auth/accessRouting";
 import {
   isAuthCancellation,
   mapAuthCodeToMessage,
 } from "@/lib/auth/mapAuthCodeToMessage";
+import {
+  GOOGLE_SIGN_IN_CREDENTIAL_HINT,
+  isCredentialSignInError,
+  resolveLoginErrorMessage,
+} from "@/lib/auth/signInMethods";
 
 type FirebaseAuthError = {
   code?: string;
@@ -28,6 +34,7 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showGoogleHint, setShowGoogleHint] = useState(false);
   const [notice, setNotice] = useState(
     () => searchParams.get("message")?.trim() ?? ""
   );
@@ -37,6 +44,7 @@ export function LoginForm() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError("");
+    setShowGoogleHint(false);
     setIsLoading(true);
 
     try {
@@ -44,7 +52,8 @@ export function LoginForm() {
       router.replace(getPostAuthDestination(appUser));
     } catch (err) {
       const code = (err as FirebaseAuthError).code ?? "";
-      setError(mapAuthCodeToMessage(code));
+      setError(resolveLoginErrorMessage(code));
+      setShowGoogleHint(isCredentialSignInError(code));
     } finally {
       setIsLoading(false);
     }
@@ -86,13 +95,20 @@ export function LoginForm() {
           placeholder="you@company.com"
           autoComplete="email"
         />
-        <AuthField
+        <AuthPasswordField
           label="Password"
-          type="password"
           value={password}
           onChange={setPassword}
           placeholder="Enter your password"
           autoComplete="current-password"
+          labelExtra={
+            <Link
+              href="/forgot-password"
+              className="text-sm font-medium text-teal-800 hover:text-teal-900"
+            >
+              Forgot password?
+            </Link>
+          }
         />
 
         {notice ? (
@@ -104,6 +120,12 @@ export function LoginForm() {
         {error ? (
           <p className="text-sm text-red-600" role="alert">
             {error}
+          </p>
+        ) : null}
+
+        {showGoogleHint ? (
+          <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
+            {GOOGLE_SIGN_IN_CREDENTIAL_HINT}
           </p>
         ) : null}
 

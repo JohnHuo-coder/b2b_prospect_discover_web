@@ -16,10 +16,16 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   "auth/internal-error": "Sign-in failed due to a server configuration issue.",
   "auth/account-exists-with-different-credential":
     "An account already exists with this email using a different sign-in method.",
+  "auth/missing-email": "Please enter your email address.",
+  "auth/invalid-action-code":
+    "This password reset link is invalid or has expired. Please request a new one.",
 };
 
 export function mapAuthCodeToMessage(code: string): string {
-  return AUTH_ERROR_MESSAGES[code] ?? "Sign in failed. Please try again.";
+  return (
+    AUTH_ERROR_MESSAGES[code] ??
+    "Something went wrong. Please try again."
+  );
 }
 
 export function isAuthCancellation(code: string): boolean {
