@@ -4,15 +4,16 @@ import type { LucideIcon } from "lucide-react";
 import {
   Building2,
   CheckCircle2,
-  ClipboardCheck,
+  Copy,
+  ExternalLink,
+  LayoutDashboard,
+  List,
   Mail,
-  MapPin,
   Search,
   Settings2,
-  SlidersHorizontal,
 } from "lucide-react";
 
-type FeatureVisualVariant = "config" | "discovery" | "outreach";
+type FeatureVisualVariant = "config" | "discovery" | "outreach" | "dashboard";
 
 type LandingFeatureVisualProps = {
   variant: FeatureVisualVariant;
@@ -60,122 +61,158 @@ function VisualShell({
   );
 }
 
-function ConfigVisual() {
+function MiniConfigCard({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <VisualShell icon={Settings2} title="Business configuration">
-      <div className="grid h-full gap-3 md:grid-cols-[120px_minmax(0,1fr)]">
-        <aside className="hidden space-y-1.5 md:block">
-          {["Profile", "Requirements", "Industries", "Outreach"].map(
-            (item, index) => (
-              <div
-                key={item}
-                className={`rounded-md px-2.5 py-2 text-xs ${
-                  index === 1
-                    ? "bg-teal-900/10 font-medium text-teal-900"
-                    : "text-zinc-500"
-                }`}
-              >
-                {item}
-              </div>
-            ),
-          )}
-        </aside>
+    <section className="overflow-hidden rounded-lg border border-zinc-200/90 bg-white/95 shadow-sm">
+      <div className="flex items-center gap-2 border-b border-zinc-100 px-3 py-2">
+        <Icon className="h-3.5 w-3.5 text-zinc-500" strokeWidth={1.5} />
+        <h3 className="text-[11px] font-semibold text-zinc-950">{title}</h3>
+      </div>
+      <div className="px-3 py-2.5">{children}</div>
+    </section>
+  );
+}
 
-        <div className="space-y-3 rounded-xl border border-zinc-200/80 bg-white/90 p-3 md:p-4">
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-400">
-              Partnership intent
-            </p>
-            <div className="mt-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-700">
-              Distribution partners in logistics & retail tech
-            </div>
+function ConfigVisual() {
+  const collaborationIntent =
+    "We are looking to identify software companies with complementary products that could become integration partners, allowing customers to automate workflows across both platforms.";
+
+  const requirements = [
+    "The company provides cloud-based business software.",
+    "The company serves mid-market B2B customers with 50–500 employees.",
+  ];
+
+  return (
+    <VisualShell icon={Settings2} title="Configuration">
+      <div className="flex h-full flex-col gap-2.5">
+        <MiniConfigCard icon={Building2} title="Business Identity">
+          <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-400">
+            Collaboration Intent
+          </p>
+          <div className="mt-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-2 text-[10px] leading-relaxed text-zinc-700">
+            {collaborationIntent}
           </div>
+        </MiniConfigCard>
 
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-400">
-              Target industries
-            </p>
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {["Logistics", "Retail SaaS", "Supply chain"].map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] text-zinc-700"
-                >
-                  {tag}
+        <MiniConfigCard icon={List} title="Requirements">
+          <div className="space-y-2">
+            {requirements.map((requirement, index) => (
+              <div key={requirement} className="flex items-start gap-2">
+                <span className="w-3.5 shrink-0 pt-1.5 text-[10px] font-medium text-zinc-500">
+                  {index + 1}.
                 </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-zinc-200/80 bg-zinc-50/80 p-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 text-zinc-600">
-                <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={1.5} />
-                <p className="text-[11px] font-medium">Fit score cutoff</p>
+                <div className="min-h-[36px] flex-1 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1.5 text-[10px] leading-relaxed text-zinc-700">
+                  {requirement}
+                </div>
               </div>
-              <p className="font-mono text-xs font-semibold tabular-nums text-teal-800">
-                72
-              </p>
-            </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-200">
-              <div className="h-full w-[72%] rounded-full bg-teal-800" />
-            </div>
+            ))}
           </div>
-        </div>
+        </MiniConfigCard>
       </div>
     </VisualShell>
   );
 }
 
+function RequirementScoreCard({
+  name,
+  score,
+  maxScore,
+  reason,
+  facts,
+}: {
+  name: string;
+  score: number;
+  maxScore: number;
+  reason: string;
+  facts: string[];
+}) {
+  const percent = Math.min(Math.max((score / maxScore) * 100, 0), 100);
+
+  return (
+    <section className="rounded-lg border border-zinc-200 bg-white px-3 py-2.5">
+      <div className="mb-1.5 flex items-start justify-between gap-2">
+        <h4 className="text-[10px] font-semibold leading-snug text-zinc-950">
+          {name}
+        </h4>
+        <span className="shrink-0 text-[11px] font-bold tabular-nums text-emerald-600">
+          {score}/{maxScore}
+        </span>
+      </div>
+
+      <div className="mb-2 h-1 overflow-hidden rounded-full bg-zinc-100">
+        <div
+          className="h-full rounded-full bg-emerald-500"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+
+      <p className="text-[9px] leading-relaxed text-zinc-600">{reason}</p>
+
+      <ul className="mt-1.5 space-y-1">
+        {facts.map((fact) => (
+          <li
+            key={fact}
+            className="flex items-start gap-1 text-[9px] leading-relaxed text-zinc-700"
+          >
+            <CheckCircle2 className="mt-0.5 h-2.5 w-2.5 shrink-0 text-teal-600" />
+            <span>{fact}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function DiscoveryVisual() {
-  const results = [
-    { company: "Northwind Logistics", location: "Chicago, IL", score: 87 },
-    { company: "Harbor Analytics", location: "Austin, TX", score: 72 },
-    { company: "Summit Retail Group", location: "Denver, CO", score: 91 },
+  const requirements = [
+    {
+      name: "Provides cloud-based business software",
+      score: 92,
+      maxScore: 100,
+      reason:
+        "Northwind offers a SaaS platform for workflow automation with publicly documented API integrations for CRM and billing tools.",
+      facts: [
+        "Product pages describe a cloud-hosted platform with REST API access.",
+        "Integrations listed for Salesforce, HubSpot, and Stripe.",
+      ],
+    },
+    {
+      name: "Serves mid-market B2B customers",
+      score: 88,
+      maxScore: 100,
+      reason:
+        "Case studies and pricing tiers target companies with 50–500 employees in professional services and operations teams.",
+      facts: ["Customer stories highlight mid-market logistics and finance teams."],
+    },
   ];
 
   return (
-    <VisualShell icon={Search} title="Discovery run #184">
-      <div className="flex h-full flex-col gap-3">
-        <div className="flex items-center justify-between rounded-lg border border-zinc-200/80 bg-white/90 px-3 py-2.5">
+    <VisualShell icon={Search} title="Northwind Software">
+      <div className="flex h-full flex-col gap-2">
+        <div className="flex items-center justify-between rounded-lg border border-zinc-200/80 bg-white/90 px-3 py-2">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-400">
-              Status
+              Candidate
             </p>
-            <p className="text-xs font-medium text-zinc-900">
-              Scoring 47 companies
-            </p>
+            <p className="text-[11px] font-medium text-zinc-900">Ready for review</p>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-teal-600" />
-            <span className="text-[11px] font-medium text-teal-800">Running</span>
-          </div>
+          <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-medium text-teal-800">
+            <span className="h-1.5 w-1.5 rounded-full bg-teal-600" />
+            Ready
+          </span>
         </div>
 
-        <div className="flex-1 space-y-2 rounded-xl border border-zinc-200/80 bg-white/90 p-3">
-          <div className="flex items-center gap-2 text-zinc-500">
-            <Building2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-            <p className="text-[11px] font-medium">Matched companies</p>
-          </div>
-
-          {results.map((result) => (
-            <div
-              key={result.company}
-              className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200/70 bg-zinc-50/70 px-3 py-2"
-            >
-              <div className="min-w-0">
-                <p className="truncate text-xs font-medium text-zinc-900">
-                  {result.company}
-                </p>
-                <p className="mt-0.5 flex items-center gap-1 text-[10px] text-zinc-500">
-                  <MapPin className="h-3 w-3" strokeWidth={1.5} />
-                  {result.location}
-                </p>
-              </div>
-              <p className="font-mono text-xs font-semibold tabular-nums text-teal-800">
-                {result.score}
-              </p>
-            </div>
+        <div className="flex-1 space-y-2 overflow-hidden">
+          {requirements.map((requirement) => (
+            <RequirementScoreCard key={requirement.name} {...requirement} />
           ))}
         </div>
       </div>
@@ -184,60 +221,240 @@ function DiscoveryVisual() {
 }
 
 function OutreachVisual() {
+  const contactEmail = "alex.morgan@northwindsoftware.com";
+  const outreachEmail = `Hi Alex,
+
+I've been following Northwind Software's workflow automation platform and your documented integrations with Salesforce, HubSpot, and Stripe.
+
+We provide API-first automation software for mid-market teams, and I think there is a strong fit for an integration partnership.
+
+Would you be open to a brief conversation about co-marketing and a technical integration path?
+
+Best regards,
+Demo Team`;
+
   return (
-    <VisualShell icon={Mail} title="Outreach workspace">
-      <div className="grid h-full gap-3 md:grid-cols-[minmax(0,1fr)_110px]">
-        <div className="rounded-xl border border-zinc-200/80 bg-white/90 p-3 md:p-4">
-          <div className="flex items-center gap-2 border-b border-zinc-100 pb-2">
-            <Mail className="h-3.5 w-3.5 text-zinc-500" strokeWidth={1.5} />
-            <p className="text-[11px] font-medium text-zinc-600">
-              Draft via Gmail
+    <VisualShell icon={Mail} title="Northwind Software">
+      <div className="relative h-full min-h-[250px]">
+        <section className="h-full rounded-lg border border-zinc-200 bg-white p-2.5">
+          <p className="text-[10px] font-semibold text-zinc-950">Contact</p>
+
+          <div className="mt-2 space-y-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Mail className="h-3 w-3 shrink-0 text-teal-800" strokeWidth={1.5} />
+              <span className="text-[10px] font-medium text-teal-800">{contactEmail}</span>
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-medium text-emerald-700">
+                Verified
+              </span>
+            </div>
+            <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-1.5 py-0.5 text-[9px] font-medium text-teal-800">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal-600" />
+              Ready
+            </span>
+          </div>
+
+          <div className="mt-2.5 grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-[9px] font-medium uppercase tracking-wide text-zinc-400">
+                First Name
+              </p>
+              <p className="mt-0.5 text-[10px] text-zinc-800">Alex</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-medium uppercase tracking-wide text-zinc-400">
+                Last Name
+              </p>
+              <p className="mt-0.5 text-[10px] text-zinc-800">Morgan</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-[9px] font-medium uppercase tracking-wide text-zinc-400">
+                Job Title
+              </p>
+              <p className="mt-0.5 text-[10px] text-zinc-800">VP of Partnerships</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-[9px] font-medium uppercase tracking-wide text-zinc-400">
+                LinkedIn
+              </p>
+              <p className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-teal-800">
+                <ExternalLink className="h-2.5 w-2.5" strokeWidth={1.5} />
+                View profile
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <div className="absolute inset-0 rounded-lg bg-zinc-950/10" aria-hidden />
+
+        <div className="absolute bottom-2 left-3 right-3 z-10 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-[0_16px_40px_-18px_rgba(24,24,27,0.35)]">
+          <div className="flex items-start justify-between gap-2 border-b border-zinc-100 px-2.5 py-2">
+            <div>
+              <p className="text-[10px] font-semibold text-zinc-950">Outreach Email</p>
+              <p className="mt-0.5 text-[9px] text-zinc-500">To: {contactEmail}</p>
+            </div>
+            <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-1.5 py-0.5 text-[9px] font-medium text-teal-800">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal-600" />
+              Ready
+            </span>
+          </div>
+
+          <div className="max-h-[118px] overflow-hidden px-2.5 py-2">
+            <p className="whitespace-pre-line text-[9px] leading-relaxed text-zinc-700">
+              {outreachEmail}
             </p>
           </div>
 
-          <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-zinc-400">
-            Subject
-          </p>
-          <p className="mt-1 text-xs font-medium text-zinc-900">
-            Partnership opportunity — Northwind Logistics
-          </p>
-
-          <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-zinc-400">
-            Preview
-          </p>
-          <p className="mt-1 text-[11px] leading-relaxed text-zinc-600">
-            Hi Morgan, we help logistics teams expand retail partnerships. Your
-            recent expansion into the Midwest looks like a strong fit for our
-            network...
-          </p>
-
-          <div className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-800">
-            <ClipboardCheck className="h-3 w-3" strokeWidth={1.5} />
-            Compliance review required
+          <div className="flex items-center justify-between gap-2 border-t border-zinc-100 px-2.5 py-1.5">
+            <span className="inline-flex items-center gap-1 rounded-md border border-zinc-200 px-1.5 py-0.5 text-[8px] font-medium text-zinc-600">
+              <Copy className="h-2.5 w-2.5" strokeWidth={1.5} />
+              Copy
+            </span>
+            <div className="flex items-center gap-1">
+              <span className="rounded-md border border-zinc-200 px-1.5 py-0.5 text-[8px] font-medium text-zinc-600">
+                Cancel
+              </span>
+              <span className="rounded-md bg-teal-800/80 px-1.5 py-0.5 text-[8px] font-medium text-white">
+                Save
+              </span>
+              <span className="rounded-md bg-teal-800 px-1.5 py-0.5 text-[8px] font-medium text-white">
+                Send
+              </span>
+            </div>
           </div>
         </div>
+      </div>
+    </VisualShell>
+  );
+}
 
-        <div className="hidden flex-col gap-2 md:flex">
-          {[
-            { label: "Ready", active: true },
-            { label: "Sent", active: false },
-            { label: "Heard back", active: false },
-          ].map((stage) => (
+function DashboardVisual() {
+  const summaryCards = [
+    { label: "Ready", value: 8, valueClass: "text-teal-800", bgClass: "bg-teal-50" },
+    { label: "Email Sent", value: 3, valueClass: "text-blue-600", bgClass: "bg-blue-50" },
+    { label: "Heard Back", value: 2, valueClass: "text-emerald-600", bgClass: "bg-emerald-50" },
+  ];
+
+  const statusFilters = [
+    { label: "All", active: false },
+    { label: "Ready", active: true },
+    { label: "Email Sent", active: false },
+    { label: "Pending", active: false },
+  ];
+
+  const leads = [
+    {
+      id: "LD-1842",
+      company: "Northwind Software",
+      contact: "Alex Morgan",
+      status: "Ready",
+      statusClass: "bg-teal-50 text-teal-800",
+    },
+    {
+      id: "LD-1840",
+      company: "Summit Retail Group",
+      contact: "Riley Chen",
+      status: "Ready",
+      statusClass: "bg-teal-50 text-teal-800",
+    },
+    {
+      id: "LD-1839",
+      company: "Harbor Analytics",
+      contact: "Jamie Lee",
+      status: "Email Sent",
+      statusClass: "bg-blue-50 text-blue-700",
+    },
+    {
+      id: "LD-1836",
+      company: "IntegrateFlow",
+      contact: "Sam Ortiz",
+      status: "Heard Back",
+      statusClass: "bg-emerald-50 text-emerald-700",
+    },
+    {
+      id: "LD-1831",
+      company: "CloudBridge Systems",
+      contact: "Taylor Brooks",
+      status: "Pending",
+      statusClass: "bg-amber-50 text-amber-700",
+    },
+    {
+      id: "LD-1828",
+      company: "PixelOps",
+      contact: "Jordan Kim",
+      status: "Rejected",
+      statusClass: "bg-zinc-100 text-zinc-600",
+    },
+  ];
+
+  return (
+    <VisualShell icon={LayoutDashboard} title="Dashboard">
+      <div className="flex h-full min-h-0 flex-col gap-2">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="text-[10px] font-semibold text-zinc-950">All lead candidates</p>
+            <p className="mt-0.5 text-[9px] text-zinc-500">
+              12/50 prospects today · 1/2 running
+            </p>
+          </div>
+          <span className="shrink-0 rounded-md bg-teal-800 px-2 py-1 text-[9px] font-medium text-white">
+            Start Prospect Discover
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-1.5">
+          {summaryCards.map((card) => (
             <div
-              key={stage.label}
-              className={`rounded-lg border px-2.5 py-2 text-center text-[10px] ${
-                stage.active
-                  ? "border-teal-800/20 bg-teal-900/10 font-medium text-teal-900"
-                  : "border-zinc-200 bg-white/80 text-zinc-500"
-              }`}
+              key={card.label}
+              className={`rounded-md border border-zinc-200 px-2 py-1.5 ${card.bgClass}`}
             >
-              {stage.label}
+              <p className="text-[8px] font-medium text-zinc-600">{card.label}</p>
+              <p className={`mt-0.5 text-sm font-bold tabular-nums ${card.valueClass}`}>
+                {card.value}
+              </p>
             </div>
           ))}
-          <div className="mt-auto flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-2 text-[10px] text-emerald-800">
-            <CheckCircle2 className="h-3 w-3" strokeWidth={1.5} />
-            Contact enriched
+        </div>
+
+        <div className="flex flex-wrap gap-1">
+          {statusFilters.map((filter) => (
+            <span
+              key={filter.label}
+              className={`rounded px-1.5 py-0.5 text-[8px] font-medium ${
+                filter.active
+                  ? "bg-teal-800 text-white"
+                  : "border border-zinc-200 bg-white text-zinc-600"
+              }`}
+            >
+              {filter.label}
+            </span>
+          ))}
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-zinc-200 bg-white">
+          <div className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)_minmax(0,0.8fr)] border-b border-zinc-100 bg-zinc-50 px-2 py-1 text-[8px] font-semibold uppercase tracking-wide text-zinc-400">
+            <span>Company</span>
+            <span>Contact</span>
+            <span>Status</span>
           </div>
+          {leads.map((lead) => (
+            <div
+              key={lead.id}
+              className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)_minmax(0,0.8fr)] border-b border-zinc-50 px-2 py-1 last:border-b-0"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-[9px] font-semibold text-zinc-950">
+                  {lead.company}
+                </p>
+                <p className="text-[8px] text-zinc-400">{lead.id}</p>
+              </div>
+              <p className="truncate text-[9px] text-zinc-700">{lead.contact}</p>
+              <span
+                className={`inline-flex w-fit rounded-full px-1.5 py-0.5 text-[8px] font-medium ${lead.statusClass}`}
+              >
+                {lead.status}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </VisualShell>
@@ -255,6 +472,8 @@ export function LandingFeatureVisual({
       return <DiscoveryVisual />;
     case "outreach":
       return <OutreachVisual />;
+    case "dashboard":
+      return <DashboardVisual />;
     default:
       return (
         <VisualShell icon={icon} title="Product preview">

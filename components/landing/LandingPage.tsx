@@ -5,12 +5,13 @@ import {
   ArrowRight,
   BarChart3,
   ClipboardCheck,
+  LayoutDashboard,
   Mail,
   Megaphone,
+  ScanSearch,
   Search,
   Settings2,
-  Users,
-  Workflow,
+  ShieldCheck,
 } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
 import { getPostAuthDestination } from "@/lib/auth/accessRouting";
@@ -20,50 +21,85 @@ import { LandingFeatureVisual } from "@/components/landing/LandingFeatureVisual"
 import { LandingHeroVisual } from "@/components/landing/LandingHeroVisual";
 import { LandingReveal } from "@/components/landing/LandingReveal";
 
+const GUIDED_WALKTHROUGH_URL =
+  "https://app.supademo.com/demo/cms81ew4y01kdqm68samg07zi?utm_source=link";
+const CASE_STUDY_URL =
+  "https://app.supademo.com/demo/cms8856pv066tqm6877vaav0a?utm_source=link";
+
 const iconClass = "h-5 w-5";
 const iconStroke = 1.5;
+
+const heroHighlights = [
+  {
+    icon: Search,
+    label: "Discovery runs",
+    value: "Evidence-Based Evaluation",
+    iconBoxClassName: "bg-teal-100 text-teal-800",
+  },
+  {
+    icon: BarChart3,
+    label: "Lead scoring",
+    value: "Requirement-by-Requirement Scoring",
+    iconBoxClassName: "bg-blue-100 text-blue-700",
+  },
+  {
+    icon: Mail,
+    label: "Outreach",
+    value: "Personalized Outreach",
+    iconBoxClassName: "bg-amber-100 text-amber-700",
+  },
+] as const;
 
 const spotlightFeatures = [
   {
     icon: Settings2,
     label: "Configure once",
-    title: "Business profile and search criteria in one workspace",
+    title: "Define your partnership strategy.",
     description:
-      "Define partnership intent, target industries, scoring thresholds, contact preferences, and outreach settings. Your team edits configuration without touching spreadsheets.",
+      "Describe your business, partnership intent, and evaluation requirements once. Every discovery run follows the same strategy.",
     visual: "config" as const,
   },
   {
     icon: Search,
     label: "Discover on demand",
-    title: "Automated runs that surface qualified companies",
+    title: "AI finds companies and explains every recommendation.",
     description:
-      "Launch discovery jobs when you are ready. The pipeline finds companies, scores fit against your requirements, and collects contact data so reps open leads with context.",
+      "AI collects evidence, evaluates each requirement, and returns a score, reasoning, and supporting facts.",
     visual: "discovery" as const,
     reverse: true,
   },
   {
     icon: Mail,
-    label: "Outreach with guardrails",
-    title: "Gmail drafts, human review, and a clear pipeline",
+    label: "Review & outreach",
+    title: "Review contacts and personalized outreach.",
     description:
-      "Connect Gmail, review AI-drafted emails, pass compliance checks when flagged, and track every lead from Ready through Heard Back.",
+      "Collect decision-maker contact emails, then generate personalized outreach from company evidence and your collaboration intent—not generic templates.",
     visual: "outreach" as const,
+  },
+  {
+    icon: LayoutDashboard,
+    label: "Track pipeline",
+    title: "Manage every partnership opportunity in one place.",
+    description:
+      "The dashboard shows every evaluated candidate with key details and status. Filter by pipeline stage, review status summary counts, monitor running jobs and daily quota, and start discovery in one click.",
+    visual: "dashboard" as const,
+    reverse: true,
   },
 ];
 
 const bentoItems = [
   {
-    icon: BarChart3,
-    title: "Requirement-based fit scoring",
+    icon: ScanSearch,
+    title: "System dashboard",
     description:
-      "Every lead includes a score and supporting facts tied to your configured requirements.",
-    span: "lg:col-span-2",
+      "Give technical staff a workflow health view across discovery, scoring, contact, outreach, usage, and API errors.",
+    span: "lg:col-span-1",
   },
   {
-    icon: Users,
-    title: "Contact enrichment",
+    icon: ShieldCheck,
+    title: "Admin",
     description:
-      "Decision-maker emails from verified sources, with confidence indicators.",
+      "Business owners review and approve members requesting access to the workspace.",
     span: "lg:col-span-1",
   },
   {
@@ -72,40 +108,6 @@ const bentoItems = [
     description:
       "Flagged outreach routes through review before anything sends.",
     span: "lg:col-span-1",
-  },
-  {
-    icon: Workflow,
-    title: "Job monitoring",
-    description:
-      "Queued runs, automation status, and daily discovery usage in one view.",
-    span: "lg:col-span-2",
-  },
-];
-
-const steps = [
-  {
-    step: "01",
-    title: "Configure your search",
-    description:
-      "Set requirements, scoring thresholds, target partners, and outreach preferences.",
-  },
-  {
-    step: "02",
-    title: "Run discovery",
-    description:
-      "Start a job. The pipeline finds companies, scores them, and collects contacts.",
-  },
-  {
-    step: "03",
-    title: "Review and reach out",
-    description:
-      "Open lead details, pass compliance when needed, send via Gmail.",
-  },
-  {
-    step: "04",
-    title: "Track responses",
-    description:
-      "Update status as conversations progress and keep follow-ups organized.",
   },
 ];
 
@@ -140,6 +142,44 @@ function SecondaryButton({
     >
       {children}
     </Link>
+  );
+}
+
+function ExternalSecondaryButton({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400 active:translate-y-px"
+    >
+      {children}
+    </a>
+  );
+}
+
+function ExternalPrimaryButton({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2.5 rounded-xl bg-teal-800 px-8 py-4 text-base font-medium text-white transition hover:bg-teal-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 active:translate-y-px md:px-10 md:text-lg"
+    >
+      {children}
+    </a>
   );
 }
 
@@ -207,7 +247,7 @@ export function LandingPage() {
       <main className="relative z-10">
         <section className="relative overflow-hidden border-b border-zinc-200/80">
           <LandingAtmosphere variant="hero" />
-          <div className="relative mx-auto grid max-w-6xl gap-12 px-6 pb-16 pt-14 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:items-center md:gap-10 md:pb-20 md:pt-16 lg:gap-16 lg:pb-24 lg:pt-20">
+          <div className="relative mx-auto grid max-w-6xl gap-12 px-6 pb-16 pt-14 md:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] md:items-center md:gap-10 md:pb-20 md:pt-16 lg:gap-14 lg:pb-24 lg:pt-20">
             <LandingReveal>
               <p className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-teal-800">
                 B2B partnership prospecting
@@ -219,9 +259,7 @@ export function LandingPage() {
                 </span>
               </h1>
               <p className="mt-5 max-w-md text-pretty text-base leading-relaxed text-zinc-600 md:text-[17px]">
-                Identify companies that match your criteria, enrich contacts,
-                draft outreach, and manage the full lead lifecycle from first
-                discovery to heard back.
+                Define your partnership requirements, let AI collect supporting evidence, evaluate every candidate transparently, and generate personalized outreach ready to send.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 {isSignedIn ? (
@@ -244,32 +282,51 @@ export function LandingPage() {
                     <SecondaryButton href="/login">Log in</SecondaryButton>
                   </>
                 )}
+                <ExternalSecondaryButton href={GUIDED_WALKTHROUGH_URL}>
+                  Guided walkthrough
+                </ExternalSecondaryButton>
+                <ExternalSecondaryButton href={CASE_STUDY_URL}>
+                  View case study
+                </ExternalSecondaryButton>
               </div>
             </LandingReveal>
 
-            <LandingReveal delay={0.08} className="relative md:justify-self-stretch">
+            <LandingReveal delay={0.08} className="relative w-full min-w-0 md:justify-self-end">
               <LandingHeroVisual />
             </LandingReveal>
           </div>
 
-          <div className="relative mx-auto max-w-6xl border-t border-zinc-200/80 bg-white/40 px-6 py-8 backdrop-blur-[2px]">
-            <div className="grid gap-6 sm:grid-cols-3 sm:gap-8">
-              {[
-                { label: "Discovery runs", value: "On-demand pipeline" },
-                { label: "Lead scoring", value: "Requirement-based fit" },
-                { label: "Outreach", value: "Gmail integration" },
-              ].map((item, index) => (
-                <LandingReveal key={item.label} delay={index * 0.05}>
-                  <div>
-                    <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-zinc-400">
-                      {item.label}
-                    </p>
-                    <p className="mt-1.5 text-sm font-medium text-zinc-800">
-                      {item.value}
-                    </p>
-                  </div>
-                </LandingReveal>
-              ))}
+          <div className="relative mx-auto max-w-6xl border-t border-zinc-200/80 px-6 py-10 md:py-12">
+            <div className="grid gap-4 sm:grid-cols-3 sm:gap-5">
+              {heroHighlights.map((item, index) => {
+                const Icon = item.icon;
+
+                return (
+                  <LandingReveal key={item.label} delay={index * 0.05}>
+                    <article className="group relative h-full overflow-hidden rounded-xl border border-zinc-200/90 bg-white/90 p-5 shadow-sm transition hover:border-zinc-300 hover:shadow-md">
+                      <div
+                        aria-hidden
+                        className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br from-teal-800/[0.04] to-transparent opacity-0 transition group-hover:opacity-100"
+                      />
+                      <div className="relative flex items-start gap-4">
+                        <div
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${item.iconBoxClassName}`}
+                        >
+                          <Icon className="h-5 w-5" strokeWidth={iconStroke} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-zinc-400">
+                            {item.label}
+                          </p>
+                          <p className="mt-1.5 text-sm font-semibold leading-snug text-zinc-950">
+                            {item.value}
+                          </p>
+                        </div>
+                      </div>
+                    </article>
+                  </LandingReveal>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -324,8 +381,8 @@ export function LandingPage() {
                 Everything else in the product
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">
-                Scoring, enrichment, compliance, and job visibility without
-                another tab open.
+                Workflow visibility, member access control, and compliance review
+                for the teams running your pipeline.
               </p>
             </LandingReveal>
 
@@ -358,40 +415,29 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 py-20 md:py-24">
-          <LandingReveal className="max-w-xl">
-            <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 md:text-3xl">
-              How it works
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">
-              Your team stays in control while automation handles discovery,
-              scoring, and enrichment.
-            </p>
+        <section className="relative mx-auto max-w-6xl px-6 py-20 md:py-24">
+          <LandingAtmosphere variant="section" />
+          <LandingReveal>
+            <div className="relative mx-auto max-w-2xl rounded-2xl border border-zinc-200 bg-white px-8 py-12 text-center shadow-[0_20px_50px_-30px_rgba(24,24,27,0.12)] md:px-12 md:py-14">
+              <p className="font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-teal-800">
+                Product tour
+              </p>
+              <h2 className="mt-4 text-balance text-2xl font-semibold tracking-tight text-zinc-950 md:text-3xl">
+                See Prospect Discover in action
+              </h2>
+              <p className="mx-auto mt-4 max-w-lg text-pretty text-sm leading-relaxed text-zinc-600 md:text-base">
+                Walk through configuration, evidence-based evaluation, personalized
+                outreach, and the partnership dashboard step by step—without signing up
+                first.
+              </p>
+              <div className="mt-8 flex justify-center">
+                <ExternalPrimaryButton href={GUIDED_WALKTHROUGH_URL}>
+                  Start guided walkthrough
+                  <ArrowRight className="h-5 w-5" strokeWidth={iconStroke} />
+                </ExternalPrimaryButton>
+              </div>
+            </div>
           </LandingReveal>
-
-          <div className="relative mt-14">
-            <div
-              aria-hidden
-              className="absolute left-0 right-0 top-5 hidden h-px bg-zinc-200 md:block"
-            />
-            <ol className="grid gap-10 md:grid-cols-4 md:gap-6">
-              {steps.map((item, index) => (
-                <LandingReveal key={item.step} delay={index * 0.06}>
-                  <li>
-                    <p className="font-mono text-xs font-semibold tabular-nums text-teal-800">
-                      {item.step}
-                    </p>
-                    <h3 className="mt-4 text-base font-semibold text-zinc-950">
-                      {item.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-zinc-600">
-                      {item.description}
-                    </p>
-                  </li>
-                </LandingReveal>
-              ))}
-            </ol>
-          </div>
         </section>
 
         <section className="relative overflow-hidden border-t border-zinc-200 bg-white">
