@@ -1,6 +1,7 @@
 import { ENDPOINTS } from "@/lib/api/endpoints";
 import { authenticatedFetch } from "@/lib/api/authenticatedFetch";
 import {
+  DAILY_PROSPECT_LIMIT,
   START_DISCOVERY_CLIENT_TIMEOUT_MS,
   START_DISCOVERY_TIMEOUT_MESSAGE,
 } from "@/lib/constants/automation-jobs";
@@ -68,7 +69,7 @@ function parseDiscoveryQuota(data: unknown): DiscoveryQuota | null {
   return {
     prospectUsage: {
       used: Number(usage.used) || 0,
-      limit: Number(usage.limit) || 200,
+      limit: Number(usage.limit) || DAILY_PROSPECT_LIMIT,
     },
     runningJobs: {
       count: Number(running.count) || 0,
@@ -175,7 +176,7 @@ export async function startProspectDiscovery(
   const data = (await response.json().catch(() => ({}))) as StartDiscoveryResponse;
   const prospectUsage = parseDiscoveryQuota(data)?.prospectUsage ?? {
     used: 0,
-    limit: 200,
+    limit: DAILY_PROSPECT_LIMIT,
   };
   const runningJobs = parseDiscoveryQuota(data)?.runningJobs ?? {
     count: 0,

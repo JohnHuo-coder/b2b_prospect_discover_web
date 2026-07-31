@@ -1,4 +1,4 @@
-export const DAILY_PROSPECT_LIMIT = 200;
+export const DAILY_PROSPECT_LIMIT = 100;
 export const MAX_RUNNING_AUTOMATION_JOBS = 2;
 /** Max concurrent running discovery workflows across all businesses (site-wide). */
 export const MAX_GLOBAL_RUNNING_AUTOMATION_JOBS = 2;
