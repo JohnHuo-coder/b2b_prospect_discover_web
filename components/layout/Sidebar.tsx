@@ -12,6 +12,7 @@ import {
   Network,
   Settings,
   Shield,
+  ShieldCheck,
 } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
 import {
@@ -38,6 +39,12 @@ const allNavItems: Array<{
     href: "/companies",
     label: "Companies",
     icon: Building2,
+    superAdminOnly: true,
+  },
+  {
+    href: "/access-requests",
+    label: "Access Requests",
+    icon: ShieldCheck,
     superAdminOnly: true,
   },
   {

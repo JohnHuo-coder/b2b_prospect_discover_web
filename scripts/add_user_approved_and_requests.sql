@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS prospect_discover.requests (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES prospect_discover.users(id) ON DELETE CASCADE,
   reason TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'approved', 'denied')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

@@ -9,6 +9,13 @@ export const ENDPOINTS = {
     ADMIN_MEMBERS: "/api/admin/members",
     SUPERADMIN_COMPANIES: "/api/superadmin/companies",
     SUPERADMIN_COMPANIES_MONITOR: "/api/superadmin/companies/monitor",
+    SUPERADMIN_ACCESS_REQUESTS: "/api/superadmin/access-requests",
+    SUPERADMIN_ACCESS_REQUESTS_APPROVE_ALL:
+      "/api/superadmin/access-requests/approve-all",
+    superadminAccessRequestApprove: (id: number | string) =>
+      `/api/superadmin/access-requests/${id}/approve`,
+    superadminAccessRequestDeny: (id: number | string) =>
+      `/api/superadmin/access-requests/${id}/deny`,
     LEADS: "/api/leads",
     DASHBOARD_SUMMARY: "/api/dashboard/summary",
     DASHBOARD_DISCOVERY_QUOTA: "/api/dashboard/discovery-quota",
